@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # 1. Reverse Proxy & API Gateway (Nginx)
+  gateway:
+    image: nginx:1.27-alpine
+    container_name: ordera-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - postgres
+      - redis
+
+  # 2. PostgreSQL 16 Primary Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ordera-postgres
+    environment:
+      - POSTGRES_DB=ordera_db
+      - POSTGRES_USER=ordera_user
+      - POSTGRES_PASSWORD=ordera_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../scripts/init-database.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ordera_user -d ordera_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 3. Redis 7 Cache & Distributed Lock
+  redis:
+    image: redis:7-alpine
+    container_name: ordera-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # 4. MailHog - Mock SMTP Server cho OTP Email
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ordera-mailhog
+    ports:
+      - "8025:8025" # Web Dashboard xem thư OTP
+      - "1025:1025" # SMTP server port
+
+volumes:
+  postgres_data:
+  redis_data:
+
