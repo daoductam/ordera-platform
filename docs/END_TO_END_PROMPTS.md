@@ -309,3 +309,4 @@ Yêu cầu thực hiện:
 4. Kiểm tra pipeline GitHub Actions trong .github/workflows/ (backend-ci.yml, frontend-ci.yml).
 5. Commit thay đổi hoàn thiện vào nhánh develop theo skill action-commit.
 ```
+
