@@ -14,3 +14,4 @@ public interface LedgerMapper {
     PointsLedgerJpaEntity toEntity(PointsLedger domain);
     List<PointsLedger> toDomainList(List<PointsLedgerJpaEntity> entities);
 }
+

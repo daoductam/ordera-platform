@@ -32,3 +32,4 @@ public interface CatalogMapper {
     ProductModifierJpaEntity toEntity(ProductModifier domain);
     List<ProductModifier> toModifierDomainList(List<ProductModifierJpaEntity> entities);
 }
+

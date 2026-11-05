@@ -64,3 +64,4 @@ class PointsLedgerJpaEntityTest {
         assertEquals(id1.hashCode(), id2.hashCode());
     }
 }
+

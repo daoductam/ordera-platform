@@ -34,3 +34,4 @@ class MemberTierTest {
         assertEquals("#D9148E", MemberTier.RUBY.getThemeColorHex());
     }
 }
+

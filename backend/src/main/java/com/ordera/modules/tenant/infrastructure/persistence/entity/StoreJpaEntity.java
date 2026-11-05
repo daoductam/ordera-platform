@@ -52,3 +52,4 @@ public class StoreJpaEntity extends BaseTenantAuditEntity {
     @Builder.Default
     private boolean acceptsDinein = true;
 }
+

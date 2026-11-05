@@ -27,3 +27,4 @@ public class SupportClaim {
     private Instant createdAt;
     private Instant resolvedAt;
 }
+

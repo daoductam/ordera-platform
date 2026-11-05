@@ -22,3 +22,4 @@ public class UserGiftRedemption {
     private Instant claimedAt;
     private Instant createdAt;
 }
+

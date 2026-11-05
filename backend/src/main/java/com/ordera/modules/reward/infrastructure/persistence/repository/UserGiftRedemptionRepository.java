@@ -17,3 +17,4 @@ public interface UserGiftRedemptionRepository extends JpaRepository<UserGiftRede
 
     List<UserGiftRedemptionJpaEntity> findByMemberIdAndStatus(UUID memberId, String status);
 }
+

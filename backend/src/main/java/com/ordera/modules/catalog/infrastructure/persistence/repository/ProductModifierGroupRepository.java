@@ -12,3 +12,4 @@ public interface ProductModifierGroupRepository extends JpaRepository<ProductMod
 
     List<ProductModifierGroupJpaEntity> findByProductIdOrderByDisplayOrderAsc(UUID productId);
 }
+

@@ -41,3 +41,4 @@ public class ProductJpaEntity extends BaseTenantAuditEntity {
     @Builder.Default
     private BigDecimal vatRate = new BigDecimal("15.00");
 }
+

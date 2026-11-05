@@ -14,3 +14,4 @@ public class TierUpgradeProgressResponse {
     private int pointsNeeded;
     private double progressPercentage;
 }
+

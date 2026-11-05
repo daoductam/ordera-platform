@@ -17,3 +17,4 @@ public interface UserVoucherRepository extends JpaRepository<UserVoucherJpaEntit
 
     Optional<UserVoucherJpaEntity> findByAppliedOrderId(UUID orderId);
 }
+

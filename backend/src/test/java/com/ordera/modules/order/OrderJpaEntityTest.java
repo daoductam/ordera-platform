@@ -48,3 +48,4 @@ class OrderJpaEntityTest {
         assertNotNull(order.getCreatedAt());
     }
 }
+

@@ -22,3 +22,4 @@ public class LoyaltyGift {
     private boolean active;
     private Instant createdAt;
 }
+

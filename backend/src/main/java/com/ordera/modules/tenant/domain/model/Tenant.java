@@ -24,3 +24,4 @@ public class Tenant {
     private Instant createdAt;
     private Instant updatedAt;
 }
+

@@ -17,3 +17,4 @@ public interface StoreTableRepository extends JpaRepository<StoreTableJpaEntity,
 
     Optional<StoreTableJpaEntity> findByQrCodeToken(String qrCodeToken);
 }
+

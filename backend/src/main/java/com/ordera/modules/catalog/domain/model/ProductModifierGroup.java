@@ -18,3 +18,4 @@ public class ProductModifierGroup {
     private int maxSelection;
     private int displayOrder;
 }
+

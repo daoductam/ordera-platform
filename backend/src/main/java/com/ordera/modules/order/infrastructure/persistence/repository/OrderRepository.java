@@ -19,3 +19,4 @@ public interface OrderRepository extends JpaRepository<OrderJpaEntity, UUID> {
 
     List<OrderJpaEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
 }
+

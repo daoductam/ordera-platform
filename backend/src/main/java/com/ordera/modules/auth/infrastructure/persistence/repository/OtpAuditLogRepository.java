@@ -15,3 +15,4 @@ public interface OtpAuditLogRepository extends JpaRepository<OtpAuditLogJpaEntit
 
     long countByTenantIdAndRecipientAndCreatedAtAfter(UUID tenantId, String recipient, Instant after);
 }
+

@@ -40,3 +40,4 @@ public class OrderItemJpaEntity extends BaseEntity {
     @Column(name = "special_instruction")
     private String specialInstruction;
 }
+

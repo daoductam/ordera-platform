@@ -24,3 +24,4 @@ public class OtpAuditLog {
     private Instant expiresAt;
     private Instant createdAt;
 }
+

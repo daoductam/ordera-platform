@@ -26,3 +26,4 @@ public interface TenantMapper {
     StoreTableJpaEntity toEntity(StoreTable domain);
     List<StoreTable> toStoreTableDomainList(List<StoreTableJpaEntity> entities);
 }
+

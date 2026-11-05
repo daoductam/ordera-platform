@@ -28,3 +28,4 @@ public class LoyaltyController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
+

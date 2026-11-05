@@ -6,3 +6,4 @@ public class InvalidTierTransitionException extends RuntimeException {
         super(message);
     }
 }
+

@@ -44,3 +44,4 @@ public class StoreTableJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
+

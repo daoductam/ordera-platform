@@ -28,3 +28,4 @@ public class Voucher {
     private boolean active;
     private Instant createdAt;
 }
+

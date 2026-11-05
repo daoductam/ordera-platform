@@ -21,3 +21,4 @@ public class UserVoucher {
     private Instant redeemedAt;
     private Instant usedAt;
 }
+

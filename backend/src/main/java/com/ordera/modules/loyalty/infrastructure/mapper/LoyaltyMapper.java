@@ -25,3 +25,4 @@ public interface LoyaltyMapper {
     SupportClaimJpaEntity toEntity(SupportClaim domain);
     List<SupportClaim> toClaimDomainList(List<SupportClaimJpaEntity> entities);
 }
+

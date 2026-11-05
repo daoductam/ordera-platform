@@ -102,3 +102,4 @@ public class OrderJpaEntity extends BaseTenantEntity {
     @Column(name = "completed_at")
     private Instant completedAt;
 }
+

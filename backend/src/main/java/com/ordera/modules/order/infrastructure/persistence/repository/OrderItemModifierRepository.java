@@ -14,3 +14,4 @@ public interface OrderItemModifierRepository extends JpaRepository<OrderItemModi
 
     List<OrderItemModifierJpaEntity> findByOrderItemIdIn(List<UUID> orderItemIds);
 }
+

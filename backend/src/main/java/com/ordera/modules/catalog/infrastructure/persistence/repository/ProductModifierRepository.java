@@ -14,3 +14,4 @@ public interface ProductModifierRepository extends JpaRepository<ProductModifier
 
     List<ProductModifierJpaEntity> findByGroupIdIn(List<UUID> groupIds);
 }
+

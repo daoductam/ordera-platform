@@ -16,3 +16,4 @@ public interface StoreRepository extends JpaRepository<StoreJpaEntity, UUID> {
 
     List<StoreJpaEntity> findByTenantId(UUID tenantId);
 }
+

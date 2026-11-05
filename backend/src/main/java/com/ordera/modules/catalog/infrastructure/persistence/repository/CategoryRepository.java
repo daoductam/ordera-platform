@@ -14,3 +14,4 @@ public interface CategoryRepository extends JpaRepository<CategoryJpaEntity, UUI
 
     List<CategoryJpaEntity> findByTenantIdOrderByDisplayOrderAsc(UUID tenantId);
 }
+

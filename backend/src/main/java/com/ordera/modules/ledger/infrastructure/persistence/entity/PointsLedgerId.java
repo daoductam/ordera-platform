@@ -16,3 +16,4 @@ public class PointsLedgerId implements Serializable {
     private UUID id;
     private Instant createdAt;
 }
+

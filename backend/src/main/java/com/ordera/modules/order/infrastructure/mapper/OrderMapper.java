@@ -26,3 +26,4 @@ public interface OrderMapper {
     OrderItemModifierJpaEntity toEntity(OrderItemModifier domain);
     List<OrderItemModifier> toModifierDomainList(List<OrderItemModifierJpaEntity> entities);
 }
+

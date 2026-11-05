@@ -46,3 +46,4 @@ public class UserGiftRedemptionJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
+

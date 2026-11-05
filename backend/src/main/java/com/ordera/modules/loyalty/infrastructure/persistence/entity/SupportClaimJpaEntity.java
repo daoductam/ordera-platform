@@ -57,3 +57,4 @@ public class SupportClaimJpaEntity extends BaseTenantEntity {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 }
+

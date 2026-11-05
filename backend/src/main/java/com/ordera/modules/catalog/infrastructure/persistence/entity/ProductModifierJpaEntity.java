@@ -32,3 +32,4 @@ public class ProductModifierJpaEntity extends BaseEntity {
     @Builder.Default
     private boolean isDefault = false;
 }
+

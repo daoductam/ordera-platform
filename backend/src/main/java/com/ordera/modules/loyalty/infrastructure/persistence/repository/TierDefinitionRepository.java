@@ -17,3 +17,4 @@ public interface TierDefinitionRepository extends JpaRepository<TierDefinitionJp
 
     Optional<TierDefinitionJpaEntity> findByTenantIdAndTierName(UUID tenantId, String tierName);
 }
+

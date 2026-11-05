@@ -52,3 +52,4 @@ public class UserJpaEntity extends BaseTenantAuditEntity {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
 }
+

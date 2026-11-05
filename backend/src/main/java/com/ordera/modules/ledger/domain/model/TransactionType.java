@@ -8,3 +8,4 @@ public enum TransactionType {
     ADMIN_ADJUST,
     CLAIM_APPROVED
 }
+

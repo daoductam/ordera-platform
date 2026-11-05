@@ -31,3 +31,4 @@ public class OrderItemModifierJpaEntity extends BaseEntity {
     @Builder.Default
     private BigDecimal extraPrice = BigDecimal.ZERO;
 }
+

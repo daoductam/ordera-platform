@@ -35,3 +35,4 @@ public class ProductModifierGroupJpaEntity extends BaseEntity {
     @Builder.Default
     private int displayOrder = 0;
 }
+

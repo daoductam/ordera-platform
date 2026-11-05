@@ -27,3 +27,4 @@ public enum MemberTier {
         return NEW;
     }
 }
+

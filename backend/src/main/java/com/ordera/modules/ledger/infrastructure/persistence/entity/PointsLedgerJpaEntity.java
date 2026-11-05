@@ -50,3 +50,4 @@ public class PointsLedgerJpaEntity {
     @Column(name = "description", nullable = false)
     private String description;
 }
+

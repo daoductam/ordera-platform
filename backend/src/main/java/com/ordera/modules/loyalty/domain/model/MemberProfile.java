@@ -25,3 +25,4 @@ public class MemberProfile {
     private Instant createdAt;
     private Instant updatedAt;
 }
+

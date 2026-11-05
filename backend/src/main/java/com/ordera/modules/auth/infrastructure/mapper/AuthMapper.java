@@ -20,3 +20,4 @@ public interface AuthMapper {
     OtpAuditLogJpaEntity toEntity(OtpAuditLog domain);
     List<OtpAuditLog> toOtpDomainList(List<OtpAuditLogJpaEntity> entities);
 }
+

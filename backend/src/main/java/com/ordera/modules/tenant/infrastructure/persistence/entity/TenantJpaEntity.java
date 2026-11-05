@@ -44,3 +44,4 @@ public class TenantJpaEntity extends BaseAuditEntity {
     @Column(name = "metadata", columnDefinition = "jsonb")
     private Map<String, Object> metadata;
 }
+

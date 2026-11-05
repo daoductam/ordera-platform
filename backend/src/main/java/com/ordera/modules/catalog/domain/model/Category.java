@@ -19,3 +19,4 @@ public class Category {
     private boolean active;
     private Instant createdAt;
 }
+

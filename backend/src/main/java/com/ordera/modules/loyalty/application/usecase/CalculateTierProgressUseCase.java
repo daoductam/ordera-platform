@@ -8,3 +8,4 @@ public interface CalculateTierProgressUseCase {
 
     TierUpgradeProgressResponse execute(UUID tenantId, UUID memberId);
 }
+

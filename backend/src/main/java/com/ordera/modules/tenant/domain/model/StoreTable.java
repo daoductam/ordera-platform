@@ -21,3 +21,4 @@ public class StoreTable {
     private boolean occupied;
     private Instant createdAt;
 }
+

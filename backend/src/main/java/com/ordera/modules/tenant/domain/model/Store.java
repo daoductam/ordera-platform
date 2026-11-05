@@ -28,3 +28,4 @@ public class Store {
     private Instant createdAt;
     private Instant updatedAt;
 }
+

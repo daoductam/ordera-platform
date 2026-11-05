@@ -53,3 +53,4 @@ public class OtpAuditLogJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
+

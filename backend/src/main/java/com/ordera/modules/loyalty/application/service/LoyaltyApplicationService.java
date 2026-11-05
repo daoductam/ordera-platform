@@ -58,3 +58,4 @@ public class LoyaltyApplicationService implements CalculateTierProgressUseCase {
                 .build();
     }
 }
+

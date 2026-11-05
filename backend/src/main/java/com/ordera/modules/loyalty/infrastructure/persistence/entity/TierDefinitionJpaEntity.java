@@ -55,3 +55,4 @@ public class TierDefinitionJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
+

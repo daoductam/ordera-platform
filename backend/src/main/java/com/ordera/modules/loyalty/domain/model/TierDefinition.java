@@ -24,3 +24,4 @@ public class TierDefinition {
     private List<String> benefitsSummary;
     private Instant createdAt;
 }
+

@@ -17,3 +17,4 @@ public interface SupportClaimRepository extends JpaRepository<SupportClaimJpaEnt
 
     Optional<SupportClaimJpaEntity> findByTenantIdAndReceiptCode(UUID tenantId, String receiptCode);
 }
+

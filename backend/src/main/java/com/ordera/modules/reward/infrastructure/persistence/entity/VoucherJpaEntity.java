@@ -67,3 +67,4 @@ public class VoucherJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
+

@@ -25,3 +25,4 @@ public class Product {
     private Instant createdAt;
     private Instant updatedAt;
 }
+

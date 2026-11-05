@@ -32,3 +32,4 @@ public interface RewardMapper {
     UserGiftRedemptionJpaEntity toEntity(UserGiftRedemption domain);
     List<UserGiftRedemption> toRedemptionDomainList(List<UserGiftRedemptionJpaEntity> entities);
 }
+

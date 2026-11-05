@@ -20,3 +20,4 @@ public interface PointsLedgerRepository extends JpaRepository<PointsLedgerJpaEnt
 
     Optional<PointsLedgerJpaEntity> findByReferenceTypeAndReferenceId(String referenceType, String referenceId);
 }
+

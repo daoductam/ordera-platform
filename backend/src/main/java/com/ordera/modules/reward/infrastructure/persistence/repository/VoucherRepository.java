@@ -18,3 +18,4 @@ public interface VoucherRepository extends JpaRepository<VoucherJpaEntity, UUID>
 
     List<VoucherJpaEntity> findByTenantIdAndActiveAndValidUntilAfter(UUID tenantId, boolean active, Instant now);
 }
+

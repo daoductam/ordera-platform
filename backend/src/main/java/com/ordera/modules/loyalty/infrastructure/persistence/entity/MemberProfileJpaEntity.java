@@ -41,3 +41,4 @@ public class MemberProfileJpaEntity extends BaseTenantAuditEntity {
     @Column(name = "avatar_url")
     private String avatarUrl;
 }
+

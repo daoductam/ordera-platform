@@ -20,3 +20,4 @@ public class MemberStatusResponse {
     private int lifetimePoints;
     private TierUpgradeProgressResponse upgradeProgress;
 }
+

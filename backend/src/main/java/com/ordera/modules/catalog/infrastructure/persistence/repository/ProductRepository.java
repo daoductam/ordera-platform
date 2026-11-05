@@ -18,3 +18,4 @@ public interface ProductRepository extends JpaRepository<ProductJpaEntity, UUID>
 
     List<ProductJpaEntity> findByTenantId(UUID tenantId);
 }
+

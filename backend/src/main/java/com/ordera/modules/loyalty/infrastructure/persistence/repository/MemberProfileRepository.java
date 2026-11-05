@@ -17,3 +17,4 @@ public interface MemberProfileRepository extends JpaRepository<MemberProfileJpaE
 
     List<MemberProfileJpaEntity> findByTenantIdAndCurrentTierId(UUID tenantId, UUID currentTierId);
 }
+

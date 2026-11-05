@@ -12,3 +12,4 @@ public interface LoyaltyGiftRepository extends JpaRepository<LoyaltyGiftJpaEntit
 
     List<LoyaltyGiftJpaEntity> findByTenantIdAndActive(UUID tenantId, boolean active);
 }
+

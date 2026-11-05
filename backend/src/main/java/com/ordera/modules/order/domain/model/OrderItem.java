@@ -21,3 +21,4 @@ public class OrderItem {
     private BigDecimal itemTotal;
     private String specialInstruction;
 }
+

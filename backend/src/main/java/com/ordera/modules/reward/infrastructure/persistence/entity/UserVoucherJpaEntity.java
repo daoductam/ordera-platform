@@ -38,3 +38,4 @@ public class UserVoucherJpaEntity extends BaseTenantEntity {
     @Column(name = "used_at")
     private Instant usedAt;
 }
+
