@@ -138,3 +138,4 @@ File `V9__seed_demo_data_linn_sushi.sql` nạp sẵn bộ dữ liệu mẫu kh�
    - Voucher 1: `Voucher Name` (Giảm `100.00` NOK, Đơn tối thiểu `250.00` NOK, Đổi bằng `100 Points`).
    - Voucher 2: `Voucher Name` (Giảm `30%`, Đơn tối thiểu `0.00` NOK, Đổi bằng `1000 Points`).
    - Quà tặng: `Gift Name` (Cốc Tumbler màu hồng, Đổi bằng `100 Points`, Tồn kho `10 Pieces`).
+

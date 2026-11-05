@@ -131,3 +131,4 @@ CREATE TABLE points_ledger_y2027 PARTITION OF points_ledger
    ```sql
    ALTER TABLE points_ledger DETACH PARTITION points_ledger_y2025;
    ```
+

@@ -99,3 +99,4 @@ Phục vụ màn hình hỗ trợ khiếu nại điểm đơn hàng tại quầy
 #### Indexes & Constraints
 - `idx_support_claims_member`: (`member_id`, `status`)
 - `idx_support_claims_tenant_pending`: (`tenant_id`, `status`) WHERE `status = 'PENDING'`
+

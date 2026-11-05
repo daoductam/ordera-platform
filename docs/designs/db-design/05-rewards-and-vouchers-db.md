@@ -93,3 +93,4 @@ Lưu trữ việc thành viên đổi điểm nhận quà vật lý tại quầy
 #### Indexes & Constraints
 - `uq_gift_redemption_code`: UNIQUE (`redemption_code`)
 - `idx_gift_redemption_member`: (`member_id`, `status`)
+

@@ -56,3 +56,4 @@ Lưu vết các lượt gửi mã OTP (SMS/Email) để kiểm soát cooldown 12
 #### Indexes & Constraints
 - `idx_otp_recipient_time`: (`recipient`, `created_at` DESC)
 - `idx_otp_tenant_created`: (`tenant_id`, `created_at` DESC)
+

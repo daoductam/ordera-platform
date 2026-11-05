@@ -73,3 +73,4 @@ Lưu vết các topping, size đã chọn (Figma 06.06: Size L, Mango Popping, L
 | `modifier_group_name`| `VARCHAR(100)`| NO | | | Tên nhóm: `Size`, `Topping`, `Sweetness Level`, `Ice Level` |
 | `modifier_name`| `VARCHAR(100)` | NO | | | Tên lựa chọn: `Size L`, `Mango Popping`, `Less ice` |
 | `extra_price` | `NUMERIC(12,2)`| NO | `0.00` | | Giá phụ thu tại thời điểm đặt |
+

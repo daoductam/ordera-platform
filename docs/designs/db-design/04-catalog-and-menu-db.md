@@ -72,3 +72,4 @@ Danh sách các option bên trong nhóm modifier.
 | `name` | `VARCHAR(100)` | NO | | | Tên option (ví dụ: `Size L`, `Mango Popping`, `Strawberry Popping`, `Standard Ice`, `Less ice`) |
 | `extra_price` | `NUMERIC(12,2)`| NO | `0.00` | | Giá cộng thêm vào đơn (ví dụ: Size L cộng thêm `15.00` Kr, topping `10.00` Kr) |
 | `is_default` | `BOOLEAN` | NO | `false` | | Tùy chọn mặc định được tích sẵn |
+

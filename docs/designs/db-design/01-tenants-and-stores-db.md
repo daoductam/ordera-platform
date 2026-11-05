@@ -72,3 +72,4 @@ Quản lý số bàn phục vụ hình thức nhận món tại bàn (Figma Nhó
 #### Indexes & Constraints
 - `idx_store_tables_store`: (`store_id`, `table_number`)
 - `uq_store_tables_token`: UNIQUE (`qr_code_token`)
+
