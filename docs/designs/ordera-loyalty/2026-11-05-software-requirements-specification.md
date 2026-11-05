@@ -387,3 +387,4 @@ Bảng đối chiếu chuẩn giúp kỹ sư kiểm tra chéo: từ màn hình F
 ## 5. Ký duyệt & Hiệu lực Áp dụng (Sign-off & Governance)
 - Mọi Pull Request (PR) hoặc tác vụ sinh mã nguồn mới (Feature/Bug fix) **bắt buộc phải trích dẫn mã màn hình hoặc mã BR tương ứng trong tài liệu này**.
 - Khi phát hiện mâu thuẫn giữa code và tài liệu, mã nguồn phải được sửa để tuân thủ theo SRS này (trừ khi có tài liệu Architecture Amendment được phê duyệt bằng văn bản).
+
