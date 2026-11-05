@@ -37,7 +37,7 @@ sequenceDiagram
     Loyalty->>Profile: Truy vấn hồ sơ: Cấp bậc hiện tại (Silver), Lifetime Points (300)
     Loyalty->>Tier: Lấy tỷ lệ hoàn điểm của Silver (earn_points_rate = 1.0)
     
-    Loyalty->>Loyalty: Tính số điểm tích lũy: 177 Kr * 1.0 = 177 Points
+    Loyalty->>Loyalty: Tính số điểm tích lũy: Tiền hàng 167 Kr (sau trừ voucher) -> Tích lũy +170 Points
     Loyalty->>Profile: Tính số dư mới: Current = 120 + 170 = 290 | Lifetime = 300 + 170 = 470
     
     Loyalty->>Ledger: INSERT INTO points_ledger (TransactionType = ORDER_EARN, delta = +170, balance_after = 290)
@@ -63,7 +63,7 @@ sequenceDiagram
 - `current_points`: Điểm dùng để đổi voucher và quà tặng (sẽ giảm đi khi đổi).  
 - `lifetime_points`: Điểm cộng dồn vĩnh viễn, **chỉ tăng không giảm**, dùng làm căn cứ xét hạng thẻ. | Nếu không tìm thấy hồ sơ thành viên (khách vãng lai): Dừng quy trình, không tích điểm. |
 | **3** | Hệ thống | Xác định hệ số hoàn điểm của hạng thẻ hiện tại: Hạng Silver có hệ số $1.0$. Tính toán số điểm được nhận: | Backend Loyalty Engine | `LOY-01` | **BR-LOY-02 (Tỷ lệ Hoàn Điểm):**  
-$$\text{Points} = \lfloor \text{SubtotalAmount} \times \text{EarnRate} \rfloor$$  
+$$\text{Points} = \lfloor (\text{SubtotalAmount} - \text{DiscountAmount}) \times \text{EarnRate} \rfloor$$  
 *(Lưu ý: Tiền tip không được tính vào công thức tích điểm).* | Luôn làm tròn xuống số nguyên gần nhất (Floor rounding), không phát sinh điểm lẻ thập phân. |
 | **4** | Hệ thống | Thực hiện bút toán ghi sổ cái kép bất biến `points_ledger`: | PostgreSQL Database | `LOY-01` | **BR-LEDGER-01 (Bất biến Tuyệt đối):**  
 Tạo dòng mới với:  

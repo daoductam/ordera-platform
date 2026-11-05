@@ -5,7 +5,7 @@
 > **Hệ quản trị CSDL:** PostgreSQL 16 (Hỗ trợ JSONB, RLS, UUID, Range Partitioning)  
 > **Framework ORM & Migration:** Spring Data JPA 3.x, Hibernate 6, Flyway 10  
 > **Kiến trúc Cô lập:** Multi-Tenant Shared Database, Shared Schema với Row-Level Security (RLS)  
-> **Mục tiêu:** Cung cấp tài liệu kỹ thuật chuẩn xác, định nghĩa toàn diện 18 bảng dữ liệu, ràng buộc toàn vẹn, chiến lược index, cơ chế sổ cái bất biến và phân vùng dữ liệu để làm base triển khai code backend.
+> **Mục tiêu:** Cung cấp tài liệu kỹ thuật chuẩn xác, định nghĩa toàn diện 20 bảng dữ liệu nghiệp vụ chuẩn hóa, ràng buộc toàn vẹn, chiến lược index, cơ chế sổ cái bất biến và phân vùng dữ liệu để làm base triển khai code backend.
 
 ---
 

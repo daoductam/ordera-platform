@@ -5,6 +5,11 @@ Total time: 4 minutes
 
 # Architecture: Ordera Loyalty Program 2.0
 
+> [!WARNING]
+> **TÀI LIỆU LƯU TRỮ LỊCH SỬ (ARCHIVED HISTORICAL DRAFT):** Tài liệu này thuộc giai đoạn khảo sát ban đầu (2026-11-03).  
+> Kiến trúc hệ thống Enterprise Full-stack hoàn chỉnh (Clean Architecture 4 lớp, Polyglot Monorepo, RLS) đã được nâng cấp tại:  
+> 👉 [**`2026-11-04-enterprise-architecture.md`**](./2026-11-04-enterprise-architecture.md).
+
 ## Source
 - **Vision:** [2026-11-03-vision.md](file:///d:/vibe-code/orderaapp/docs/designs/ordera-loyalty/2026-11-03-vision.md)
 - **Requirements:** [2026-11-03-requirements.md](file:///d:/vibe-code/orderaapp/docs/designs/ordera-loyalty/2026-11-03-requirements.md)
