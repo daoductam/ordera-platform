@@ -151,3 +151,4 @@ Bảng đối chiếu đảm bảo mọi Luồng Nghiệp Vụ (BF) đều đư�
   5. `Diamond Member`: 2,000 - 3,999 pts $\rightarrow$ Hoàn điểm 2.0%
   6. `Ruby Member`: $\ge$ 4,000 pts $\rightarrow$ Hoàn điểm 2.5%
 - **BR-06 (An Toàn Phiên Kiosk):** Khi trạm Kiosk không nhận được tương tác chạm của khách hàng trong 60 giây, phiên làm việc phải tự động bị hủy và xóa trắng toàn bộ dữ liệu tạm (Start Over) để bảo mật thông tin khách hàng trước.
+

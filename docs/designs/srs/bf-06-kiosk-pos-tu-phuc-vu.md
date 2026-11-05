@@ -89,3 +89,4 @@ Không yêu cầu nhập mật khẩu hay OTP SMS tại quầy để đảm bả
 | **11** | Kiosk POS | Màn hình chuyển sang trạng thái Thành công (Bước 3: Success Screen):  
 - Hiển thị số thứ tự khổng lồ: `#A-08`  
 - Thông báo: *"Đặt đơn thành công! Vui lòng nhận phiếu in. Hệ thống tự động trở về trang chủ sau 5 giây."* | Kiosk Frontend | `KSK-03` | Sau đúng **5 giây đếm ngược**, Kiosk tự động gọi hàm `handleStartOver()` đưa màn hình về trạng thái chờ sẵn sàng đón khách tiếp theo. | Khách có thể chủ động bấm nút "Xong" để trở về màn hình chờ ngay lập tức mà không cần đợi 5 giây. |
+

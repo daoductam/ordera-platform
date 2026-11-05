@@ -75,3 +75,4 @@ sequenceDiagram
 3. Tổng tiền tip cho nhân viên.  
 4. Tổng số điểm thưởng đã phát hành (`ORDER_EARN`).  
 5. Tổng số điểm đã bị khách tiêu dùng (`VOUCHER_REDEEM`, `GIFT_REDEEM`). | Báo cáo cho phép xuất tệp Excel (`.xlsx`) hoặc tệp PDF đã ký số điện tử để gửi cho cơ quan thuế và bộ phận kế toán. |
+

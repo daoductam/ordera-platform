@@ -90,3 +90,4 @@ sequenceDiagram
 `UPDATE loyalty_gifts SET stock_quantity = stock_quantity - 1 WHERE id = ... AND stock_quantity > 0` | Nếu `stock_quantity <= 0`: Trả mã lỗi `409 GIFT_OUT_OF_STOCK` và không trừ điểm của khách. |
 | **9b** | Hệ thống | Trừ điểm, giảm tồn kho từ 10 xuống 9 chiếc và sinh mã nhận quà 8 ký tự duy nhất: `TUMB-8821`. | PostgreSQL Database | `REW-03` | Tạo bản ghi trong `user_gift_redemptions` với `status = 'PENDING'` kèm mã vạch Barcode/QR Code để nhân viên quầy quét. | Đảm bảo tính độc nhất của mã nhận quà bằng ràng buộc `UNIQUE (redemption_code)`. |
 | **10** | Thu ngân & Khách | Khách đến quầy thu ngân xuất trình mã `TUMB-8821`. Thu ngân đối soát trên POS và bấm "Xác nhận đã trao quà". | Cashier Terminal, Backend | `REW-04` | Chuyển trạng thái quà sang `status = 'CLAIMED'`, lưu thời gian `claimed_at = now()`. | Nếu mã đã bị dùng trước đó (`status = 'CLAIMED'`): Báo động đỏ "Mã quà tặng đã được nhận trước đó!". |
+

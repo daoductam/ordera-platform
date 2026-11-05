@@ -95,3 +95,4 @@ Một mã hóa đơn giấy chỉ được chấp nhận tạo khiếu nại 1 l
 | **10a** | Hệ thống | Gửi thông báo thành công: Tạo bản ghi trong `user_notifications` và gửi email thông báo:  
 *"Khiếu nại điểm cho hóa đơn POS-0891 đã được phê duyệt. Bạn đã được cộng +150 điểm vào tài khoản!"* | Notification Engine | `NTF-01` | Khách mở app PWA thấy điểm số nhảy lên ngay lập tức và xem được dòng biến động trong Lịch sử điểm. | Không có ngoại lệ. |
 | **10b** | Quản lý & Hệ thống | **Trường hợp Từ chối (Reject):** Quản lý chọn lý do: *"Hóa đơn mờ không rõ số tiền"* hoặc *"Hóa đơn đã được tích điểm trực tiếp tại quầy"*. | Web Portal, Notification Engine | `CLM-02`, `NTF-01` | Cập nhật `status = 'REJECTED'`, `reviewer_note = '...'`. Gửi email giải thích rõ ràng lý do cho khách hàng. | Khách hàng có thể đọc phản hồi của quản lý và được phép gửi lại khiếu nại mới nếu chụp lại ảnh rõ nét hơn. |
+
