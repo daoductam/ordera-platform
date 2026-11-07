@@ -75,6 +75,7 @@
       "activeOrdersCount": 1,
       "unreadNotificationsCount": 1
     },
+    "hasMissingPointsNotice": true,
     "createdAt": "2026-11-05T00:00:00Z"
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
@@ -82,6 +83,19 @@
 ```
 
 #### 3. Phản hồi Lỗi (RFC 7807)
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Chưa đăng nhập hoặc Token hết hạn (`401 Unauthorized`):**
 ```json
 {
@@ -165,6 +179,32 @@
 ```
 
 #### 4. Phản hồi Lỗi Chi tiết
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa xác thực danh tính (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Yêu cầu cần Access Token hợp lệ của hội viên.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Email đã được sử dụng bởi tài khoản khác trong cùng thương hiệu (`409 Conflict`):**
 ```json
 {
@@ -252,6 +292,32 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa xác thực danh tính (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Phiên xác thực hoặc token tạm thời không hợp lệ.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Thiếu thông tin bắt buộc (`400 Bad Request`):**
 ```json
 {
@@ -259,6 +325,19 @@
   "error": {
     "code": "MISSING_REQUIRED_FIELDS",
     "message": "Họ tên và email là thông tin bắt buộc để kích hoạt tài khoản.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Email đã được sử dụng bởi người dùng khác (`409 Conflict`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "EMAIL_ALREADY_EXISTS",
+    "message": "Địa chỉ email này đã liên kết với tài khoản thành viên khác trong thương hiệu.",
     "details": null
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
@@ -304,6 +383,32 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa xác thực danh tính (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Yêu cầu cần Access Token hợp lệ của hội viên.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Tệp vượt quá dung lượng cho phép (`413 Payload Too Large`):**
 ```json
 {
@@ -432,6 +537,20 @@
 }
 ```
 
+#### 3. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 4.6: Lịch sử Sổ cái Biến động Điểm (Points Ledger History)
@@ -505,6 +624,19 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Chưa đăng nhập (`401 Unauthorized`):**
 ```json
 {
@@ -542,6 +674,7 @@
 | `receiptCode` | `String` | Có | `@NotBlank`, `@Size(max=64)` | Mã hóa đơn in trên phiếu (vd: *RCP-8921-X*) |
 | `orderDate` | `LocalDate` | Có | Không quá 30 ngày | Ngày thanh toán trên hóa đơn |
 | `billAmount` | `BigDecimal` | Có | `@DecimalMin("1.00")` | Tổng số tiền đã thanh toán (NOK) |
+| `storeId` | `UUID` | Không | ID cửa hàng hợp lệ | Chi nhánh mua hàng để hỗ trợ đối soát tại quầy (vd: Linn Sushi Sentrum) |
 | `billPhotoUrl`| `String` | Không | URL ảnh tải lên | Đường dẫn ảnh chụp hóa đơn |
 | `note` | `String` | Không | Tối đa 500 ký tự | Ghi chú thêm cho nhân viên đối soát |
 
@@ -550,6 +683,7 @@
   "receiptCode": "RCP-8921-X",
   "orderDate": "2026-11-04",
   "billAmount": 350.00,
+  "storeId": "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
   "billPhotoUrl": "https://storage.ordera.no/claims/receipt-8921.jpg",
   "note": "Hóa đơn mua tại quầy Linn Sushi Sentrum lúc trưa 12h30 nhưng thu ngân chưa quét thẻ."
 }
@@ -566,6 +700,7 @@
     "claimId": "sc1ebc99-9c0b-4ef8-bb6d-6bb9bd380001",
     "receiptCode": "RCP-8921-X",
     "billAmount": 350.00,
+    "storeId": "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
     "status": "PENDING",
     "createdAt": "2026-11-05T20:45:00Z"
   },
@@ -574,6 +709,32 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để gửi yêu cầu khiếu nại điểm.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Mã hóa đơn này đã từng gửi khiếu nại hoặc đã tích điểm rồi (`409 Conflict`):**
 ```json
 {
@@ -601,3 +762,15 @@
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
 ```
+
+---
+
+## Ghi Chú Kỹ Thuật & Chuẩn Kế Toán Điểm Bất Biến (Immutable Points Ledger & Notes)
+
+1. **Nguyên Tắc Bất Biến Tuyệt Đối (Immutable Ledger Rule):**
+   - Tuyệt đối không cập nhật trực tiếp cột `current_points` hoặc `lifetime_points` trên bảng `member_profiles`.
+   - Mọi biến động điểm (tích điểm đơn hàng, đổi voucher, đổi quà, duyệt khiếu nại, thưởng thăng hạng) bắt buộc chèn một dòng mới vào bảng `points_ledger` kèm `reference_type` và `reference_id`.
+2. **Kỹ Thuật Phân Vùng PostgreSQL Declarative RANGE Partitioning:**
+   - Bảng `points_ledger` được phân vùng theo thời gian `created_at` theo từng năm (`points_ledger_y2026`, `points_ledger_y2027`...) nhằm đảm bảo tốc độ đọc/ghi tối ưu ngay cả khi khối lượng giao dịch tích điểm của chuỗi nhà hàng đạt hàng chục triệu bản ghi.
+3. **Mã Barcode Quét Tích Điểm Tại Quầy (POS / Kiosk):**
+   - Trường `barcodeToken` (ví dụ `ORD-MEM-97362748`) liên kết độc nhất với số điện thoại của hội viên, giúp nhân viên tại quầy hoặc Kiosk cảm ứng quét nhanh mã Barcode / QR Code hiển thị trên màn hình điện thoại khách để tích điểm ngay lập tức.

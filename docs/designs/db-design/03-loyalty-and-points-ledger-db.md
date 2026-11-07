@@ -2,7 +2,8 @@
 ## Ordera Multi-Tenant Loyalty & Ordering Platform
 
 > **Phân hệ Bậc Thẻ Thành Viên, Kế Toán Điểm Bất Biến & Khiếu Nại Điểm Sót**  
-> **Ánh xạ Frontend:** `ProfilePage.tsx`, `TiersModal.tsx`, `MissingPointsModal.tsx`  
+> **Ánh xạ Prototype:** `docs/prototype/4-ho-so-va-hang-thanh-vien/` (`04.01` đến `04.15`), `docs/prototype/5-thong-bao-va-ho-tro-diem/` (`05.01` đến `05.03`)  
+> **Ánh xạ Frontend:** `ProfilePage.tsx`, `TiersModal.tsx`, `MissingPointsClaimModal.tsx`, `AccountOverview.tsx`  
 > **File Migration:** `V3__create_loyalty_and_tiers.sql`, `V4__create_points_ledger.sql`  
 > **JPA Entities:** `TierDefinitionJpaEntity.java`, `MemberProfileJpaEntity.java`, `PointsLedgerJpaEntity.java`, `SupportClaimJpaEntity.java`
 
@@ -14,13 +15,13 @@ Lưu cấu hình chuẩn của 6 bậc thành viên trong Figma Nhóm 04 (New $\
 | Cột | Kiểu dữ liệu | Nullable | Mặc định | Ràng buộc | Chú thích chi tiết (Remark) |
 |---|---|---|---|---|---|
 | `id` | `UUID` | NO | `gen_random_uuid()` | PK | Khóa chính cấu hình bậc |
-| `tenant_id` | `UUID` | NO | | FK -> `tenants(id)` | Định danh thương hiệu sở hữu chính sách |
+| `tenant_id` | `UUID` | NO | | FK -> `tenants(id)` | Định danh thương hiệu sở hữu chính sách (Multi-tenancy) |
 | `tier_name` | `VARCHAR(32)` | NO | | | Tên cấp bậc: `New`, `Silver`, `Gold`, `Platinum`, `Diamond`, `Ruby` |
 | `tier_order` | `INT` | NO | | | Thứ tự thăng tiến: 1 (New), 2 (Silver), ..., 6 (Ruby) |
 | `min_points_required`| `INT` | NO | `0` | | Mốc điểm tích lũy tối thiểu để đạt hạng (0, 200, 400, 1000, 2000, 4000) |
 | `theme_color_hex` | `VARCHAR(16)`| NO | | | Mã màu thẻ Figma: New (`#1EB759`), Silver (`#00A3FF`), Gold (`#F5B800`), Platinum (`#FF5B4D`), Diamond (`#7C3AED`), Ruby (`#D9148E`) |
-| `earn_points_rate` | `NUMERIC(6,4)`| NO | `1.0000` | | Hệ số nhân tích điểm (ví dụ: Silver x1.0, Diamond x1.5, Ruby x2.0) |
-| `benefits_summary` | `JSONB` | YES | `'[]'` | | Danh sách đặc quyền của hạng thẻ lưu dạng JSON |
+| `earn_points_rate` | `NUMERIC(6,4)`| NO | `1.0000` | | Hệ số nhân tích điểm (ví dụ: Silver x1.2, Diamond x2.0, Ruby x2.5) |
+| `benefits_summary` | `JSONB` | YES | `'[]'` | | Danh sách đặc quyền của hạng thẻ lưu dạng JSON array |
 | `created_at` | `TIMESTAMPTZ` | NO | `now()` | | Thời gian tạo cấu hình |
 
 #### Indexes & Constraints
@@ -40,6 +41,7 @@ Lưu trữ thông tin điểm và cấp bậc hiện tại của khách (Figma 0
 | `current_tier_id` | `UUID` | NO | | FK -> `tier_definitions(id)` | Cấp bậc hiện tại của thành viên |
 | `current_points` | `INT` | NO | `0` | | Số điểm khả dụng có thể dùng để đổi quà/voucher (120 điểm) |
 | `lifetime_points`| `INT` | NO | `0` | | Tổng điểm tích luỹ trọn đời để xét hạng thẻ (300 điểm) |
+| `barcode_token` | `VARCHAR(64)` | YES | | UNIQUE | Chuỗi mã vạch định danh hội viên quét tại Kiosk/POS (vd: `ORD-MEM-97362748`) |
 | `date_of_birth` | `DATE` | YES | | | Ngày sinh nhật khách hàng (dùng để tặng quà sinh nhật: `23/08/2000`) |
 | `gender` | `VARCHAR(16)` | YES | | | Giới tính: `MALE`, `FEMALE`, `OTHER` |
 | `avatar_url` | `TEXT` | YES | | | Đường dẫn ảnh đại diện avatar |
@@ -48,6 +50,7 @@ Lưu trữ thông tin điểm và cấp bậc hiện tại của khách (Figma 0
 
 #### Indexes & Constraints
 - `uq_member_profiles_user`: UNIQUE (`user_id`)
+- `uq_member_profiles_barcode`: UNIQUE (`barcode_token`)
 - `idx_member_profiles_tier`: (`tenant_id`, `current_tier_id`)
 
 ---
@@ -79,15 +82,16 @@ Lưu trữ thông tin điểm và cấp bậc hiện tại của khách (Figma 0
 ---
 
 ### Bảng 3.4: `support_claims` (Khiếu nại Thiếu điểm - Claim Missing Points)
-Phục vụ màn hình hỗ trợ khiếu nại điểm đơn hàng tại quầy (Figma Nhóm 04 & 05: Missing Points Claim).
+Phục vụ màn hình hỗ trợ khiếu nại điểm đơn hàng tại quầy (Figma Nhóm 04 & 05: Missing Points Claim `05.03`).
 
 | Cột | Kiểu dữ liệu | Nullable | Mặc định | Ràng buộc | Chú thích chi tiết (Remark) |
 |---|---|---|---|---|---|
 | `id` | `UUID` | NO | `gen_random_uuid()` | PK | Khóa chính của ticket khiếu nại |
 | `tenant_id` | `UUID` | NO | | FK -> `tenants(id)` | Định danh thương hiệu |
+| `store_id` | `UUID` | YES | | FK -> `stores(id)` ON DELETE SET NULL | Chi nhánh phát sinh hóa đơn khiếu nại để đối soát nội bộ (vd: Linn Sushi Sentrum) |
 | `member_id` | `UUID` | NO | | FK -> `member_profiles(id)` | Thành viên gửi khiếu nại |
-| `receipt_code` | `VARCHAR(64)` | NO | | | Mã hóa đơn in trên phiếu tính tiền mà khách bị thiếu điểm |
-| `order_date` | `DATE` | NO | | | Ngày mua hàng trên hóa đơn |
+| `receipt_code` | `VARCHAR(64)` | NO | | | Mã hóa đơn in trên phiếu tính tiền mà khách bị thiếu điểm (vd: `RCP-8921-X`) |
+| `order_date` | `DATE` | NO | | | Ngày mua hàng trên hóa đơn (giới hạn trong 30 ngày) |
 | `bill_amount` | `NUMERIC(12,2)`| NO | | | Số tiền ghi trên hóa đơn |
 | `bill_photo_url`| `TEXT` | YES | | | Đường dẫn ảnh chụp hóa đơn khách upload đính kèm |
 | `status` | `VARCHAR(32)` | NO | `'PENDING'` | | Trạng thái duyệt: `PENDING`, `APPROVED`, `REJECTED` |
@@ -98,5 +102,19 @@ Phục vụ màn hình hỗ trợ khiếu nại điểm đơn hàng tại quầy
 
 #### Indexes & Constraints
 - `idx_support_claims_member`: (`member_id`, `status`)
+- `idx_support_claims_store`: (`store_id`, `status`)
 - `idx_support_claims_tenant_pending`: (`tenant_id`, `status`) WHERE `status = 'PENDING'`
 
+---
+
+## Tham Khảo DDL Flyway Mở Rộng (Migration Script Reference)
+
+```sql
+-- 1. Bổ sung barcode_token cho member_profiles để Kiosk/POS quét mã
+ALTER TABLE member_profiles ADD COLUMN IF NOT EXISTS barcode_token VARCHAR(64);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_member_profiles_barcode ON member_profiles(barcode_token);
+
+-- 2. Bổ sung store_id cho support_claims hỗ trợ quản lý chi nhánh đối soát
+ALTER TABLE support_claims ADD COLUMN IF NOT EXISTS store_id UUID REFERENCES stores(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_support_claims_store ON support_claims(store_id);
+```
