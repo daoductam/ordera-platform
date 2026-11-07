@@ -1,88 +1,52 @@
 # Phân hệ 03: Xác thực & Định danh API Specification
 ## Ordera Multi-Tenant Loyalty & Ordering Platform
 
-> **Phân hệ Đăng nhập, Gửi OTP SMS/Email, Đăng ký Thành viên & Quản lý Phiên (Auth & JWT)**  
+> **Phân hệ Đăng nhập không mật khẩu, OTP Đa kênh (SMS & Email), Đăng ký 2 bước & Quản lý Phiên (Auth & JWT)**  
+> **Ánh xạ Prototype:** `docs/prototype/2-dang-nhap-va-truy-cap-tai-khoan/` (`02.01` - `02.07`), `docs/prototype/3-dang-ky-va-xac-thuc-thanh-vien/` (`03.01` - `03.10`)  
 > **Ánh xạ Frontend:** `frontend/src/pages/AuthFlowPage.tsx`, `LoginView.tsx`, `OtpVerificationModal.tsx`, `RegisterView.tsx`  
 > **Bảng Database & Cache:** `users`, `otp_audit_logs`, `member_profiles`, `tier_definitions`, `Redis (OTP cache & Token Blacklist)`
 
 ---
 
-### API 3.1: Gửi Mã OTP Xác thực (Send OTP)
+### Danh sách Endpoint trong Phân hệ 03
+
+| STT | Endpoint | Method | Tên thao tác / Mục đích | Màn hình Prototype |
+|---|---|:---:|---|:---:|
+| 3.1 | `/api/v1/auth/otp/send` | `POST` | Gửi mã OTP đăng nhập qua SMS (Cooldown 120s) | `02.03` |
+| 3.2 | `/api/v1/auth/otp/verify` | `POST` | Xác thực mã OTP đăng nhập, cấp JWT, trả về cờ `isProfileComplete` | `02.04`, `02.05`, `02.07` |
+| 3.3 | `/api/v1/auth/register/otp/send` | `POST` | Gửi mã OTP đăng ký mới (Hỗ trợ chọn kênh Email OTP hoặc SMS OTP) | `03.03`, `03.04` |
+| 3.4 | `/api/v1/auth/register/otp/verify` | `POST` | Xác thực mã OTP đăng ký, khởi tạo tài khoản Member New (0 điểm) | `03.05`, `03.06`, `03.07`, `03.09` |
+| 3.5 | `/api/v1/auth/refresh-token` | `POST` | Cấp mới Access Token bằng Refresh Token | Toàn hệ thống |
+| 3.6 | `/api/v1/auth/logout` | `POST` | Đăng xuất, đưa token vào Redis Blacklist | `04.06` |
+
+---
+
+### API 3.1: Gửi Mã OTP Đăng nhập (Send Login OTP)
 
 - **HTTP Method:** `POST`
 - **URL Path:** `/api/v1/auth/otp/send`
-- **Operation ID:** `sendOtp`
-- **Mô tả:** Tiếp nhận SĐT (hoặc Email) của khách hàng, sinh ngẫu nhiên mã số bảo mật 6 chữ số, lưu vào Redis với TTL 120 giây (kèm cooldown 60 giây) và gửi tin nhắn SMS / Email qua cổng dịch vụ.
-- **Frontend Gọi tại:** `LoginView.tsx`
-- **Rate Limit:** Tối đa 3 lần / 10 phút trên cùng 1 SĐT / IP.
+- **Operation ID:** `sendLoginOtp`
+- **Mô tả:** Tiếp nhận SĐT (mặc định mã vùng `+47`), sinh ngẫu nhiên mã số 6 chữ số, lưu vào Redis với TTL 120 giây (kèm cooldown 120 giây) và gửi SMS qua cổng viễn thông.
+- **Màn hình Prototype:** `02.03`
 
-#### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Mẫu |
-|:---|:---|:---:|:---|
-| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
-| `Content-Type`| `String` | **Có** | `application/json` |
-
-#### 2. Request Body Schema
-| Trường | Kiểu | Bắt buộc | Ràng buộc & Validation | Mô tả |
-|:---|:---|:---:|:---|:---|
-| `channel` | `String` | Có | `SMS` hoặc `EMAIL` | Kênh gửi mã |
-| `recipient` | `String` | Có | SĐT E.164 (`^\+[1-9]\d{7,14}$`) hoặc chuẩn Email RFC 5322 | Số điện thoại (+4797362748) hoặc Email |
-| `purpose` | `String` | Không | `AUTH`, `REGISTER`, `PASSWORD_RESET` (Mặc định: `AUTH`) | Mục đích gửi mã |
-
+#### 1. Request Body Schema
 ```json
 {
   "channel": "SMS",
-  "recipient": "+4797362748",
-  "purpose": "AUTH"
+  "phoneNumber": "+4797362748"
 }
 ```
 
-#### 3. Phản hồi Thành công (200 OK)
-- **Status:** `200 OK`
-- **Body:**
+#### 2. Phản hồi Thành công (200 OK)
 ```json
 {
   "success": true,
   "message": "Mã xác thực OTP đã được gửi thành công qua tin nhắn SMS.",
   "data": {
-    "recipient": "+4797362748",
+    "phoneNumber": "+4797362748",
+    "maskedPhoneNumber": "** ***748",
     "channel": "SMS",
-    "cooldownSeconds": 120,
-    "resendAllowedAfterSeconds": 60
-  },
-  "timestamp": "2026-11-05T20:45:00.000Z"
-}
-```
-
-#### 4. Phản hồi Lỗi Chi tiết
-- **Số điện thoại sai định dạng E.164 (`422 Unprocessable Entity`):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_FAILED",
-    "message": "Dữ liệu đầu vào không hợp lệ.",
-    "details": [
-      {
-        "field": "recipient",
-        "rejectedValue": "097362748",
-        "message": "Số điện thoại phải tuân thủ định dạng quốc tế E.164 (bắt đầu bằng dấu +, ví dụ: +4797362748)"
-      }
-    ]
-  },
-  "timestamp": "2026-11-05T20:45:00.000Z"
-}
-```
-- **Spam gửi lại OTP khi chưa hết 60 giây Cooldown (`429 Too Many Requests`):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "OTP_COOLDOWN_ACTIVE",
-    "message": "Vui lòng đợi thêm 42 giây trước khi yêu cầu gửi lại mã OTP.",
-    "details": {
-      "retryAfterSeconds": 42
-    }
+    "cooldownSeconds": 120
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
@@ -90,49 +54,42 @@
 
 ---
 
-### API 3.2: Xác thực Mã OTP (Verify OTP)
+### API 3.2: Xác thực Mã OTP Đăng nhập (Verify Login OTP)
 
 - **HTTP Method:** `POST`
 - **URL Path:** `/api/v1/auth/otp/verify`
-- **Operation ID:** `verifyOtp`
-- **Mô tả:** Kiểm tra mã 6 chữ số người dùng nhập vào. Nếu đúng, kiểm tra tài khoản đã tồn tại chưa: nếu có thì trả về cặp JWT Token; nếu chưa thì trả về `isNewUser = true` để Frontend mở màn hình Đăng ký `03.01`.
-- **Frontend Gọi tại:** `OtpVerificationModal.tsx`
+- **Operation ID:** `verifyLoginOtp`
+- **Mô tả:** Kiểm tra mã 6 chữ số người dùng nhập vào (`387505`). Nếu đúng: Cấp JWT tokens và trả về cờ `isProfileComplete`:
+  - `isProfileComplete == true`: Đủ họ tên & email $\rightarrow$ Điều hướng về **04.03 Tổng quan tài khoản**.
+  - `isProfileComplete == false`: Thiếu họ tên/email $\rightarrow$ Điều hướng sang **04.04 Bổ sung thông tin**.
+- **Màn hình Prototype:** `02.04`, `02.05`, `02.06`, `02.07`
 
-#### 1. Request Body
-| Trường | Kiểu | Bắt buộc | Ràng buộc | Mô tả |
-|:---|:---|:---:|:---|:---|
-| `recipient` | `String` | Có | SĐT hoặc Email đã gửi ở bước trước | Khóa định danh nhận mã |
-| `code` | `String` | Có | Đúng 6 ký tự số (`^\d{6}$`) | Mã OTP 6 số |
-
+#### 1. Request Body Schema
 ```json
 {
-  "recipient": "+4797362748",
-  "code": "849201"
+  "phoneNumber": "+4797362748",
+  "otpCode": "387505"
 }
 ```
 
-#### 2. Phản hồi Thành công — Người dùng Đã có Tài khoản (200 OK)
-- **Status:** `200 OK`
-- **Body:**
+#### 2. Phản hồi Thành công (200 OK)
 ```json
 {
   "success": true,
-  "message": "Xác thực mã OTP thành công. Đăng nhập hoàn tất.",
+  "message": "Xác thực mã OTP thành công.",
   "data": {
     "isNewUser": false,
-    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkYXZpZC5uZ3V5ZW4iLCJ0ZW5hbnRJZCI6ImEwZWViYzk5LTljMGItNGVmOC1iYjZkLTZiYjliZDM4MGExMSIsInJvbGUiOiJDVVNUT01FUiIsImV4cCI6MTgwMTkwMDUwMH0...",
-    "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkYXZpZC5uZ3V5ZW4iLCJ0eXBlIjoicmVmcmVzaCIsImV4cCI6MTgwMjQxODkwMH0...",
+    "isProfileComplete": true,
+    "accessToken": "eyJhbGciOiJIUzUxMiJ9...",
+    "refreshToken": "eyJhbGciOiJIUzUxMiJ9...",
     "tokenType": "Bearer",
     "expiresIn": 86400,
     "user": {
       "id": "u1eebc99-9c0b-4ef8-bb6d-6bb9bd380001",
       "phoneNumber": "+4797362748",
-      "email": "david.nguyen@example.com",
       "fullName": "David Nguyen",
-      "role": "CUSTOMER",
-      "phoneVerified": true,
-      "emailVerified": true,
-      "tierName": "Gold",
+      "email": "david.nguyen@ordera.no",
+      "currentTier": "Silver",
       "currentPoints": 120,
       "lifetimePoints": 300
     }
@@ -141,58 +98,37 @@
 }
 ```
 
-#### 3. Phản hồi Thành công — Khách Mới Chưa có Hồ sơ (200 OK)
-- **Status:** `200 OK`
-- **Body:**
+---
+
+### API 3.3: Gửi Mã OTP Đăng ký Mới Đa Kênh (Send Registration OTP)
+
+- **HTTP Method:** `POST`
+- **URL Path:** `/api/v1/auth/register/otp/send`
+- **Operation ID:** `sendRegisterOtp`
+- **Mô tả:** Tiếp nhận toàn bộ thông tin đăng ký ở Bước 1 (`Your name *`, `Email *`, `Phone number *`, `Date of birth`), lưu hồ sơ tạm thời, sau đó gửi OTP theo kênh người dùng chọn ở Bước 2 (`EMAIL` hoặc `SMS`).
+- **Màn hình Prototype:** `03.01`, `03.02`, `03.03`, `03.04`
+
+#### 1. Request Body Schema
+```json
+{
+  "fullName": "ABY TRAN",
+  "email": "abytran@ordera.no",
+  "phoneNumber": "+4797362748",
+  "dateOfBirth": "2000-08-23",
+  "channel": "EMAIL"
+}
+```
+*(Hoặc `"channel": "SMS"`)*
+
+#### 2. Phản hồi Thành công (200 OK)
 ```json
 {
   "success": true,
-  "message": "Mã OTP chính xác. Số điện thoại chưa được đăng ký trong hệ thống.",
+  "message": "Mã xác thực đã được gửi tới địa chỉ email của bạn.",
   "data": {
-    "isNewUser": true,
-    "registrationToken": "reg_token_f92b7c6182e04f9812a",
-    "phoneNumber": "+4797362748",
-    "user": null
-  },
-  "timestamp": "2026-11-05T20:45:00.000Z"
-}
-```
-
-#### 4. Phản hồi Lỗi Chi tiết
-- **Mã OTP sai (`400 Bad Request`):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "OTP_INVALID",
-    "message": "Mã OTP không chính xác. Bạn còn 3 lần thử.",
-    "details": {
-      "remainingAttempts": 3
-    }
-  },
-  "timestamp": "2026-11-05T20:45:00.000Z"
-}
-```
-- **Mã OTP đã hết hạn 120 giây (`400 Bad Request`):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "OTP_EXPIRED",
-    "message": "Mã xác thực đã hết hạn hiệu lực. Vui lòng bấm gửi lại mã mới.",
-    "details": null
-  },
-  "timestamp": "2026-11-05T20:45:00.000Z"
-}
-```
-- **Nhập sai quá 5 lần — Khóa phiên (`429 Too Many Requests`):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "OTP_MAX_ATTEMPTS_EXCEEDED",
-    "message": "Bạn đã nhập sai mã xác thực quá 5 lần. Phiên xác thực này đã bị hủy vì lý do bảo mật.",
-    "details": null
+    "channel": "EMAIL",
+    "maskedDestination": "in** ***gmail.com",
+    "cooldownSeconds": 120
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
@@ -200,74 +136,48 @@
 
 ---
 
-### API 3.3: Đăng ký Thành viên Mới (Register Member)
+### API 3.4: Xác thực OTP Đăng ký & Khởi tạo Tài khoản (Verify Registration OTP)
 
 - **HTTP Method:** `POST`
-- **URL Path:** `/api/v1/auth/register`
-- **Operation ID:** `registerMember`
-- **Mô tả:** Khách hàng mới sau khi xác thực OTP thành công sẽ gửi thông tin cá nhân (Họ tên, Email, Ngày sinh, Giới tính) để mở tài khoản và cấp thẻ thành viên hạng `New Member` (0 điểm).
-- **Frontend Gọi tại:** `RegisterView.tsx`
+- **URL Path:** `/api/v1/auth/register/otp/verify`
+- **Operation ID:** `verifyRegisterOtp`
+- **Mô tả:** Xác thực mã OTP 6 số để kích hoạt tài khoản hội viên mới (`New Member`), gán 0 điểm ban đầu, trả về JWT và chuẩn bị điều hướng tới màn hình `03.10`.
+- **Màn hình Prototype:** `03.05`, `03.06`, `03.07`, `03.08`, `03.09`, `03.10`
 
 #### 1. Request Body Schema
-| Trường | Kiểu | Bắt buộc | Ràng buộc & Validation | Mô tả |
-|:---|:---|:---:|:---|:---|
-| `phoneNumber` | `String` | Có | Định dạng E.164 | SĐT đã xác thực OTP |
-| `fullName` | `String` | Có | `@NotBlank`, `@Size(min=2, max=128)` | Họ và tên khách hàng (vd: *David Nguyen*) |
-| `email` | `String` | Có | `@NotBlank`, `@Email` | Email liên hệ nhận hóa đơn điện tử |
-| `dateOfBirth` | `LocalDate` | Không | Định dạng `YYYY-MM-DD` | Ngày sinh để nhận ưu đãi sinh nhật |
-| `gender` | `String` | Không | `MALE`, `FEMALE`, `OTHER` | Giới tính |
-
 ```json
 {
   "phoneNumber": "+4797362748",
-  "fullName": "David Nguyen",
-  "email": "david.nguyen@example.com",
-  "dateOfBirth": "2000-08-23",
-  "gender": "MALE"
+  "email": "abytran@ordera.no",
+  "otpCode": "387505"
 }
 ```
 
 #### 2. Phản hồi Thành công (201 Created)
-- **Status:** `201 Created`
-- **Body:**
 ```json
 {
   "success": true,
-  "message": "Đăng ký thành viên thành công! Chào mừng bạn đến với Linn Sushi.",
+  "message": "Đăng ký thành viên thành công! Chào mừng ABY TRAN đến với Linn Sushi.",
   "data": {
     "accessToken": "eyJhbGciOiJIUzUxMiJ9...",
     "refreshToken": "eyJhbGciOiJIUzUxMiJ9...",
     "tokenType": "Bearer",
     "expiresIn": 86400,
     "user": {
-      "id": "u1eebc99-9c0b-4ef8-bb6d-6bb9bd380001",
+      "id": "u2eebc99-9c0b-4ef8-bb6d-6bb9bd380002",
+      "fullName": "ABY TRAN",
+      "email": "abytran@ordera.no",
       "phoneNumber": "+4797362748",
-      "email": "david.nguyen@example.com",
-      "fullName": "David Nguyen",
-      "role": "CUSTOMER"
+      "dateOfBirth": "2000-08-23"
     },
-    "memberProfile": {
-      "id": "m1eebc99-9c0b-4ef8-bb6d-6bb9bd380001",
+    "loyalty": {
       "tierName": "New",
-      "tierOrder": 1,
       "themeColorHex": "#1EB759",
       "currentPoints": 0,
-      "lifetimePoints": 0
+      "lifetimePoints": 0,
+      "pointsToNextTier": 200,
+      "nextTierName": "Silver"
     }
-  },
-  "timestamp": "2026-11-05T20:45:00.000Z"
-}
-```
-
-#### 3. Phản hồi Lỗi
-- **Số điện thoại hoặc Email đã tồn tại trong đại lý này (`409 Conflict`):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "USER_ALREADY_EXISTS",
-    "message": "Số điện thoại hoặc Email này đã được đăng ký tài khoản tại thương hiệu.",
-    "details": null
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
@@ -275,7 +185,7 @@
 
 ---
 
-### API 3.4: Làm Mới Token (Refresh Access Token)
+### API 3.5: Làm Mới Token (Refresh Access Token)
 
 - **HTTP Method:** `POST`
 - **URL Path:** `/api/v1/auth/refresh-token`
@@ -286,34 +196,14 @@
   "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkYXZpZC5uZ3V5ZW4iLCJ0eXBlIjoicmVmcmVzaCJ9..."
 }
 ```
-- **Response 200 OK:**
-```json
-{
-  "success": true,
-  "message": "Cấp mới Access Token thành công",
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkYXZpZC5uZ3V5ZW4iLCJleHAiOjE4MDE5ODAwMDB9...",
-    "expiresIn": 86400
-  },
-  "timestamp": "2026-11-05T20:45:00.000Z"
-}
-```
+- **Response 200 OK:** Trả về Access Token mới có thời hạn 24 giờ.
 
 ---
 
-### API 3.5: Đăng xuất & Hủy Phiên (Logout)
+### API 3.6: Đăng xuất & Thu Hồi Phiên (Logout)
 
 - **HTTP Method:** `POST`
 - **URL Path:** `/api/v1/auth/logout`
 - **Operation ID:** `logout`
-- **Mô tả:** Đưa token JWT hiện tại vào Blacklist trong Redis cho đến khi token tự hết hạn để ngăn chặn tái sử dụng.
-- **Headers:** `Authorization: Bearer <token>`
-- **Response 200 OK:**
-```json
-{
-  "success": true,
-  "message": "Đăng xuất thành công. Phiên làm việc đã bị hủy.",
-  "data": null,
-  "timestamp": "2026-11-05T20:45:00.000Z"
-}
-```
+- **Mô tả:** Đưa token JWT hiện tại vào Blacklist trong Redis và thu hồi Refresh Token.
+- **Màn hình Prototype:** `04.06` (Nút Logout dưới đáy trang)
