@@ -143,3 +143,4 @@ CREATE TABLE support_inquiries (
 
 CREATE INDEX idx_support_inquiries_status ON support_inquiries (tenant_id, status, created_at DESC);
 ```
+
