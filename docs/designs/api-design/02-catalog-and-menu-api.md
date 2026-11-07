@@ -27,13 +27,21 @@
 - **Operation ID:** `getCategoriesByStore`
 - **Mô tả:** Lấy danh sách các nhóm danh mục chính (*Popular, Maki, Nigiri, Drinks, Hot Food*) cùng danh sách nhóm con (*Fresh maki, Fried maki...*) phục vụ hiển thị thanh cuộn ngang và các nút pill lọc nhanh.
 - **Màn hình Prototype:** `01.06`, `01.07`
+- **Frontend Gọi tại:** `MenuScreen.tsx` (Horizontal Category Bar)
 
-#### 1. Path Parameters
+#### 1. Request Headers
+| Header | Kiểu | Bắt buộc | Mẫu |
+|:---|:---|:---:|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
+
+#### 2. Path Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
 |:---|:---|:---:|:---|
 | `storeId` | `UUID` | **Có** | ID chi nhánh cửa hàng |
 
-#### 2. Phản hồi Thành công (200 OK)
+#### 3. Phản hồi Thành công (200 OK)
+- **Status:** `200 OK`
+- **Body:**
 ```json
 {
   "success": true,
@@ -87,57 +95,76 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi
+- **Không tìm thấy Cửa hàng (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "STORE_NOT_FOUND",
+    "message": "Store with ID 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b99' does not exist.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
-### API 2.2: Toàn bộ Thực đơn Phân cấp theo Danh mục (Get Full Menu)
+### API 2.2: Cây Thực Đơn Đầy Đủ (Get Store Menu)
 
 - **HTTP Method:** `GET`
 - **URL Path:** `/api/v1/stores/{storeId}/menu`
-- **Operation ID:** `getFullStoreMenu`
-- **Mô tả:** Trả về cây thực đơn phân cấp hoàn chỉnh gồm các danh mục, nhóm con và toàn bộ món ăn bên trong. Hỗ trợ hiển thị giá khuyến mãi gạch bỏ (`originalPrice: 130.00`, `basePrice: 111.20 NOK`), nhãn `isPopular`, nhãn ăn kiêng dị ứng và nút thêm nhanh `[+]`.
+- **Operation ID:** `getStoreMenu`
+- **Mô tả:** Lấy toàn bộ cây danh mục và danh sách món ăn phân theo từng nhóm (Section List) hiển thị trên màn hình Menu (`01.06`, `01.07`).
 - **Màn hình Prototype:** `01.06`, `01.07`
 
-#### 1. Phản hồi Thành công (200 OK)
+#### 1. Request Headers
+| Header | Kiểu | Bắt buộc | Mẫu |
+|:---|:---|:---:|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
+
+#### 2. Path Parameters
+| Tham số | Kiểu | Bắt buộc | Mô tả |
+|:---|:---|:---:|:---|
+| `storeId` | `UUID` | **Có** | ID chi nhánh đang xem thực đơn |
+
+#### 3. Phản hồi Thành công (200 OK)
+- **Status:** `200 OK`
+- **Body:**
 ```json
 {
   "success": true,
-  "message": "Full store menu retrieved successfully",
+  "message": "Store menu retrieved successfully",
   "data": {
     "storeId": "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01",
-    "storeName": "Linn Sushi Sentrum",
-    "currency": "NOK",
     "categories": [
       {
-        "id": "c1eebc99-9c0b-4ef8-bb6d-6bb9bd380c01",
-        "name": "Maki",
+        "categoryId": "c1eebc99-9c0b-4ef8-bb6d-6bb9bd380c01",
+        "categoryName": "Maki",
         "subcategories": [
           {
-            "id": "sub2ebc9-9c0b-4ef8-bb6d-6bb9bd380s02",
-            "name": "Fried maki",
-            "description": "Fried maki description",
+            "subcategoryId": "sub1ebc9-9c0b-4ef8-bb6d-6bb9bd380s01",
+            "subcategoryName": "Fresh maki",
             "products": [
               {
                 "id": "d1eebc99-9c0b-4ef8-bb6d-6bb9bd380d01",
                 "name": "Laks Maki",
-                "description": "8 biter maki med laks og kremost. Velg mellom mango eller avokado...",
+                "description": "8 miếng cuộn cá hồi Na Uy tươi kèm bơ sáp và dưa chuột giòn",
                 "basePrice": 150.00,
-                "originalPrice": null,
                 "imageUrl": "https://storage.ordera.no/products/laks-maki.jpg",
                 "isPopular": true,
-                "available": true,
-                "dietaryTags": ["SEAFOOD", "CONTAINS_DAIRY"],
+                "isAvailable": true,
                 "hasModifiers": true
               },
               {
                 "id": "d2eebc99-9c0b-4ef8-bb6d-6bb9bd380d02",
                 "name": "Tuna Maki",
-                "description": "8 biter maki med tuna og kremost. Velg mellom mango eller avokado...",
-                "basePrice": 111.20,
-                "originalPrice": 130.00,
+                "description": "8 miếng cuộn cá ngừ đại dương với sốt cay đặc biệt",
+                "basePrice": 72.00,
                 "imageUrl": "https://storage.ordera.no/products/tuna-maki.jpg",
-                "isPopular": true,
-                "available": true,
-                "dietaryTags": ["SEAFOOD", "SPICY"],
+                "isPopular": false,
+                "isAvailable": true,
                 "hasModifiers": true
               }
             ]
@@ -152,18 +179,26 @@
 
 ---
 
-### API 2.3: Chi tiết Món ăn & Tùy chọn Modifiers (Get Product Modifiers)
+### API 2.3: Chi Tiết Món Ăn & Nhóm Tùy Chọn (Get Product Modifiers)
 
 - **HTTP Method:** `GET`
 - **URL Path:** `/api/v1/products/{productId}/modifiers`
 - **Operation ID:** `getProductModifiers`
-- **Mô tả:** Lấy toàn bộ các nhóm tùy chọn (Size, Topping, Mức ngọt, Mức đá) của món ăn phục vụ hiển thị Modal chi tiết hoặc chỉnh sửa món trong giỏ hàng.
+- **Mô tả:** Lấy danh sách các nhóm tùy chọn (Size, Topping, Mức ngọt, Mức đá) khi khách hàng chạm vào một món ăn trong danh sách để mở Modal tùy biến (`01.06`, `06.06`).
+- **Màn hình Prototype:** `01.06`, `06.06`
 
-#### 1. Phản hồi Thành công (200 OK)
+#### 1. Path Parameters
+| Tham số | Kiểu | Bắt buộc | Mô tả |
+|:---|:---|:---:|:---|
+| `productId` | `UUID` | **Có** | ID của món ăn |
+
+#### 2. Phản hồi Thành công (200 OK)
+- **Status:** `200 OK`
+- **Body:**
 ```json
 {
   "success": true,
-  "message": "Product modifier groups retrieved successfully",
+  "message": "Product modifiers retrieved successfully",
   "data": {
     "productId": "d1eebc99-9c0b-4ef8-bb6d-6bb9bd380d01",
     "productName": "Aurora",
@@ -217,6 +252,20 @@
 }
 ```
 
+#### 3. Phản hồi Lỗi
+- **Không tìm thấy Món ăn (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "PRODUCT_NOT_FOUND",
+    "message": "Product with ID 'd1eebc99-9c0b-4ef8-bb6d-6bb9bd380d99' does not exist.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 2.4: Banner Khuyến mãi Tiếp thị (Get Promotion Banners)
@@ -225,8 +274,19 @@
 - **URL Path:** `/api/v1/stores/{storeId}/promotions/banners`
 - **Operation ID:** `getPromotionBanners`
 - **Mô tả:** Lấy danh sách banner chiến dịch tiếp thị kích hoạt tại chi nhánh (như *"Summer Sales: 20% Off"* trong prototype `01.06`, `01.07`) hiển thị phía trên danh mục món ăn.
+- **Màn hình Prototype:** `01.06`, `01.07`
 
-#### 1. Phản hồi Thành công (200 OK)
+#### 1. Request Headers
+| Header | Kiểu | Bắt buộc | Mẫu |
+|:---|:---|:---:|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
+
+#### 2. Path Parameters
+| Tham số | Kiểu | Bắt buộc | Ví dụ |
+|:---|:---|:---:|:---|
+| `storeId` | `UUID` | **Có** | `b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01` |
+
+#### 3. Phản hồi Thành công (200 OK)
 ```json
 {
   "success": true,
@@ -255,13 +315,24 @@
 - **URL Path:** `/api/v1/stores/{storeId}/products/search`
 - **Operation ID:** `searchStoreProducts`
 - **Mô tả:** Tìm kiếm món ăn theo từ khóa nhập vào khi người dùng chạm vào icon kính lúp trên thanh điều hướng (`01.06`).
+- **Màn hình Prototype:** `01.06`
 
-#### 1. Query Parameters
+#### 1. Request Headers
+| Header | Kiểu | Bắt buộc | Mẫu |
+|:---|:---|:---:|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
+
+#### 2. Path Parameters
+| Tham số | Kiểu | Bắt buộc | Ví dụ |
+|:---|:---|:---:|:---|
+| `storeId` | `UUID` | **Có** | `b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01` |
+
+#### 3. Query Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
 |:---|:---|:---:|:---|
 | `query` | `String` | Có | Từ khóa tìm kiếm (vd: `maki`, `salmon`) |
 
-#### 2. Phản hồi Thành công (200 OK)
+#### 4. Phản hồi Thành công (200 OK)
 ```json
 {
   "success": true,

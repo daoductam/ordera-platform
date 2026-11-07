@@ -21,7 +21,7 @@
 
 ---
 
-### API 1.1: Lấy Thông tin Thương hiệu Hiện tại (Get Current Tenant)
+### API 1.1: Cấu hình Thương hiệu Hiện tại (Get Current Tenant)
 
 - **HTTP Method:** `GET`
 - **URL Path:** `/api/v1/tenants/current`
@@ -29,14 +29,17 @@
 - **Mô tả:** Lấy thông tin cấu hình thương hiệu (tên đại lý, logo, slogan, mã màu chủ đạo, hotline, chính sách điểm) phục vụ việc render giao diện động (Dynamic Theming) ở Frontend PWA.
 - **Quyền hạn truy cập:** `PUBLIC` (Khách vãng lai, Thành viên, Quầy Kiosk)
 - **Frontend Gọi tại:** `Navbar.tsx`, `MobileContainer.tsx`, `DrawerMenu.tsx`
+- **Màn hình Prototype:** `01.01`, `01.02`
 
 #### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Mặc định / Mẫu | Mô tả |
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
 |:---|:---|:---:|:---|:---|
 | `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID của thương hiệu (Linn Sushi) |
 | `Accept` | `String` | Không | `application/json` | Định dạng dữ liệu |
 
 #### 2. Phản hồi Thành công (200 OK)
+- **Status:** `200 OK`
+- **Body:**
 ```json
 {
   "success": true,
@@ -50,13 +53,36 @@
     "primaryColor": "#F5B800",
     "secondaryColor": "#1E293B",
     "status": "ACTIVE",
-    "metadata": {
-      "hotline": "(+47) 22 33 44 55",
-      "supportEmail": "info@linnsushi.no",
-      "defaultCurrency": "NOK",
-      "vatIncludedRate": 15.00
-    },
-    "createdAt": "2026-11-05T00:00:00Z"
+    "currency": "NOK",
+    "defaultVatRate": 0.1500,
+    "supportPhone": "+4722334455",
+    "supportEmail": "contact@linnsushi.no"
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+#### 3. Phản hồi Lỗi (RFC 7807)
+- **Trường hợp thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Required request header 'X-Tenant-ID' is missing.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+- **Trường hợp không tìm thấy Tenant (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_NOT_FOUND",
+    "message": "No active tenant found with ID 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'.",
+    "details": null
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
@@ -69,25 +95,27 @@
 - **HTTP Method:** `GET`
 - **URL Path:** `/api/v1/stores`
 - **Operation ID:** `listStores`
-- **Mô tả:** Lấy danh sách các điểm bán / chi nhánh của thương hiệu theo thành phố, tọa độ GPS hoặc hình thức phục vụ (Takeaway, Dine In, Delivery).
-- **Màn hình Prototype:** `01.02`, `01.04`, `01.08`, `01.09`
+- **Mô tả:** Lấy danh sách các điểm bán / chi nhánh của thương hiệu theo thành phố hoặc vị trí tọa độ GPS, phục vụ màn hình Khám phá cửa hàng (`01.02`, `01.04`, `01.08`). Hỗ trợ bộ lọc hình thức nhận món (`DINE_IN`, `TAKEAWAY`, `DELIVERY`).
+- **Quyền hạn truy cập:** `PUBLIC`
+- **Frontend Gọi tại:** `StoreDiscoveryPage.tsx`, `RestaurantList.tsx`
+- **Màn hình Prototype:** `01.02`, `01.04`, `01.08`
 
 #### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Ví dụ |
+| Header | Kiểu | Bắt buộc | Mẫu |
 |:---|:---|:---:|:---|
 | `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
-| `Authorization` | `String` | Không | `Bearer ...` (Dùng để nhận biết cửa hàng yêu thích của user) |
 
 #### 2. Query Parameters
-| Tham số | Kiểu | Bắt buộc | Mặc định | Mô tả & Ràng buộc |
-|:---|:---|:---:|:---|:---|
-| `fulfillmentType` | `String` | Không | `null` | Lọc theo: `DINE_IN`, `TAKEAWAY`, `DELIVERY` |
-| `status` | `String` | Không | `ALL` | `OPEN`, `CLOSED`, `ALL` |
-| `latitude` | `BigDecimal` | Không | `null` | Vĩ độ GPS người dùng để tính `distanceKm` |
-| `longitude` | `BigDecimal` | Không | `null` | Kinh độ GPS người dùng |
-| `city` | `String` | Không | `null` | Lọc theo thành phố (vd: `Oslo`, `Bergen`) |
+| Tham số | Kiểu | Bắt buộc | Mặc định | Mô tả |
+|:---|:---|:---:|:---:|:---|
+| `keyword` | `String` | Không | `null` | Từ khóa tìm theo tên chi nhánh / đường phố |
+| `fulfillmentType` | `String` | Không | `ALL` | Bộ lọc: `ALL`, `DINE_IN`, `TAKEAWAY`, `DELIVERY` |
+| `latitude` | `Double` | Không | `null` | Tọa độ vĩ độ người dùng (để tính khoảng cách km) |
+| `longitude`| `Double` | Không | `null` | Tọa độ kinh độ người dùng |
 
 #### 3. Phản hồi Thành công (200 OK)
+- **Status:** `200 OK`
+- **Body:**
 ```json
 {
   "success": true,
@@ -96,15 +124,16 @@
     {
       "id": "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01",
       "name": "Linn Sushi Sentrum",
-      "coverImageUrl": "https://storage.ordera.no/stores/sentrum-cover.jpg",
       "address": "Prinsens gate 10C, 0153 Oslo",
       "city": "Oslo",
       "latitude": 59.9114910,
       "longitude": 10.7482320,
-      "distanceKm": 0.45,
+      "coverImageUrl": "https://storage.ordera.no/stores/sentrum-cover.jpg",
+      "logoUrl": "https://storage.ordera.no/stores/sentrum-logo.png",
       "phoneNumber": "+4722334455",
       "openingHoursText": "Open 9:00 - 23:00",
       "isOpen": true,
+      "distanceKm": 0.35,
       "preparingTimeMinutes": 15,
       "supportedFulfillmentTypes": ["TAKEAWAY", "DINE_IN", "DELIVERY"],
       "isFavorite": true
@@ -112,16 +141,17 @@
     {
       "id": "b2eebc99-9c0b-4ef8-bb6d-6bb9bd380b02",
       "name": "Linn Sushi Majorstuen",
-      "coverImageUrl": "https://storage.ordera.no/stores/majorstuen-cover.jpg",
-      "address": "Valkyriegata 15, 0366 Oslo",
+      "address": "Bogstadveien 45, 0366 Oslo",
       "city": "Oslo",
-      "latitude": 59.9298210,
-      "longitude": 10.7163820,
-      "distanceKm": 2.10,
+      "latitude": 59.9272300,
+      "longitude": 10.7162900,
+      "coverImageUrl": "https://storage.ordera.no/stores/majorstuen-cover.jpg",
+      "logoUrl": "https://storage.ordera.no/stores/majorstuen-logo.png",
       "phoneNumber": "+4722334456",
-      "openingHoursText": "Closed · Open 13:00 Fri",
-      "isOpen": false,
-      "preparingTimeMinutes": 15,
+      "openingHoursText": "Open 11:00 - 22:00",
+      "isOpen": true,
+      "distanceKm": 2.10,
+      "preparingTimeMinutes": 20,
       "supportedFulfillmentTypes": ["TAKEAWAY", "DELIVERY"],
       "isFavorite": false
     }
@@ -132,19 +162,23 @@
 
 ---
 
-### API 1.3: Chi tiết Chi nhánh Cửa hàng (Get Store Details)
+### API 1.3: Chi tiết Cửa hàng & Trạng thái Thực đơn (Get Store Details)
 
 - **HTTP Method:** `GET`
 - **URL Path:** `/api/v1/stores/{storeId}`
 - **Operation ID:** `getStoreById`
-- **Mô tả:** Lấy toàn bộ thông tin chi tiết của một chi nhánh phục vụ hiển thị Modal xác nhận chọn cửa hàng (`01.05 - Just making sure...`).
+- **Mô tả:** Lấy thông tin chi tiết một điểm bán gồm giờ hoạt động, địa chỉ, số hotline, thời gian chuẩn bị món dự kiến và các hình thức nhận phục vụ popup xác nhận *"Just making sure..."* tại màn hình `01.05`.
+- **Màn hình Prototype:** `01.05`
+- **Frontend Gọi tại:** `StoreDiscoveryPage.tsx`, `LocationConfirmModal.tsx`
 
 #### 1. Path Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
 |:---|:---|:---:|:---|
-| `storeId` | `UUID` | **Có** | ID định danh chi nhánh cửa hàng |
+| `storeId` | `UUID` | **Có** | ID duy nhất của cửa hàng |
 
 #### 2. Phản hồi Thành công (200 OK)
+- **Status:** `200 OK`
+- **Body:**
 ```json
 {
   "success": true,
@@ -168,15 +202,30 @@
 }
 ```
 
+#### 3. Phản hồi Lỗi
+- **Không tìm thấy Cửa hàng (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "STORE_NOT_FOUND",
+    "message": "Store with ID 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b99' does not exist in this tenant.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
-### API 1.4: Quét Mã QR Nhận diện Bàn ăn (Resolve Table by QR Code)
+### API 1.4: Quét Mã QR Bàn Ăn (Resolve Store Table by QR)
 
 - **HTTP Method:** `GET`
 - **URL Path:** `/api/v1/stores/tables/qr/{qrToken}`
 - **Operation ID:** `resolveTableByQrToken`
 - **Mô tả:** Khi khách hàng ngồi tại bàn và dùng camera quét mã QR dán trên bàn, API này giải mã token thành số bàn (`Table 05`) và chi nhánh cửa hàng tương ứng để tự động gán vào giỏ hàng.
 - **Màn hình Prototype:** `01.01`, `06.07`
+- **Frontend Gọi tại:** `StoreDiscoveryPage.tsx`, `CheckoutView.tsx`
 
 #### 1. Path Parameters
 | Tham số | Kiểu | Bắt buộc | Ví dụ |
@@ -189,12 +238,26 @@
   "success": true,
   "message": "Table resolved successfully",
   "data": {
-    "tableId": "t1eebc99-9c0b-4ef8-bb6d-6bb9bd380t05",
     "storeId": "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01",
     "storeName": "Linn Sushi Sentrum",
+    "tableId": "tb1ebc99-9c0b-4ef8-bb6d-6bb9bd380005",
     "tableNumber": "Table 05",
-    "seatingCapacity": 4,
-    "occupied": false
+    "zone": "Tầng 1 - Khu trong nhà",
+    "capacity": 4
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+#### 3. Phản hồi Lỗi
+- **Mã QR không hợp lệ hoặc bị rách/hết hạn (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_QR_TOKEN",
+    "message": "Mã QR bàn ăn không hợp lệ hoặc không thuộc chi nhánh này.",
+    "details": null
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
@@ -208,6 +271,7 @@
 - **URL Path:** `/api/v1/stores/fulfillment-options`
 - **Operation ID:** `getFulfillmentOptions`
 - **Mô tả:** Lấy danh sách các hình thức nhận món được cấu hình cho tenant (Dine In, Takeaway, Delivery) và các tùy chọn thời gian (As soon as possible / Schedule) phục vụ hiển thị Bottom Sheet `01.01` và `01.03`.
+- **Màn hình Prototype:** `01.01`, `01.03`
 
 #### 1. Request Headers
 | Header | Kiểu | Bắt buộc | Ví dụ |
@@ -271,6 +335,7 @@
 - **URL Path:** `/api/v1/stores/{storeId}/favorite`
 - **Operation ID:** `toggleStoreFavorite`
 - **Mô tả:** Bật/tắt biểu tượng trái tim đỏ trên thẻ cửa hàng (`01.02`, `01.04`). Yêu cầu người dùng đã đăng nhập.
+- **Màn hình Prototype:** `01.02`, `01.04`
 
 #### 1. Request Headers
 | Header | Kiểu | Bắt buộc | Mẫu |
@@ -278,7 +343,12 @@
 | `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
 | `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` |
 
-#### 2. Phản hồi Thành công (200 OK)
+#### 2. Path Parameters
+| Tham số | Kiểu | Bắt buộc | Mô tả |
+|:---|:---|:---:|:---|
+| `storeId` | `UUID` | **Có** | ID chi nhánh muốn lưu vào danh sách yêu thích |
+
+#### 3. Phản hồi Thành công (200 OK)
 ```json
 {
   "success": true,
@@ -286,6 +356,20 @@
   "data": {
     "storeId": "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01",
     "isFavorite": true
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+#### 4. Phản hồi Lỗi
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để lưu chi nhánh vào danh sách yêu thích.",
+    "details": null
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
 }

@@ -90,15 +90,15 @@
 
 ## 4. Bảng Tổng hợp Ma trận Endpoint & Ánh xạ Prototype
 
-Hệ thống cung cấp đầy đủ 45 API endpoints chuyên biệt, tương thích hoàn toàn với 73 màn hình Prototype trong thư mục [`docs/prototype/`](../prototype/):
+Hệ thống cung cấp đầy đủ 55 API endpoints chuyên biệt, tương thích hoàn toàn với 73 màn hình Prototype trong thư mục [`docs/prototype/`](../prototype/):
 
 | Phân hệ | Tài liệu API Chi tiết | Số lượng API | Các chức năng nghiệp vụ trọng tâm | Màn hình Prototype Ánh xạ |
 |---|---|:---:|---|:---:|
 | **01** | [`01-tenant-and-store-api.md`](./01-tenant-and-store-api.md) | 6 | Thông tin thương hiệu, Tùy chọn nhận hàng, Danh sách cửa hàng kèm giờ mở/đóng, Popup xác nhận chi nhánh, Quét mã QR số bàn, Yêu thích cửa hàng | `01.01` đến `01.09` |
 | **02** | [`02-catalog-and-menu-api.md`](./02-catalog-and-menu-api.md) | 5 | Danh mục chính & nhóm con (Subcategory pills), Menu cuộn phân cấp kèm giá gạch bỏ, Tùy chọn Modifiers (Size, Toppings, Đá, Đường), Banner marketing Summer Sales, Tìm kiếm món | `01.06`, `01.07` |
 | **03** | [`03-auth-and-identity-api.md`](./03-auth-and-identity-api.md) | 6 | Đăng nhập OTP SĐT, Cờ phân nhánh `isProfileComplete`, Đăng ký thành viên 2 bước, Tùy chọn kênh OTP (SMS hoặc Email), Cấp & làm mới JWT, Đăng xuất | `02.01` đến `02.07`, `03.01` đến `03.10` |
-| **04** | [`04-loyalty-and-tier-api.md`](./04-loyalty-and-tier-api.md) | 7 | Hồ sơ tổng quan, Bộ đếm huy hiệu đỏ trên các ô tác vụ, Cập nhật thông tin cá nhân, Hoàn thiện hồ sơ mới, Đổi avatar camera, Bảng cấu hình 6 hạng thẻ (`New` $\rightarrow$ `Ruby`), Sổ cái điểm | `04.01` đến `04.15` |
-| **05** | [`05-reward-and-voucher-api.md`](./05-reward-and-voucher-api.md) | 10 | Ví cá nhân My Rewards (Voucher & Quà tặng), Kho đổi thưởng bằng điểm (Get More Rewards: 100 NOK, -30%, Cốc tumbler), Đổi thưởng trừ điểm, Ưu đãi đủ điều kiện trong Checkout, Nhập mã tay, Áp dụng/Gỡ bỏ voucher & quà | `07.01` đến `07.08`, `08.01` đến `08.12` |
+| **04** | [`04-loyalty-and-tier-api.md`](./04-loyalty-and-tier-api.md) | 7 | Hồ sơ tổng quan, Bộ đếm huy hiệu đỏ trên các ô tác vụ, Cập nhật thông tin cá nhân, Hoàn thiện hồ sơ mới, Đổi avatar camera, Bảng cấu hình 6 hạng thẻ (`New` $\rightarrow$ `Ruby`), Sổ cái điểm, Khiếu nại thiếu điểm hóa đơn | `04.01` đến `04.15`, `05.03` |
+| **05** | [`05-reward-and-voucher-api.md`](./05-reward-and-voucher-api.md) | 11 | Ví cá nhân My Rewards (Voucher & Quà tặng), Kho đổi thưởng bằng điểm (Get More Rewards: 100 NOK, Cốc tumbler), Đổi thưởng trừ điểm, Đổi quà hiện vật, Bộ đếm huy hiệu đỏ ví, Ưu đãi đủ điều kiện trong Checkout, Nhập mã tay qua bàn phím ảo, Áp dụng/Gỡ bỏ voucher & quà | `07.01` đến `07.08`, `08.01` đến `08.12` |
 | **06** | [`06-order-and-checkout-api.md`](./06-order-and-checkout-api.md) | 9 | Chi tiết giỏ hàng, Cập nhật số lượng/tùy chọn, Ghi chú đơn (0/200 chars), Dự toán Checkout (VAT 15%, Tips, +170 pts), Đặt hàng Vipps/Card, Lịch sử phân tab (Active & Past), Đặt lại đơn cũ 1-click (Reorder), Gửi biên nhận E-Receipt PDF qua Email | `06.01` đến `06.10` |
 | **07** | [`07-kiosk-pos-api.md`](./07-kiosk-pos-api.md) | 5 | Chế độ Kiosk màn hình chạm toàn màn hình: Nhận diện SĐT hội viên, Tích điểm nhanh tại quầy không cần đặt món, Kiosk Self-checkout, Tự động reset màn hình chờ sau 60s, Cấu hình thiết bị | Kiosk POS Mode |
 | **08** | [`08-notification-api.md`](./08-notification-api.md) | 6 | Số lượng thông báo chưa đọc (Huy hiệu đỏ trên quả chuông), Danh sách thông báo phân tab (`Messages` & `News`), Chi tiết thông báo banner đồ ăn, Đánh dấu đã đọc, Gửi biểu mẫu tra cứu/khiếu nại thiếu điểm (*Missing Your Points?*) | `05.01`, `05.02`, `05.03` |
