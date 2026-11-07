@@ -44,12 +44,12 @@ ON CONFLICT (id) DO NOTHING;
 -- 4. 6 Tier Definitions (New, Silver, Gold, Platinum, Diamond, Ruby)
 INSERT INTO tier_definitions (id, tenant_id, tier_name, tier_order, min_points_required, theme_color_hex, earn_points_rate, benefits_summary)
 VALUES
-    ('c1111111-1111-1111-1111-111111111111', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'New', 1, 0, '#1EB759', 1.0000, '["Tích 1 điểm mỗi 10 NOK chi tiêu"]'::jsonb),
-    ('c2222222-2222-2222-2222-222222222222', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Silver', 2, 200, '#00A3FF', 1.0000, '["Tích 1 điểm mỗi 10 NOK", "Ưu đãi sinh nhật"]'::jsonb),
-    ('c3333333-3333-3333-3333-333333333333', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Gold', 3, 400, '#F5B800', 1.2000, '["Tích x1.2 điểm", "Miễn phí topping", "Quà sinh nhật"]'::jsonb),
-    ('c4444444-4444-4444-4444-444444444444', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Platinum', 4, 1000, '#FF5B4D', 1.5000, '["Tích x1.5 điểm", "Voucher độc quyền", "Hỗ trợ ưu tiên"]'::jsonb),
-    ('c5555555-5555-5555-5555-555555555555', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Diamond', 5, 2000, '#7C3AED', 1.8000, '["Tích x1.8 điểm", "Miễn phí đồ uống hàng tháng", "Quà tặng VIP"]'::jsonb),
-    ('c6666666-6666-6666-6666-666666666666', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Ruby', 6, 4000, '#D9148E', 2.0000, '["Tích x2.0 điểm", "Bàn VIP ưu tiên", "Lời mời sự kiện Tasting riêng"]'::jsonb)
+    ('c1111111-1111-1111-1111-111111111111', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'New', 1, 0, '#1EB759', 1.0000, '["Tích 1 điểm mỗi 10 NOK chi tiêu (1.0%)"]'::jsonb),
+    ('c2222222-2222-2222-2222-222222222222', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Silver', 2, 200, '#00A3FF', 1.2000, '["Tích x1.2 điểm (1.2%)", "Ưu đãi sinh nhật"]'::jsonb),
+    ('c3333333-3333-3333-3333-333333333333', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Gold', 3, 400, '#F5B800', 1.5000, '["Tích x1.5 điểm (1.5%)", "Miễn phí topping", "Quà sinh nhật"]'::jsonb),
+    ('c4444444-4444-4444-4444-444444444444', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Platinum', 4, 1000, '#FF5B4D', 1.8000, '["Tích x1.8 điểm (1.8%)", "Voucher độc quyền", "Hỗ trợ ưu tiên"]'::jsonb),
+    ('c5555555-5555-5555-5555-555555555555', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Diamond', 5, 2000, '#7C3AED', 2.0000, '["Tích x2.0 điểm (2.0%)", "Miễn phí đồ uống hàng tháng", "Quà tặng VIP"]'::jsonb),
+    ('c6666666-6666-6666-6666-666666666666', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Ruby', 6, 4000, '#D9148E', 2.5000, '["Tích x2.5 điểm (2.5%)", "Bàn VIP ưu tiên", "Lời mời sự kiện Tasting riêng"]'::jsonb)
 ON CONFLICT (tenant_id, tier_name) DO NOTHING;
 
 -- 5. Users: David Nguyen & ABY TRAN

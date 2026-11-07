@@ -5,6 +5,11 @@ Total time: 4 minutes
 
 # Contracts: Ordera Loyalty Program 2.0
 
+> [!WARNING]
+> **TÀI LIỆU LƯU TRỮ LỊCH SỬ (ARCHIVED HISTORICAL DRAFT):** Tài liệu này thuộc giai đoạn khảo sát ban đầu (2026-11-03).  
+> Toàn bộ hợp đồng API và CSDL chuẩn Enterprise (có bắt buộc `X-Tenant-ID` và chuẩn lỗi RFC 7807) hiện đã được chuyển sang:  
+> 👉 [**`docs/designs/api-design/`**](../api-design/README.md) & [**`docs/designs/db-design/`**](../db-design/README.md).
+
 ## Source
 - **Architecture:** [2026-11-03-architecture.md](file:///d:/vibe-code/orderaapp/docs/designs/ordera-loyalty/2026-11-03-architecture.md)
 

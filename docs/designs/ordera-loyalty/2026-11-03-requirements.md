@@ -5,6 +5,11 @@ Total time: 4 minutes
 
 # Requirements: Ordera Loyalty Program 2.0
 
+> [!WARNING]
+> **TÀI LIỆU LƯU TRỮ LỊCH SỬ (ARCHIVED HISTORICAL DRAFT):** Tài liệu này thuộc giai đoạn khảo sát ban đầu (2026-11-03).  
+> Toàn bộ đặc tả yêu cầu nghiệp vụ phần mềm (SRS) chính thức và chuẩn xác nhất đã được chuyển sang thư mục:  
+> 👉 [**`docs/designs/srs/`**](../srs/README.md) (Tuân thủ theo CarLLM Business Flow Spec, khớp 100% với Figma 2.0).
+
 ## Source
 - **Vision:** [2026-11-03-vision.md](file:///d:/vibe-code/orderaapp/docs/designs/ordera-loyalty/2026-11-03-vision.md)
 - **Figma Design Reference:** `Ordera Loyalty Program 2.0 (Copy) (Copy)` (Key: `m9HCuIqhJinebNk4dlxRSb`)
