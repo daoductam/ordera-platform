@@ -38,6 +38,9 @@ public class UserGiftRedemptionJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private String status = "PENDING";
 
+    @Column(name = "applied_order_id")
+    private UUID appliedOrderId;
+
     @Column(name = "claimed_at")
     private Instant claimedAt;
 
@@ -46,4 +49,3 @@ public class UserGiftRedemptionJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
-

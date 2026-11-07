@@ -24,6 +24,9 @@ public class CategoryJpaEntity extends BaseTenantEntity {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    @Column(name = "icon", length = 50)
+    private String icon;
+
     @Column(name = "display_order", nullable = false)
     @Builder.Default
     private int displayOrder = 0;
@@ -37,4 +40,3 @@ public class CategoryJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
-

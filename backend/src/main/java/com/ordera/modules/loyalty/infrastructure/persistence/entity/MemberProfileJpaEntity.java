@@ -32,6 +32,9 @@ public class MemberProfileJpaEntity extends BaseTenantAuditEntity {
     @Builder.Default
     private int lifetimePoints = 0;
 
+    @Column(name = "barcode_token", unique = true, length = 64)
+    private String barcodeToken;
+
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
@@ -41,4 +44,3 @@ public class MemberProfileJpaEntity extends BaseTenantAuditEntity {
     @Column(name = "avatar_url")
     private String avatarUrl;
 }
-

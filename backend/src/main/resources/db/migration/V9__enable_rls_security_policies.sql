@@ -1,7 +1,8 @@
 -- ==============================================================================
--- V8__enable_rls_security_policies.sql
+-- V9__enable_rls_security_policies.sql
 -- Bảo mật Đa đại lý: PostgreSQL Row-Level Security (RLS) & Tenant Isolation
 -- Chống triệt để 100% nguy cơ IDOR và rò rỉ dữ liệu giữa các đại lý/thương hiệu
+-- Ánh xạ: docs/designs/db-design/07-rls-and-partitioning.md
 -- ==============================================================================
 
 -- 1. Hàm an toàn trích xuất Tenant ID từ Session Context
@@ -13,25 +14,33 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql STABLE;
 
-COMMENT ON FUNCTION current_app_tenant_id IS 'Hàm trích xuất tenant_id của request hiện tại từ PostgreSQL session variable';
+COMMENT ON FUNCTION current_app_tenant_id IS 'Hàm trích xuất tenant_id của request hiện tại từ PostgreSQL session variable app.current_tenant_id';
 
--- 2. Kích hoạt Row-Level Security (RLS) trên tất cả các bảng nghiệp vụ
+-- 2. Kích hoạt Row-Level Security (RLS) trên tất cả các bảng nghiệp vụ thuộc phạm vi Tenant
 ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE store_tables ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kiosk_devices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_favorite_stores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tier_definitions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE member_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE support_claims ENABLE ROW LEVEL SECURITY;
 ALTER TABLE points_ledger ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE promotion_banners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vouchers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_vouchers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE loyalty_gifts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_gift_redemptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE carts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE system_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE support_inquiries ENABLE ROW LEVEL SECURITY;
 
--- 3. Tạo chính sách bảo mật cô lập (Isolation Policies)
--- Cho phép truy cập nếu là tenant hiện tại hoặc nếu session chưa set (dành cho Migration / SuperAdmin)
+-- 3. Tạo chính sách bảo mật cô lập đa thuê (Tenant Isolation Policies)
+-- Cho phép truy cập nếu khớp tenant_id hoặc nếu session chưa set (dành cho Migration / SuperAdmin)
 
 -- Stores Policy
 CREATE POLICY tenant_isolation_stores ON stores
@@ -45,8 +54,26 @@ CREATE POLICY tenant_isolation_store_tables ON store_tables
     USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
     WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
 
+-- Kiosk Devices Policy
+CREATE POLICY tenant_isolation_kiosk_devices ON kiosk_devices
+    FOR ALL
+    USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
+    WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
+
 -- Users Policy
 CREATE POLICY tenant_isolation_users ON users
+    FOR ALL
+    USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
+    WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
+
+-- Customer Favorite Stores Policy
+CREATE POLICY tenant_isolation_customer_favorite_stores ON customer_favorite_stores
+    FOR ALL
+    USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
+    WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
+
+-- Tier Definitions Policy
+CREATE POLICY tenant_isolation_tier_definitions ON tier_definitions
     FOR ALL
     USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
     WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
@@ -81,6 +108,12 @@ CREATE POLICY tenant_isolation_products ON products
     USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
     WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
 
+-- Promotion Banners Policy
+CREATE POLICY tenant_isolation_promotion_banners ON promotion_banners
+    FOR ALL
+    USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
+    WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
+
 -- Vouchers Policy
 CREATE POLICY tenant_isolation_vouchers ON vouchers
     FOR ALL
@@ -107,6 +140,30 @@ CREATE POLICY tenant_isolation_gift_redemptions ON user_gift_redemptions
 
 -- Orders Policy
 CREATE POLICY tenant_isolation_orders ON orders
+    FOR ALL
+    USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
+    WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
+
+-- Carts Policy
+CREATE POLICY tenant_isolation_carts ON carts
+    FOR ALL
+    USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
+    WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
+
+-- System Notifications Policy
+CREATE POLICY tenant_isolation_system_notifications ON system_notifications
+    FOR ALL
+    USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
+    WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
+
+-- User Notifications Policy
+CREATE POLICY tenant_isolation_user_notifications ON user_notifications
+    FOR ALL
+    USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
+    WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());
+
+-- Support Inquiries Policy
+CREATE POLICY tenant_isolation_support_inquiries ON support_inquiries
     FOR ALL
     USING (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id())
     WITH CHECK (current_app_tenant_id() IS NULL OR tenant_id = current_app_tenant_id());

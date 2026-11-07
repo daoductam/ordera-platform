@@ -51,8 +51,10 @@ dist/
 downloads/
 eggs/
 .eggs/
+# Python venv
 lib/
 lib64/
+!frontend/src/lib/
 parts/
 sdist/
 var/

@@ -1,10 +1,11 @@
 -- ==============================================================================
 -- V4__create_points_ledger.sql
 -- Phân hệ 3 (Tiếp theo): Sổ cái Điểm Bất biến (Immutable Points Ledger)
--- Sử dụng kỹ thuật PostgreSQL Declarative RANGE Partitioning theo created_at
+-- Kỹ thuật: PostgreSQL Declarative RANGE Partitioning theo created_at
+-- Ánh xạ: docs/designs/db-design/03-loyalty-and-points-ledger-db.md & 07-rls-and-partitioning.md
 -- ==============================================================================
 
--- 1. Bảng chính points_ledger (Phân vùng theo thời gian)
+-- 1. Bảng chính points_ledger (Phân vùng RANGE theo created_at)
 CREATE TABLE points_ledger (
     id UUID NOT NULL DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
@@ -23,15 +24,18 @@ COMMENT ON TABLE points_ledger IS 'Sổ cái kép bất biến ghi nhận mọi 
 COMMENT ON COLUMN points_ledger.id IS 'Khóa chính dòng giao dịch sổ cái';
 COMMENT ON COLUMN points_ledger.tenant_id IS 'Khóa ngoại định danh thương hiệu';
 COMMENT ON COLUMN points_ledger.member_id IS 'Khóa ngoại định danh thành viên';
-COMMENT ON COLUMN points_ledger.transaction_type IS 'Loại giao dịch: ORDER_EARN, VOUCHER_REDEEM, GIFT_REDEEM, TIER_BONUS, ADMIN_ADJUST, CLAIM_APPROVED';
+COMMENT ON COLUMN points_ledger.transaction_type IS 'Loại biến động: ORDER_EARN, VOUCHER_REDEEM, GIFT_REDEEM, TIER_BONUS, ADMIN_ADJUST, CLAIM_APPROVED, KIOSK_EARN';
 COMMENT ON COLUMN points_ledger.points_delta IS 'Số điểm biến động: số dương (+170) là cộng, số âm (-100) là trừ';
 COMMENT ON COLUMN points_ledger.balance_after IS 'Số dư điểm khả dụng ngay sau khi thực hiện giao dịch này';
 COMMENT ON COLUMN points_ledger.reference_type IS 'Bảng liên kết nguồn: ORDERS, USER_VOUCHERS, SUPPORT_CLAIMS';
 COMMENT ON COLUMN points_ledger.reference_id IS 'Mã ID tham chiếu của đơn hàng hoặc voucher';
 COMMENT ON COLUMN points_ledger.description IS 'Diễn giải giao dịch hiển thị lịch sử cho khách hàng';
-COMMENT ON COLUMN points_ledger.created_at IS 'Dấu thời gian phát sinh giao dịch bất biến';
+COMMENT ON COLUMN points_ledger.created_at IS 'Dấu thời gian phát sinh giao dịch bất biến (Partition Key)';
 
--- 2. Tạo các phân vùng cụ thể (Partitions)
+-- 2. Tạo các phân vùng cụ thể (Partitions theo năm)
+CREATE TABLE points_ledger_y2025 PARTITION OF points_ledger
+    FOR VALUES FROM ('2025-01-01 00:00:00+00') TO ('2026-01-01 00:00:00+00');
+
 CREATE TABLE points_ledger_y2026 PARTITION OF points_ledger
     FOR VALUES FROM ('2026-01-01 00:00:00+00') TO ('2027-01-01 00:00:00+00');
 
@@ -45,3 +49,15 @@ CREATE INDEX idx_points_ledger_member_time ON points_ledger(member_id, created_a
 CREATE INDEX idx_points_ledger_ref ON points_ledger(reference_type, reference_id);
 CREATE INDEX idx_points_ledger_tenant ON points_ledger(tenant_id, created_at DESC);
 
+-- 4. Ràng buộc Tính Bất Biến (Immutability Enforcement Trigger)
+CREATE OR REPLACE FUNCTION prevent_points_ledger_modification()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'points_ledger is immutable. UPDATE and DELETE operations are strictly prohibited.';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_points_ledger_immutable
+    BEFORE UPDATE OR DELETE ON points_ledger
+    FOR EACH ROW
+    EXECUTE FUNCTION prevent_points_ledger_modification();

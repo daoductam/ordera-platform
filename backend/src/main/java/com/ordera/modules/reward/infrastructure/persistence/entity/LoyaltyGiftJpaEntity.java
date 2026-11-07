@@ -38,6 +38,9 @@ public class LoyaltyGiftJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private int stockQuantity = 10;
 
+    @Column(name = "tag", length = 64)
+    private String tag;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean active = true;
@@ -47,4 +50,3 @@ public class LoyaltyGiftJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
-

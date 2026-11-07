@@ -1,6 +1,7 @@
 -- ==============================================================================
 -- V2__create_users_and_identity.sql
--- Phân hệ 2: Người dùng & Xác thực (Users, OTP Logs)
+-- Phân hệ 2: Người dùng, Xác thực OTP & Cửa hàng Yêu thích
+-- Ánh xạ: docs/designs/db-design/02-users-and-identity-db.md & 01-tenants-and-stores-db.md
 -- ==============================================================================
 
 -- 1. Bảng users (Tài khoản Người dùng Hệ thống)
@@ -68,4 +69,23 @@ COMMENT ON COLUMN otp_audit_logs.expires_at IS 'Thời điểm hết hạn của
 COMMENT ON COLUMN otp_audit_logs.created_at IS 'Thời gian tạo phiên OTP';
 
 CREATE INDEX idx_otp_recipient_time ON otp_audit_logs(recipient, created_at DESC);
+CREATE INDEX idx_otp_tenant_created ON otp_audit_logs(tenant_id, created_at DESC);
 
+-- 3. Bảng customer_favorite_stores (Cửa hàng Yêu thích của Hội viên)
+CREATE TABLE customer_favorite_stores (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_customer_store_favorite UNIQUE (tenant_id, user_id, store_id)
+);
+
+COMMENT ON TABLE customer_favorite_stores IS 'Lưu trữ trạng thái yêu thích cửa hàng (Icon trái tim đỏ tại màn hình 01.02, 01.04)';
+COMMENT ON COLUMN customer_favorite_stores.id IS 'Khóa chính bản ghi yêu thích';
+COMMENT ON COLUMN customer_favorite_stores.tenant_id IS 'Khóa ngoại phân lập theo thương hiệu';
+COMMENT ON COLUMN customer_favorite_stores.user_id IS 'Khóa ngoại hội viên bấm yêu thích';
+COMMENT ON COLUMN customer_favorite_stores.store_id IS 'Khóa ngoại chi nhánh cửa hàng được thích';
+COMMENT ON COLUMN customer_favorite_stores.created_at IS 'Thời điểm bấm yêu thích';
+
+CREATE INDEX idx_fav_stores_user ON customer_favorite_stores(tenant_id, user_id);
