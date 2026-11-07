@@ -31,9 +31,9 @@ flowchart LR
     App -->|Data Access| Infra["Infrastructure: Repositories & Mappers"]
     Infra -->|SQL / Cache| DB[("PostgreSQL & Redis")]
 
-    classDef c1 fill:#e0f2fe,stroke:#0284c7,stroke-width:2px;
-    classDef c2 fill:#fef3c7,stroke:#d97706,stroke-width:2px;
-    classDef c3 fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
+    classDef c1 fill:#0c4a6e,stroke:#38bdf8,stroke-width:2px,color:#f0f9ff;
+    classDef c2 fill:#451a03,stroke:#f59e0b,stroke-width:2px,color:#fef3c7;
+    classDef c3 fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5;
     class Pre,App c1;
     class Dom,Util c2;
     class Infra,DB c3;
@@ -69,8 +69,8 @@ flowchart TD
     CheckExist -- Có --> MapDTO["TenantDtoMapper trích xuất metadata slogan, vat, currency"]
     MapDTO --> Success(["✅ 200 OK - TenantResponse<br>test: should_return_tenant_details_when_tenant_exists"])
 
-    classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
-    classDef fail fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
     class Success ok;
     class ErrHdr,ErrNotFound fail;
 ```
@@ -135,8 +135,8 @@ flowchart TD
     DoSort --> Success(["✅ 200 OK - Danh sách StoreSummaryResponse<br>test: should_filter_by_fulfillment_type_and_sort_by_distance_ascending"])
     KeepOrder --> Success
 
-    classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
-    classDef fail fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
     class Success ok;
     class ErrParam,ErrHdr fail;
 ```
@@ -195,8 +195,8 @@ flowchart TD
     Exist -- Có --> MapDetail["TenantDtoMapper ánh xạ StoreDetailResponse"]
     MapDetail --> Success(["✅ 200 OK - Chi tiết giờ mở cửa, ảnh bìa, logo, bán kính ship<br>test: should_return_store_detail_when_store_exists"])
 
-    classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
-    classDef fail fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
     class Success ok;
     class ErrHdr,ErrStore fail;
 ```
@@ -249,8 +249,8 @@ flowchart TD
     QueryTables --> MapTables["Ánh xạ List StoreTableResponse"]
     MapTables --> Success(["✅ 200 OK - Danh sách bàn ăn, sức chứa, số bàn, khu vực<br>test: should_return_tables_list_when_store_exists"])
 
-    classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
-    classDef fail fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
     class Success ok;
     class ErrHdr,ErrStore fail;
 ```
@@ -320,8 +320,8 @@ flowchart TD
     StoreOK -- Không --> ErrStore["❌ 404 STORE_NOT_FOUND<br>test: should_throw_STORE_NOT_FOUND_when_store_not_in_tenant"]
     StoreOK -- Có --> Success(["✅ 200 OK - ResolvedTableQrResponse<br>test: should_resolve_table_by_fallback_regex_pattern"])
 
-    classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
-    classDef fail fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
     class Success ok;
     class ErrHdr,ErrBlank,ErrInvalid,ErrStore fail;
 ```
@@ -392,8 +392,8 @@ flowchart TD
     GenSlots --> Success(["✅ 200 OK - FulfillmentOptionsResponse động<br>test: should_return_store_specific_options"])
     DefaultTenant --> SuccessDefault(["✅ 200 OK - FulfillmentOptionsResponse mặc định<br>test: should_return_default_options_when_storeId_null"])
 
-    classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
-    classDef fail fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
     class Success,SuccessDefault ok;
     class ErrHdr,ErrStore fail;
 ```
@@ -463,8 +463,8 @@ flowchart TD
     Action -- DELETE --> DeleteDB["Xóa bản ghi khỏi customer_favorite_stores"]
     DeleteDB --> RetDel(["✅ 200 OK - isFavorite: false<br>test: should_delete_favorite_successfully"])
 
-    classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
-    classDef fail fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
     class RetPost,RetDel ok;
     class ErrAuth,ErrHdr,ErrStore fail;
 ```
@@ -534,8 +534,8 @@ flowchart TD
     CalcDist --> SortDist["Sắp xếp khoảng cách tăng dần"]
     SortDist --> RetList(["✅ 200 OK - Danh sách chi nhánh với isFavorite=true<br>test: should_return_favorites_sorted_by_distance_when_gps_provided"])
 
-    classDef ok fill:#dcfce7,stroke:#16a34a,stroke-width:2px;
-    classDef fail fill:#fee2e2,stroke:#dc2626,stroke-width:2px;
+    classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
+    classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
     class RetEmpty,RetList ok;
     class ErrAuth,ErrHdr fail;
 ```
