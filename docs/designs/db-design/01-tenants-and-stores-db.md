@@ -96,3 +96,51 @@ Lưu trữ trạng thái yêu thích cửa hàng (Icon trái tim đỏ tại mà
 #### Indexes & Constraints
 - `uq_customer_store_favorite`: UNIQUE (`tenant_id`, `user_id`, `store_id`)
 - `idx_fav_stores_user`: (`tenant_id`, `user_id`)
+
+---
+
+### Bảng 1.5: `kiosk_devices` (Quản lý Thiết Bị Kiosk Cảm Ứng Tại Điểm Bán)
+Quản lý các trạm máy tính Kiosk màn hình chạm toàn màn hình đặt tại quầy thu ngân (Figma Kiosk POS, `KioskPage.tsx`).
+
+| Cột | Kiểu dữ liệu | Nullable | Mặc định | Ràng buộc | Chú thích chi tiết (Remark) |
+|---|---|---|---|---|---|
+| `id` | `UUID` | NO | `gen_random_uuid()` | PK | Khóa chính thiết bị Kiosk |
+| `tenant_id` | `UUID` | NO | | FK -> `tenants(id)` ON DELETE RESTRICT | Thuộc thương hiệu |
+| `store_id` | `UUID` | NO | | FK -> `stores(id)` ON DELETE CASCADE | Đặt tại chi nhánh cửa hàng nào (vd: Linn Sushi Sentrum) |
+| `device_code` | `VARCHAR(64)` | NO | | UK | Mã định danh phần cứng thiết bị (ví dụ: `kiosk-pos-sentrum-01`) |
+| `device_name` | `VARCHAR(128)` | NO | | | Tên trạm hiển thị (ví dụ: `Counter Touch Terminal 01`) |
+| `printer_status` | `VARCHAR(32)` | NO | `'OK'` | | Tình trạng máy in bill nhiệt: `OK`, `OUT_OF_PAPER`, `ERROR` |
+| `card_reader_status`| `VARCHAR(32)` | NO | `'ONLINE'` | | Tình trạng máy quẹt thẻ POS: `ONLINE`, `OFFLINE`, `ERROR` |
+| `idle_timeout_seconds`| `INT` | NO | `60` | | Thời gian đếm ngược tự động reset phiên (mặc định 60 giây) |
+| `is_active` | `BOOLEAN` | NO | `true` | | Trạm có đang mở cho khách sử dụng hay tạm đóng |
+| `last_heartbeat_at`| `TIMESTAMPTZ`| YES | | | Thời điểm gửi tín hiệu ping sức khỏe thiết bị gần nhất |
+| `created_at` | `TIMESTAMPTZ` | NO | `now()` | | Thời điểm khởi tạo thiết bị Kiosk |
+
+#### Indexes & Constraints
+- `uq_kiosk_devices_tenant_code`: UNIQUE (`tenant_id`, `device_code`)
+- `idx_kiosk_devices_store`: (`store_id`, `is_active`)
+
+---
+
+## Tham Khảo DDL Flyway Mở Rộng (Migration Script Reference)
+
+```sql
+-- Flyway Script Bổ sung: V11__create_kiosk_devices.sql
+
+CREATE TABLE kiosk_devices (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+    device_code VARCHAR(64) NOT NULL,
+    device_name VARCHAR(128) NOT NULL,
+    printer_status VARCHAR(32) NOT NULL DEFAULT 'OK',
+    card_reader_status VARCHAR(32) NOT NULL DEFAULT 'ONLINE',
+    idle_timeout_seconds INT NOT NULL DEFAULT 60,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    last_heartbeat_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_kiosk_devices_tenant_code UNIQUE (tenant_id, device_code)
+);
+
+CREATE INDEX idx_kiosk_devices_store ON kiosk_devices (store_id, is_active);
+```

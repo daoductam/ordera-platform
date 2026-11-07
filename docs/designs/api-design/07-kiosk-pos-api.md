@@ -16,10 +16,10 @@
 - **Frontend Gọi tại:** `KioskPage.tsx` (`handleLookup`)
 
 #### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Mẫu |
-|:---|:---|:---:|:---|
-| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
-| `X-Kiosk-Device-ID` | `String` | **Có** | `kiosk-pos-sentrum-01` |
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID Tenant thương hiệu |
+| `X-Kiosk-Device-ID` | `String` | **Có** | `kiosk-pos-sentrum-01` | Mã định danh thiết bị Kiosk |
 
 #### 2. Request Body Schema
 | Trường | Kiểu | Bắt buộc | Ràng buộc | Mô tả |
@@ -80,15 +80,44 @@
 ```
 
 #### 4. Phản hồi Lỗi (RFC 7807)
-##### Lỗi 400 Bad Request — Số điện thoại không hợp lệ
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
 ```json
 {
-  "type": "https://api.orderaapp.com/errors/invalid-phone",
-  "title": "Invalid Phone Number",
-  "status": 400,
-  "detail": "Phone number must have at least 8 digits",
-  "instance": "/api/v1/kiosk/identify",
-  "code": "INVALID_PHONE_NUMBER",
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:50:00.000Z"
+}
+```
+
+- **Thiếu Header `X-Kiosk-Device-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "DEVICE_HEADER_MISSING",
+    "message": "Header 'X-Kiosk-Device-ID' is required to verify kiosk terminal.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:50:00.000Z"
+}
+```
+
+- **Số điện thoại không hợp lệ (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_PHONE_NUMBER",
+    "message": "Số điện thoại phải có ít nhất 8 chữ số và đúng định dạng quốc tế.",
+    "details": {
+      "field": "phoneNumber",
+      "value": "123"
+    }
+  },
   "timestamp": "2026-11-05T20:50:00.000Z"
 }
 ```
@@ -104,11 +133,11 @@
 - **Frontend Gọi tại:** `KioskPage.tsx` (`handleCompletePayment`)
 
 #### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Mẫu |
-|:---|:---|:---:|:---|
-| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
-| `X-Kiosk-Device-ID` | `String` | **Có** | `kiosk-pos-sentrum-01` |
-| `X-Staff-PIN` | `String` | Tùy chọn | `1234` (Mã xác thực thu ngân nếu bật chế độ bảo vệ) |
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID Tenant thương hiệu |
+| `X-Kiosk-Device-ID` | `String` | **Có** | `kiosk-pos-sentrum-01` | Mã định danh thiết bị Kiosk |
+| `X-Staff-PIN` | `String` | Tùy chọn | `1234` | Mã xác thực thu ngân nếu bật chế độ bảo vệ |
 
 #### 2. Request Body Schema
 | Trường | Kiểu | Bắt buộc | Ràng buộc | Mô tả |
@@ -149,6 +178,48 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi (RFC 7807)
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:50:30.000Z"
+}
+```
+
+- **Mã Staff PIN không chính xác (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_STAFF_PIN",
+    "message": "Mã PIN nhân viên thu ngân không chính xác.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:50:30.000Z"
+}
+```
+
+- **Số tiền hóa đơn không hợp lệ (`422 Unprocessable Entity`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_BILL_AMOUNT",
+    "message": "Số tiền hóa đơn tích điểm tối thiểu phải từ 1.00 NOK trở lên.",
+    "details": {
+      "billAmount": 0.00
+    }
+  },
+  "timestamp": "2026-11-05T20:50:30.000Z"
+}
+```
+
 ---
 
 ### API 7.3: Tự Đặt Món & Thanh Toán Trực Tiếp Tại Kiosk (Kiosk Direct Self-Checkout)
@@ -158,7 +229,24 @@
 - **Operation ID:** `kioskCheckoutOrder`
 - **Mô tả:** Khách hàng tự bấm chọn món tại quầy Kiosk, nhập SĐT để tích điểm, chọn tip (hoặc 0 NOK), thanh toán thẻ qua máy quẹt thẻ tích hợp Kiosk (Card Reader Terminal / Vipps). Hệ thống sinh đơn hàng, xuất số thứ tự `#A-08` và kích hoạt lệnh in nhiệt.
 
-#### 1. Request Body Schema
+#### 1. Request Headers
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID Tenant thương hiệu |
+| `X-Kiosk-Device-ID` | `String` | **Có** | `kiosk-pos-sentrum-01` | Mã định danh thiết bị Kiosk |
+| `Content-Type` | `String` | **Có** | `application/json` | Định dạng dữ liệu |
+
+#### 2. Request Body Schema
+| Trường | Kiểu | Bắt buộc | Ràng buộc | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `storeId` | `UUID` | Có | UUID hợp lệ | Chi nhánh cửa hàng |
+| `kioskDeviceId` | `String` | Có | Mã thiết bị | Định danh Kiosk đang thực hiện |
+| `customerPhone` | `String` | Có | Định dạng E.164 | SĐT khách hàng tích điểm |
+| `customerName` | `String` | Không | Tối đa 128 ký tự | Tên khách hàng |
+| `tipAmount` | `BigDecimal` | Không | `@DecimalMin("0.00")` | Tiền tip |
+| `paymentMethod` | `String` | Có | `CARD`, `VIPPS` | Phương thức thanh toán |
+| `items` | `List` | Có | Tối thiểu 1 món | Danh sách món ăn đặt |
+
 ```json
 {
   "storeId": "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01",
@@ -182,7 +270,7 @@
 }
 ```
 
-#### 2. Phản hồi Thành công (201 Created)
+#### 3. Phản hồi Thành công (201 Created)
 - **Status:** `201 Created`
 - **Body:**
 ```json
@@ -207,6 +295,48 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi (RFC 7807)
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:51:00.000Z"
+}
+```
+
+- **Món ăn trong giỏ không hợp lệ hoặc ngừng bán (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "PRODUCT_NOT_FOUND",
+    "message": "Một hoặc nhiều món ăn đã chọn không còn tồn tại hoặc tạm ngưng phục vụ.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:51:00.000Z"
+}
+```
+
+- **Lỗi xử lý đầu đọc thẻ POS (`422 Unprocessable Entity`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CARD_READER_ERROR",
+    "message": "Giao dịch thanh toán thẻ không thành công hoặc bị từ chối bởi ngân hàng.",
+    "details": {
+      "terminalStatus": "DECLINED"
+    }
+  },
+  "timestamp": "2026-11-05T20:51:00.000Z"
+}
+```
+
 ---
 
 ### API 7.4: Đặt Lại Phiên & Tự Động Timeout Sau 60 Giây (Kiosk Session Reset / Start Over)
@@ -218,19 +348,23 @@
 - **Frontend Gọi tại:** `KioskPage.tsx` (`handleStartOver`, đếm ngược `countdown <= 1`)
 
 #### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Mẫu |
-|:---|:---|:---:|:---|
-| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
-| `X-Kiosk-Device-ID` | `String` | **Có** | `kiosk-pos-sentrum-01` |
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID Tenant thương hiệu |
+| `X-Kiosk-Device-ID` | `String` | **Có** | `kiosk-pos-sentrum-01` | Mã định danh thiết bị Kiosk |
 
 #### 2. Request Body Schema
+| Trường | Kiểu | Bắt buộc | Ràng buộc | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `storeId` | `UUID` | Có | UUID hợp lệ | Chi nhánh cửa hàng |
+| `reason` | `String` | Có | `IDLE_TIMEOUT`, `USER_MANUAL_RESET`, `TRANSACTION_COMPLETED` | Nguyên nhân reset phiên |
+
 ```json
 {
   "storeId": "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01",
   "reason": "IDLE_TIMEOUT"
 }
 ```
-*Ghi chú `reason`: `IDLE_TIMEOUT`, `USER_MANUAL_RESET`, `TRANSACTION_COMPLETED`.*
 
 #### 3. Phản hồi Thành công (200 OK)
 ```json
@@ -245,6 +379,20 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi (RFC 7807)
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:51:30.000Z"
+}
+```
+
 ---
 
 ### API 7.5: Cấu Hình Thiết Bị & Khởi Tạo Trạm Kiosk (Get Kiosk Device Configuration)
@@ -254,12 +402,17 @@
 - **Operation ID:** `getKioskDeviceConfig`
 - **Mô tả:** Khi Kiosk khởi động máy tính cảm ứng, ứng dụng Frontend gọi API này để tải cấu hình chi nhánh, tên trạm, cài đặt máy in hóa đơn và chu kỳ idle timeout.
 
-#### 1. Path Parameters
+#### 1. Request Headers
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID Tenant thương hiệu |
+
+#### 2. Path Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
 |:---|:---|:---:|:---|
 | `deviceId` | `String` | Có | Định danh phần cứng Kiosk (VD: `kiosk-pos-sentrum-01`) |
 
-#### 2. Phản hồi Thành công (200 OK)
+#### 3. Phản hồi Thành công (200 OK)
 - **Status:** `200 OK`
 - **Body:**
 ```json
@@ -284,3 +437,47 @@
   "timestamp": "2026-11-05T20:52:00.000Z"
 }
 ```
+
+#### 4. Phản hồi Lỗi (RFC 7807)
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:52:00.000Z"
+}
+```
+
+- **Không tìm thấy thiết bị Kiosk (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "KIOSK_DEVICE_NOT_FOUND",
+    "message": "Thiết bị Kiosk không tồn tại hoặc chưa được đăng ký trong hệ thống chi nhánh.",
+    "details": {
+      "deviceId": "kiosk-unknown-01"
+    }
+  },
+  "timestamp": "2026-11-05T20:52:00.000Z"
+}
+```
+
+---
+
+## Ghi Chú Kỹ Thuật & Chu Trình Trạng Thái Kiosk (Technical & Kiosk State Machine Notes)
+
+1. **Chu Trình Đếm Ngược & Tự Động Reset (60-second Idle Watchdog):**
+   - Màn hình Kiosk duy trì đồng hồ đếm ngược 60 giây (`countdown`). Bất kỳ thao tác chạm màn hình nào sẽ reset thời gian chờ trở lại 60 giây.
+   - Khi bộ đếm về 0 hoặc khách hàng nhấn nút `[Start Over]`, giao diện Frontend tự động gọi `POST /api/v1/kiosk/session/reset` để xóa sạch dữ liệu tạm trong Redis Cache và trở về màn hình chờ ban đầu.
+
+2. **Quy Tắc Tích Điểm Nhanh Tại Quầy (`KIOSK_EARN`):**
+   - Khi khách gọi món và trả tiền mặt/quẹt POS truyền thống tại quầy thu ngân, nhân viên xuất hóa đơn giấy và mời khách gõ số điện thoại lên màn hình Kiosk phụ (`07.02`).
+   - Hệ thống tự động tính điểm theo hạng thẻ hiện tại của khách và ghi nhận trực tiếp vào sổ cái bất biến `points_ledger` với `transaction_type = 'KIOSK_EARN'`, `reference_type = 'EXTERNAL_RECEIPT'`, và `reference_id = externalReceiptRef`.
+
+3. **Cơ Chế Giám Sát Phần Cứng & Heartbeat:**
+   - Định kỳ mỗi 60 giây, ứng dụng Kiosk gửi tín hiệu kiểm tra tình trạng (`cardReaderStatus`, `printerPaperStatus`) về Backend để hiển thị cảnh báo cho quản lý nhà hàng nếu Kiosk hết giấy in bill hoặc mất kết nối máy quẹt thẻ.
