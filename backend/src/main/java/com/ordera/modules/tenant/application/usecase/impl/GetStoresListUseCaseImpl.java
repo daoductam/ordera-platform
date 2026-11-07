@@ -1,8 +1,9 @@
 package com.ordera.modules.tenant.application.usecase.impl;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.GetStoresListUseCase;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.domain.model.FulfillmentType;
 import com.ordera.modules.tenant.infrastructure.mapper.TenantDtoMapper;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.CustomerFavoriteStoreJpaEntity;
@@ -36,7 +37,7 @@ public class GetStoresListUseCaseImpl implements GetStoresListUseCase {
                                              UUID currentUserId) {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new TenantHeaderMissingException();
+            throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
 
         List<StoreJpaEntity> stores = storeRepository.searchStores(tenantId, keyword);
@@ -88,9 +89,6 @@ public class GetStoresListUseCaseImpl implements GetStoresListUseCase {
         return result;
     }
 
-    /**
-     * Tính toán khoảng cách giữa hai tọa độ địa lý theo công thức Haversine.
-     */
     public static Double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
@@ -105,4 +103,3 @@ public class GetStoresListUseCaseImpl implements GetStoresListUseCase {
         return Math.round(distance * 100.0) / 100.0;
     }
 }
-

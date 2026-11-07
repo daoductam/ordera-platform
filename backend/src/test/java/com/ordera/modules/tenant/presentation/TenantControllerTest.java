@@ -1,9 +1,9 @@
 package com.ordera.modules.tenant.presentation;
 
+import com.ordera.common.exception.BusinessException;
 import com.ordera.common.exception.GlobalExceptionHandler;
 import com.ordera.modules.tenant.application.usecase.GetTenantInfoUseCase;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
-import com.ordera.modules.tenant.domain.exception.TenantNotFoundException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.presentation.dto.TenantResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -78,7 +78,7 @@ class TenantControllerTest {
     @Test
     @DisplayName("GET /api/v1/tenants/current - should return 400 when X-Tenant-ID header is missing")
     void should_return_400_when_tenant_header_is_missing() throws Exception {
-        when(getTenantInfoUseCase.execute()).thenThrow(new TenantHeaderMissingException());
+        when(getTenantInfoUseCase.execute()).thenThrow(new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING));
 
         mockMvc.perform(get("/api/v1/tenants/current")
                         .accept(MediaType.APPLICATION_JSON))
@@ -90,7 +90,7 @@ class TenantControllerTest {
     @Test
     @DisplayName("GET /api/v1/tenants/current - should return 404 when tenant not found")
     void should_return_404_when_tenant_not_found() throws Exception {
-        when(getTenantInfoUseCase.execute()).thenThrow(new TenantNotFoundException(tenantId));
+        when(getTenantInfoUseCase.execute()).thenThrow(new BusinessException(TenantErrorCode.TENANT_NOT_FOUND));
 
         mockMvc.perform(get("/api/v1/tenants/current")
                         .header("X-Tenant-ID", tenantId.toString())
@@ -100,4 +100,3 @@ class TenantControllerTest {
                 .andExpect(jsonPath("$.error.code").value("TENANT_NOT_FOUND"));
     }
 }
-

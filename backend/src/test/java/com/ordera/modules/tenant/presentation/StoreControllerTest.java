@@ -1,9 +1,9 @@
 package com.ordera.modules.tenant.presentation;
 
+import com.ordera.common.exception.BusinessException;
 import com.ordera.common.exception.GlobalExceptionHandler;
 import com.ordera.modules.tenant.application.usecase.*;
-import com.ordera.modules.tenant.domain.exception.InvalidQrTokenException;
-import com.ordera.modules.tenant.domain.exception.StoreNotFoundException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.domain.model.FulfillmentType;
 import com.ordera.modules.tenant.presentation.dto.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -129,7 +129,7 @@ class StoreControllerTest {
     @Test
     @DisplayName("GET /api/v1/stores/{storeId} - should return 404 when store not found")
     void should_return_404_when_store_not_found() throws Exception {
-        when(getStoreDetailUseCase.execute(storeId)).thenThrow(new StoreNotFoundException(storeId));
+        when(getStoreDetailUseCase.execute(storeId)).thenThrow(new BusinessException(TenantErrorCode.STORE_NOT_FOUND));
 
         mockMvc.perform(get("/api/v1/stores/{storeId}", storeId)
                         .header("X-Tenant-ID", tenantId.toString())
@@ -188,7 +188,7 @@ class StoreControllerTest {
     @Test
     @DisplayName("GET /api/v1/stores/tables/qr/{qrToken} - should return 404 when QR token is invalid")
     void should_return_404_when_qr_token_invalid() throws Exception {
-        when(resolveTableQrUseCase.execute("invalid_token")).thenThrow(new InvalidQrTokenException("invalid_token"));
+        when(resolveTableQrUseCase.execute("invalid_token")).thenThrow(new BusinessException(TenantErrorCode.INVALID_QR_TOKEN));
 
         mockMvc.perform(get("/api/v1/stores/tables/qr/{qrToken}", "invalid_token")
                         .header("X-Tenant-ID", tenantId.toString())
@@ -281,4 +281,3 @@ class StoreControllerTest {
                 .andExpect(jsonPath("$.data[0].favorite").value(true));
     }
 }
-

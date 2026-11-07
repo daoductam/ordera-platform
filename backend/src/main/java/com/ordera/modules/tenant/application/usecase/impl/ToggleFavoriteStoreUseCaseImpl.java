@@ -1,9 +1,9 @@
 package com.ordera.modules.tenant.application.usecase.impl;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.ToggleFavoriteStoreUseCase;
-import com.ordera.modules.tenant.domain.exception.StoreNotFoundException;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.CustomerFavoriteStoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.CustomerFavoriteStoreRepository;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.StoreRepository;
@@ -26,12 +26,12 @@ public class ToggleFavoriteStoreUseCaseImpl implements ToggleFavoriteStoreUseCas
     public ToggleFavoriteResponse execute(UUID storeId, UUID userId, boolean favorite) {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new TenantHeaderMissingException();
+            throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
 
         // Kiểm tra cửa hàng tồn tại trong tenant
         storeRepository.findByIdAndTenantId(storeId, tenantId)
-                .orElseThrow(() -> new StoreNotFoundException(storeId));
+                .orElseThrow(() -> new BusinessException(TenantErrorCode.STORE_NOT_FOUND, "Store with ID '" + storeId + "' does not exist in this tenant."));
 
         if (favorite) {
             boolean alreadyFavorite = customerFavoriteStoreRepository.existsByTenantIdAndUserIdAndStoreId(tenantId, userId, storeId);
@@ -53,4 +53,3 @@ public class ToggleFavoriteStoreUseCaseImpl implements ToggleFavoriteStoreUseCas
                 .build();
     }
 }
-

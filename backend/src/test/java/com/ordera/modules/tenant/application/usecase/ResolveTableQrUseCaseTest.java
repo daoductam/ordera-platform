@@ -1,9 +1,9 @@
 package com.ordera.modules.tenant.application.usecase;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.impl.ResolveTableQrUseCaseImpl;
-import com.ordera.modules.tenant.domain.exception.InvalidQrTokenException;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreTableJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.StoreRepository;
@@ -53,26 +53,29 @@ class ResolveTableQrUseCaseTest {
     }
 
     @Test
-    @DisplayName("should_throw_TenantHeaderMissingException_when_tenant_is_null")
-    void should_throw_TenantHeaderMissingException_when_tenant_is_null() {
-        assertThrows(TenantHeaderMissingException.class, () -> useCase.execute("qr_linn_sentrum_table_05"));
+    @DisplayName("should_throw_TENANT_HEADER_MISSING_when_tenant_is_null")
+    void should_throw_TENANT_HEADER_MISSING_when_tenant_is_null() {
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute("qr_linn_sentrum_table_05"));
+        assertEquals(TenantErrorCode.TENANT_HEADER_MISSING, ex.getErrorCode());
     }
 
     @Test
-    @DisplayName("should_throw_InvalidQrTokenException_when_token_is_blank")
-    void should_throw_InvalidQrTokenException_when_token_is_blank() {
+    @DisplayName("should_throw_INVALID_QR_TOKEN_when_token_is_blank")
+    void should_throw_INVALID_QR_TOKEN_when_token_is_blank() {
         TenantContext.setTenantId(tenantId);
-        assertThrows(InvalidQrTokenException.class, () -> useCase.execute("   "));
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute("   "));
+        assertEquals(TenantErrorCode.INVALID_QR_TOKEN, ex.getErrorCode());
     }
 
     @Test
-    @DisplayName("should_throw_InvalidQrTokenException_when_qr_token_does_not_exist")
-    void should_throw_InvalidQrTokenException_when_qr_token_does_not_exist() {
+    @DisplayName("should_throw_INVALID_QR_TOKEN_when_qr_token_does_not_exist")
+    void should_throw_INVALID_QR_TOKEN_when_qr_token_does_not_exist() {
         TenantContext.setTenantId(tenantId);
         when(storeTableRepository.findByTenantIdAndQrCodeTokenIgnoreCase(tenantId, "non_existent_token"))
                 .thenReturn(Optional.empty());
 
-        assertThrows(InvalidQrTokenException.class, () -> useCase.execute("non_existent_token"));
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute("non_existent_token"));
+        assertEquals(TenantErrorCode.INVALID_QR_TOKEN, ex.getErrorCode());
     }
 
     @Test
@@ -160,4 +163,3 @@ class ResolveTableQrUseCaseTest {
         assertEquals("Linn Sushi Sentrum", actual.getStoreName());
     }
 }
-

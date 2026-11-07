@@ -1,8 +1,9 @@
 package com.ordera.modules.tenant.application.usecase;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.impl.GetFavoriteStoresUseCaseImpl;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.mapper.TenantDtoMapper;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.CustomerFavoriteStoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreJpaEntity;
@@ -58,9 +59,10 @@ class GetFavoriteStoresUseCaseTest {
     }
 
     @Test
-    @DisplayName("should_throw_TenantHeaderMissingException_when_tenant_is_null")
-    void should_throw_TenantHeaderMissingException_when_tenant_is_null() {
-        assertThrows(TenantHeaderMissingException.class, () -> useCase.execute(userId, null, null));
+    @DisplayName("should_throw_TENANT_HEADER_MISSING_when_tenant_is_null")
+    void should_throw_TENANT_HEADER_MISSING_when_tenant_is_null() {
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute(userId, null, null));
+        assertEquals(TenantErrorCode.TENANT_HEADER_MISSING, ex.getErrorCode());
     }
 
     @Test
@@ -116,4 +118,3 @@ class GetFavoriteStoresUseCaseTest {
         assertTrue(actual.get(0).isFavorite());
     }
 }
-

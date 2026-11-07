@@ -1,10 +1,9 @@
 package com.ordera.modules.tenant.application.usecase.impl;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.ResolveTableQrUseCase;
-import com.ordera.modules.tenant.domain.exception.InvalidQrTokenException;
-import com.ordera.modules.tenant.domain.exception.StoreNotFoundException;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreTableJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.StoreRepository;
@@ -33,11 +32,11 @@ public class ResolveTableQrUseCaseImpl implements ResolveTableQrUseCase {
     public ResolvedTableQrResponse execute(String qrToken) {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new TenantHeaderMissingException();
+            throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
 
         if (qrToken == null || qrToken.isBlank()) {
-            throw new InvalidQrTokenException(qrToken);
+            throw new BusinessException(TenantErrorCode.INVALID_QR_TOKEN);
         }
 
         String rawToken = qrToken.trim();
@@ -67,11 +66,14 @@ public class ResolveTableQrUseCaseImpl implements ResolveTableQrUseCase {
             }
         }
 
-        StoreTableJpaEntity table = tableOpt.orElseThrow(() -> new InvalidQrTokenException(rawToken));
+        StoreTableJpaEntity table = tableOpt.orElseThrow(() -> new BusinessException(
+                TenantErrorCode.INVALID_QR_TOKEN,
+                "Mã QR bàn ăn '" + rawToken + "' không hợp lệ hoặc không thuộc chi nhánh này."
+        ));
 
         // Lấy thông tin cửa hàng sở hữu bàn
         StoreJpaEntity store = storeRepository.findByIdAndTenantId(table.getStoreId(), tenantId)
-                .orElseThrow(() -> new StoreNotFoundException(table.getStoreId()));
+                .orElseThrow(() -> new BusinessException(TenantErrorCode.STORE_NOT_FOUND, "Store with ID '" + table.getStoreId() + "' does not exist in this tenant."));
 
         return ResolvedTableQrResponse.builder()
                 .storeId(store.getId())
@@ -84,4 +86,3 @@ public class ResolveTableQrUseCaseImpl implements ResolveTableQrUseCase {
                 .build();
     }
 }
-

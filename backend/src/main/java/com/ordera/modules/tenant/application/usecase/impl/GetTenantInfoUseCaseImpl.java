@@ -1,9 +1,9 @@
 package com.ordera.modules.tenant.application.usecase.impl;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.GetTenantInfoUseCase;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
-import com.ordera.modules.tenant.domain.exception.TenantNotFoundException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.mapper.TenantDtoMapper;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.TenantJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.TenantRepository;
@@ -26,13 +26,12 @@ public class GetTenantInfoUseCaseImpl implements GetTenantInfoUseCase {
     public TenantResponse execute() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new TenantHeaderMissingException();
+            throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
 
         TenantJpaEntity tenantEntity = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new TenantNotFoundException(tenantId));
+                .orElseThrow(() -> new BusinessException(TenantErrorCode.TENANT_NOT_FOUND, "No active tenant found with ID '" + tenantId + "'."));
 
         return tenantDtoMapper.toTenantResponse(tenantEntity);
     }
 }
-

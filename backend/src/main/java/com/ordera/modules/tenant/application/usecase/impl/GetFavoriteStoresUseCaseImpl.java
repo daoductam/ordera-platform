@@ -1,8 +1,9 @@
 package com.ordera.modules.tenant.application.usecase.impl;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.GetFavoriteStoresUseCase;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.mapper.TenantDtoMapper;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.CustomerFavoriteStoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreJpaEntity;
@@ -28,7 +29,7 @@ public class GetFavoriteStoresUseCaseImpl implements GetFavoriteStoresUseCase {
     public List<StoreSummaryResponse> execute(UUID userId, Double userLat, Double userLng) {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new TenantHeaderMissingException();
+            throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
 
         List<CustomerFavoriteStoreJpaEntity> favorites = customerFavoriteStoreRepository.findByTenantIdAndUserId(tenantId, userId);
@@ -68,4 +69,3 @@ public class GetFavoriteStoresUseCaseImpl implements GetFavoriteStoresUseCase {
         return result;
     }
 }
-

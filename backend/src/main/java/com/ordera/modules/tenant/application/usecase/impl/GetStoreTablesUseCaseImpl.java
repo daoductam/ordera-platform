@@ -1,9 +1,9 @@
 package com.ordera.modules.tenant.application.usecase.impl;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.GetStoreTablesUseCase;
-import com.ordera.modules.tenant.domain.exception.StoreNotFoundException;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.mapper.TenantDtoMapper;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreTableJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.StoreRepository;
@@ -29,12 +29,11 @@ public class GetStoreTablesUseCaseImpl implements GetStoreTablesUseCase {
     public List<StoreTableResponse> execute(UUID storeId) {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
-            throw new TenantHeaderMissingException();
+            throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
 
-        // Đảm bảo store tồn tại và thuộc quyền sở hữu của tenant hiện tại
         storeRepository.findByIdAndTenantId(storeId, tenantId)
-                .orElseThrow(() -> new StoreNotFoundException(storeId));
+                .orElseThrow(() -> new BusinessException(TenantErrorCode.STORE_NOT_FOUND, "Store with ID '" + storeId + "' does not exist in this tenant."));
 
         List<StoreTableJpaEntity> tables = storeTableRepository.findByTenantIdAndStoreId(tenantId, storeId);
 
@@ -43,4 +42,3 @@ public class GetStoreTablesUseCaseImpl implements GetStoreTablesUseCase {
                 .toList();
     }
 }
-

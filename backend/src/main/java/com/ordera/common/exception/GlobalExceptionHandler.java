@@ -1,7 +1,7 @@
 package com.ordera.common.exception;
 
 import com.ordera.common.api.ApiResponse;
-import com.ordera.modules.tenant.domain.exception.*;
+import com.ordera.common.error.ErrorCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,40 +15,14 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(TenantHeaderMissingException.class)
-    public ResponseEntity<ApiResponse<Void>> handleTenantHeaderMissing(TenantHeaderMissingException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("TENANT_HEADER_MISSING", ex.getMessage()));
-    }
-
-    @ExceptionHandler(TenantNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleTenantNotFound(TenantNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("TENANT_NOT_FOUND", ex.getMessage()));
-    }
-
-    @ExceptionHandler(StoreNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleStoreNotFound(StoreNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("STORE_NOT_FOUND", ex.getMessage()));
-    }
-
-    @ExceptionHandler(TableNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleTableNotFound(TableNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("TABLE_NOT_FOUND", ex.getMessage()));
-    }
-
-    @ExceptionHandler(InvalidQrTokenException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidQrToken(InvalidQrTokenException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("INVALID_QR_TOKEN", ex.getMessage()));
-    }
-
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleUnauthorized(UnauthorizedException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("UNAUTHORIZED", ex.getMessage()));
+    /**
+     * Bắt và xử lý tập trung toàn bộ các ngoại lệ nghiệp vụ có ErrorCode của tất cả phân hệ.
+     */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {
+        ErrorCode errorCode = ex.getErrorCode();
+        return ResponseEntity.status(errorCode.getStatus())
+                .body(ApiResponse.error(errorCode.getCode(), ex.getMessage(), ex.getDetails()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

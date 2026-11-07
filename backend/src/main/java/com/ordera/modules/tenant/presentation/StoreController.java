@@ -1,8 +1,9 @@
 package com.ordera.modules.tenant.presentation;
 
 import com.ordera.common.api.ApiResponse;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.*;
-import com.ordera.modules.tenant.domain.exception.UnauthorizedException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.domain.model.FulfillmentType;
 import com.ordera.modules.tenant.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,7 +44,7 @@ public class StoreController {
         try {
             parsedType = FulfillmentType.valueOf(fulfillmentType.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Giá trị 'fulfillmentType' không hợp lệ. Chỉ chấp nhận ALL, DINE_IN, TAKEAWAY, DELIVERY.");
+            throw new BusinessException(TenantErrorCode.INVALID_QUERY_PARAM, "Giá trị 'fulfillmentType' không hợp lệ. Chỉ chấp nhận ALL, DINE_IN, TAKEAWAY, DELIVERY.");
         }
 
         UUID userId = resolveCurrentUserId(userIdHeader, principal);
@@ -116,7 +117,7 @@ public class StoreController {
 
         UUID userId = resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
-            throw new UnauthorizedException("Vui lòng đăng nhập để lưu chi nhánh vào danh sách yêu thích.");
+            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để lưu chi nhánh vào danh sách yêu thích.");
         }
 
         ToggleFavoriteResponse response = toggleFavoriteStoreUseCase.execute(storeId, userId, true);
@@ -132,7 +133,7 @@ public class StoreController {
 
         UUID userId = resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
-            throw new UnauthorizedException("Vui lòng đăng nhập để gỡ chi nhánh khỏi danh sách yêu thích.");
+            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để gỡ chi nhánh khỏi danh sách yêu thích.");
         }
 
         ToggleFavoriteResponse response = toggleFavoriteStoreUseCase.execute(storeId, userId, false);
@@ -149,7 +150,7 @@ public class StoreController {
 
         UUID userId = resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
-            throw new UnauthorizedException("Vui lòng đăng nhập để xem danh sách yêu thích.");
+            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để xem danh sách yêu thích.");
         }
 
         List<StoreSummaryResponse> favorites = getFavoriteStoresUseCase.execute(userId, latitude, longitude);
@@ -172,4 +173,3 @@ public class StoreController {
         return null;
     }
 }
-

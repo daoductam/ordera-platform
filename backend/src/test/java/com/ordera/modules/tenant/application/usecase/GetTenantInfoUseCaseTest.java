@@ -1,9 +1,9 @@
 package com.ordera.modules.tenant.application.usecase;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.impl.GetTenantInfoUseCaseImpl;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
-import com.ordera.modules.tenant.domain.exception.TenantNotFoundException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.mapper.TenantDtoMapper;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.TenantJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.TenantRepository;
@@ -49,24 +49,23 @@ class GetTenantInfoUseCaseTest {
     }
 
     @Test
-    @DisplayName("should_throw_TenantHeaderMissingException_when_tenant_context_is_empty")
-    void should_throw_TenantHeaderMissingException_when_tenant_context_is_empty() {
-        // Arrange: no tenant in TenantContext
-
-        // Act & Assert
-        assertThrows(TenantHeaderMissingException.class, () -> useCase.execute());
+    @DisplayName("should_throw_TENANT_HEADER_MISSING_when_tenant_context_is_empty")
+    void should_throw_TENANT_HEADER_MISSING_when_tenant_context_is_empty() {
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute());
+        assertEquals(TenantErrorCode.TENANT_HEADER_MISSING, ex.getErrorCode());
         verifyNoInteractions(tenantRepository, tenantDtoMapper);
     }
 
     @Test
-    @DisplayName("should_throw_TenantNotFoundException_when_tenant_does_not_exist")
-    void should_throw_TenantNotFoundException_when_tenant_does_not_exist() {
+    @DisplayName("should_throw_TENANT_NOT_FOUND_when_tenant_does_not_exist")
+    void should_throw_TENANT_NOT_FOUND_when_tenant_does_not_exist() {
         // Arrange
         TenantContext.setTenantId(tenantId);
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(TenantNotFoundException.class, () -> useCase.execute());
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute());
+        assertEquals(TenantErrorCode.TENANT_NOT_FOUND, ex.getErrorCode());
         verify(tenantRepository).findById(tenantId);
         verifyNoInteractions(tenantDtoMapper);
     }
@@ -102,4 +101,3 @@ class GetTenantInfoUseCaseTest {
         verify(tenantDtoMapper).toTenantResponse(entity);
     }
 }
-

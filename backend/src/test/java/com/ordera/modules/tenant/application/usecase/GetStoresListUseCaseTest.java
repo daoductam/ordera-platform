@@ -1,8 +1,9 @@
 package com.ordera.modules.tenant.application.usecase;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.impl.GetStoresListUseCaseImpl;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.domain.model.FulfillmentType;
 import com.ordera.modules.tenant.infrastructure.mapper.TenantDtoMapper;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.CustomerFavoriteStoreJpaEntity;
@@ -57,17 +58,16 @@ class GetStoresListUseCaseTest {
     }
 
     @Test
-    @DisplayName("should_throw_TenantHeaderMissingException_when_tenant_is_null")
-    void should_throw_TenantHeaderMissingException_when_tenant_is_null() {
-        // Arrange & Act & Assert
-        assertThrows(TenantHeaderMissingException.class,
+    @DisplayName("should_throw_TENANT_HEADER_MISSING_when_tenant_is_null")
+    void should_throw_TENANT_HEADER_MISSING_when_tenant_is_null() {
+        BusinessException ex = assertThrows(BusinessException.class,
                 () -> useCase.execute(null, FulfillmentType.ALL, null, null, null));
+        assertEquals(TenantErrorCode.TENANT_HEADER_MISSING, ex.getErrorCode());
     }
 
     @Test
     @DisplayName("should_calculate_accurate_haversine_distance_between_oslo_coordinates")
     void should_calculate_accurate_haversine_distance_between_oslo_coordinates() {
-        // Oslo Central Station (59.9111, 10.7528) to Majorstuen (59.9272, 10.7163) ~ 2.7 km
         Double distance = GetStoresListUseCaseImpl.calculateHaversineDistance(
                 59.9111, 10.7528,
                 59.9272, 10.7163
@@ -122,7 +122,7 @@ class GetStoresListUseCaseTest {
                         .distanceKm(inv.getArgument(1))
                         .build());
 
-        // Act: User near Oslo Sentrum (59.9110, 10.7480)
+        // Act
         List<StoreSummaryResponse> result = useCase.execute(
                 null,
                 FulfillmentType.DELIVERY,
@@ -131,7 +131,7 @@ class GetStoresListUseCaseTest {
                 null
         );
 
-        // Assert: Store Near must be first
+        // Assert
         assertEquals(2, result.size());
         assertEquals("Store Near", result.get(0).getName());
         assertEquals("Store Far", result.get(1).getName());
@@ -168,4 +168,3 @@ class GetStoresListUseCaseTest {
         assertTrue(result.get(0).isFavorite());
     }
 }
-

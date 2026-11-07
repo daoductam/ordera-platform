@@ -1,9 +1,9 @@
 package com.ordera.modules.tenant.application.usecase;
 
 import com.ordera.common.context.TenantContext;
+import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.tenant.application.usecase.impl.ToggleFavoriteStoreUseCaseImpl;
-import com.ordera.modules.tenant.domain.exception.StoreNotFoundException;
-import com.ordera.modules.tenant.domain.exception.TenantHeaderMissingException;
+import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.CustomerFavoriteStoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.CustomerFavoriteStoreRepository;
@@ -53,18 +53,20 @@ class ToggleFavoriteStoreUseCaseTest {
     }
 
     @Test
-    @DisplayName("should_throw_TenantHeaderMissingException_when_tenant_is_null")
-    void should_throw_TenantHeaderMissingException_when_tenant_is_null() {
-        assertThrows(TenantHeaderMissingException.class, () -> useCase.execute(storeId, userId, true));
+    @DisplayName("should_throw_TENANT_HEADER_MISSING_when_tenant_is_null")
+    void should_throw_TENANT_HEADER_MISSING_when_tenant_is_null() {
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute(storeId, userId, true));
+        assertEquals(TenantErrorCode.TENANT_HEADER_MISSING, ex.getErrorCode());
     }
 
     @Test
-    @DisplayName("should_throw_StoreNotFoundException_when_store_does_not_exist")
-    void should_throw_StoreNotFoundException_when_store_does_not_exist() {
+    @DisplayName("should_throw_STORE_NOT_FOUND_when_store_does_not_exist")
+    void should_throw_STORE_NOT_FOUND_when_store_does_not_exist() {
         TenantContext.setTenantId(tenantId);
         when(storeRepository.findByIdAndTenantId(storeId, tenantId)).thenReturn(Optional.empty());
 
-        assertThrows(StoreNotFoundException.class, () -> useCase.execute(storeId, userId, true));
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute(storeId, userId, true));
+        assertEquals(TenantErrorCode.STORE_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
@@ -108,4 +110,3 @@ class ToggleFavoriteStoreUseCaseTest {
         verify(customerFavoriteStoreRepository).deleteByTenantIdAndUserIdAndStoreId(tenantId, userId, storeId);
     }
 }
-

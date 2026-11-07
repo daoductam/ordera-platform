@@ -1,6 +1,6 @@
 Started at:  2026/11/07 22:17:00
-Finished at: 2026/11/07 22:28:30
-Total time: 11 minutes
+Finished at: 2026/11/07 22:49:00
+Total time: 32 minutes
 ---
 
 # Implementation Walkthrough: Phân hệ Tenant & Store (Clean Architecture 4 Lớp)
@@ -10,7 +10,7 @@ Total time: 11 minutes
 - **Spec:** [2026-11-07-spec.md](file:///d:/vibe-code/orderaapp/docs/plans/tenant-store/2026-11-07-spec.md)
 - **Plan:** [2026-11-07-plan.md](file:///d:/vibe-code/orderaapp/docs/plans/tenant-store/2026-11-07-plan.md)
 - **Branch:** `develop`
-- **Implementation approach:** Standard
+- **Implementation approach:** Standard + ErrorCode Pattern Refactoring
 - **Execution mode:** Sequential Parallel
 - **Tasks completed:** 6/6 (100%)
 
@@ -18,84 +18,56 @@ Total time: 11 minutes
 
 ## Task Execution Log
 
-### Task 1: Domain Models, Enums & Domain Exceptions
-- **Status:** Completed
-- **Parallel group:** Group A
+### Task 1: Domain Models, Enums & ErrorCode Refactoring
+- **Status:** Completed & Refactored
 - **Files created/modified:**
+  - `backend/src/main/java/com/ordera/common/error/ErrorCode.java` (Interface chuẩn cho toàn hệ thống)
+  - `backend/src/main/java/com/ordera/common/exception/BusinessException.java` (Base exception chung)
+  - `backend/src/main/java/com/ordera/modules/tenant/domain/exception/TenantErrorCode.java` (Enum mã lỗi riêng phân hệ Tenant)
   - `backend/src/main/java/com/ordera/modules/tenant/domain/model/FulfillmentType.java`
   - `backend/src/main/java/com/ordera/modules/tenant/domain/model/Store.java`
   - `backend/src/main/java/com/ordera/modules/tenant/domain/model/StoreTable.java`
   - `backend/src/main/java/com/ordera/modules/tenant/domain/model/CustomerFavoriteStore.java`
   - `backend/src/main/java/com/ordera/modules/tenant/domain/model/KioskDevice.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/domain/exception/StoreNotFoundException.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/domain/exception/TableNotFoundException.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/domain/exception/InvalidQrTokenException.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/domain/exception/TenantNotFoundException.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/domain/exception/TenantHeaderMissingException.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/domain/exception/UnauthorizedException.java`
-- **Key decisions:** Đảm bảo tầng Domain 100% thuần Java POJO và Exceptions, không phụ thuộc vào Spring Framework hay JPA.
+- **Key decisions:**
+  - Thay vì tạo hàng chục class Exception rời rạc dẫn đến hiện tượng *Class Explosion*, hệ thống đã chuyển dịch sang kiến trúc **`ErrorCode` Interface + Module Enum `TenantErrorCode` + `BusinessException`**.
+  - `ErrorCode` độc lập hoàn toàn với Spring Framework (chứa `int getStatus()`), giúp Domain Layer giữ vững nguyên tắc Clean Architecture.
 
 ### Task 2 & 3: Repositories, Mappers & DTOs
 - **Status:** Completed
-- **Parallel group:** Group B
 - **Files created/modified:**
   - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/persistence/repository/CustomerFavoriteStoreRepository.java`
   - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/persistence/repository/KioskDeviceRepository.java`
   - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/persistence/repository/StoreRepository.java`
   - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/persistence/repository/StoreTableRepository.java`
   - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/mapper/TenantDtoMapper.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/TenantResponse.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/StoreSummaryResponse.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/StoreDetailResponse.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/StoreTableResponse.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/ResolvedTableQrResponse.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/ToggleFavoriteResponse.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/FulfillmentOptionsResponse.java`
-- **Key decisions:** Xây dựng `TenantDtoMapper` với MapStruct và default methods ánh xạ thông tin thương hiệu từ `metadata` (slogan, currency, vat rate, support phone/email).
+  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/*.java`
 
 ### Task 4: 7 Use Cases Implementation
 - **Status:** Completed
-- **Parallel group:** Group C
-- **Files created/modified:**
-  - `backend/src/main/java/com/ordera/modules/tenant/application/usecase/*.java` (7 interfaces)
-  - `backend/src/main/java/com/ordera/modules/tenant/application/usecase/impl/*.java` (7 implementations)
-- **Key decisions:**
-  - Áp dụng công thức Haversine tính toán khoảng cách GPS chính xác ($R = 6371.0\text{ km}$), làm tròn 2 chữ số thập phân, tự động sắp xếp cửa hàng gần nhất lên đầu.
-  - `ResolveTableQrUseCase` hỗ trợ giải mã cả token gốc và các định dạng chuẩn hóa như `QR-LINN-SENTRUM-T05` thông qua fallback phân tích số bàn (`Table 05`).
-  - Toàn bộ Use Cases truy vấn đều gắn `@Transactional(readOnly = true)`. Mọi thao tác đều kiểm tra `tenantId` từ `TenantContext` để ngăn chặn triệt để IDOR chéo tenant.
+- **Files updated:**
+  - `GetTenantInfoUseCaseImpl`: Ném `BusinessException(TenantErrorCode.TENANT_NOT_FOUND)`.
+  - `GetStoresListUseCaseImpl`: Tính toán GPS Haversine, lọc theo `FulfillmentType`.
+  - `GetStoreDetailUseCaseImpl`: Ném `BusinessException(TenantErrorCode.STORE_NOT_FOUND)`.
+  - `GetStoreTablesUseCaseImpl`: Đọc danh sách bàn ăn.
+  - `ResolveTableQrUseCaseImpl`: Giải mã token QR và fallback phân tích số bàn (`Table 05`).
+  - `ToggleFavoriteStoreUseCaseImpl`: Thêm/xóa yêu thích.
+  - `GetFavoriteStoresUseCaseImpl`: Lấy danh sách chi nhánh yêu thích.
 
 ### Task 5: Web Controllers & Exception Handling
 - **Status:** Completed
-- **Parallel group:** Group D
-- **Files created/modified:**
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/TenantController.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/StoreController.java`
-  - `backend/src/main/java/com/ordera/common/exception/GlobalExceptionHandler.java`
-  - `backend/src/main/java/com/ordera/common/api/ApiResponse.java`
-  - `backend/src/main/java/com/ordera/config/SecurityConfig.java`
-- **Key decisions:**
-  - Bổ sung cấu trúc `ErrorDetails` vào `ApiResponse` để phản hồi mã lỗi chuẩn RFC 7807 (`TENANT_HEADER_MISSING`, `STORE_NOT_FOUND`, `INVALID_QR_TOKEN`, `UNAUTHORIZED`, etc.).
-  - Cập nhật `SecurityConfig` cho phép `/api/v1/tenants/**` và `/api/v1/stores/**` truy cập public.
+- **Files updated:**
+  - `GlobalExceptionHandler.java`: Rút gọn còn **1 method duy nhất** `@ExceptionHandler(BusinessException.class)` bắt tất cả các lỗi nghiệp vụ có `ErrorCode`.
+  - `StoreController.java` & `TenantController.java`: Phục vụ 7 APIs chuẩn RESTful và RFC 7807.
 
 ### Task 6: Unit Tests & WebMvc Tests Verification
 - **Status:** Completed
-- **Parallel group:** Group E
-- **Files created:**
-  - `backend/src/test/java/com/ordera/modules/tenant/application/usecase/GetTenantInfoUseCaseTest.java` (3 tests)
-  - `backend/src/test/java/com/ordera/modules/tenant/application/usecase/GetStoresListUseCaseTest.java` (4 tests)
-  - `backend/src/test/java/com/ordera/modules/tenant/application/usecase/GetStoreDetailUseCaseTest.java` (3 tests)
-  - `backend/src/test/java/com/ordera/modules/tenant/application/usecase/GetStoreTablesUseCaseTest.java` (3 tests)
-  - `backend/src/test/java/com/ordera/modules/tenant/application/usecase/ResolveTableQrUseCaseTest.java` (5 tests)
-  - `backend/src/test/java/com/ordera/modules/tenant/application/usecase/ToggleFavoriteStoreUseCaseTest.java` (4 tests)
-  - `backend/src/test/java/com/ordera/modules/tenant/application/usecase/GetFavoriteStoresUseCaseTest.java` (3 tests)
-  - `backend/src/test/java/com/ordera/modules/tenant/presentation/TenantControllerTest.java` (3 tests)
-  - `backend/src/test/java/com/ordera/modules/tenant/presentation/StoreControllerTest.java` (12 tests)
-- **Results:** 45/45 tests PASS (100% SUCCESS) trong 17.9 giây.
+- **Results:** 45/45 tests PASS (100% SUCCESS) trong `mvn clean test`.
 
 ---
 
 ## Deviations from Plan
-Implementation followed the plan exactly.
+Refactor từ individual exception classes sang `ErrorCode` + `BusinessException` theo đề xuất cải tiến của Tech Lead nhằm loại bỏ *Class Explosion*.
 
 ## Known Limitations
-None identified. Clean 4-layer architecture with full multi-tenant isolation.
+None. Kiến trúc hiện tại sẵn sàng nhân rộng cho các phân hệ tiếp theo (Auth, Catalog, Order, Loyalty).
