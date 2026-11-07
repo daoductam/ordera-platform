@@ -2,6 +2,7 @@ package com.ordera.modules.tenant.application.usecase.impl;
 
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
+import com.ordera.common.util.GeoUtils;
 import com.ordera.modules.tenant.application.usecase.GetStoresListUseCase;
 import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.domain.model.FulfillmentType;
@@ -23,8 +24,6 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class GetStoresListUseCaseImpl implements GetStoresListUseCase {
 
-    private static final double EARTH_RADIUS_KM = 6371.0;
-
     private final StoreRepository storeRepository;
     private final CustomerFavoriteStoreRepository customerFavoriteStoreRepository;
     private final TenantDtoMapper tenantDtoMapper;
@@ -35,76 +34,85 @@ public class GetStoresListUseCaseImpl implements GetStoresListUseCase {
                                              Double userLat,
                                              Double userLng,
                                              UUID currentUserId) {
+        UUID tenantId = validateAndGetTenantId();
+
+        List<StoreJpaEntity> stores = searchStores(tenantId, keyword);
+        List<StoreJpaEntity> filteredStores = filterByFulfillment(stores, fulfillmentType);
+        Set<UUID> favoriteStoreIds = resolveFavoriteStoreIds(tenantId, currentUserId);
+
+        List<StoreSummaryResponse> responses = mapToStoreResponses(filteredStores, favoriteStoreIds, userLat, userLng);
+        return sortByDistanceIfAvailable(responses, userLat, userLng);
+    }
+
+    private UUID validateAndGetTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
             throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
+        return tenantId;
+    }
 
-        List<StoreJpaEntity> stores;
-        if (keyword != null && !keyword.isBlank()) {
-            stores = storeRepository.searchStores(tenantId, keyword.trim());
-        } else {
-            stores = storeRepository.findByTenantIdAndActive(tenantId, true);
+    private List<StoreJpaEntity> searchStores(UUID tenantId, String keyword) {
+        String trimmedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        return storeRepository.searchStores(tenantId, trimmedKeyword);
+    }
+
+    private List<StoreJpaEntity> filterByFulfillment(List<StoreJpaEntity> stores, FulfillmentType fulfillmentType) {
+        if (fulfillmentType == null || fulfillmentType == FulfillmentType.ALL) {
+            return stores;
         }
+        return stores.stream().filter(store -> switch (fulfillmentType) {
+            case DINE_IN -> store.isAcceptsDinein();
+            case TAKEAWAY -> store.isAcceptsPickup();
+            case DELIVERY -> store.isAcceptsDelivery();
+            case ALL -> true;
+        }).toList();
+    }
 
-        // Lọc theo hình thức phục vụ (Fulfillment Type)
-        if (fulfillmentType != null && fulfillmentType != FulfillmentType.ALL) {
-            stores = stores.stream().filter(s -> switch (fulfillmentType) {
-                case DINE_IN -> s.isAcceptsDinein();
-                case TAKEAWAY -> s.isAcceptsPickup();
-                case DELIVERY -> s.isAcceptsDelivery();
-                case ALL -> true;
-            }).toList();
+    private Set<UUID> resolveFavoriteStoreIds(UUID tenantId, UUID currentUserId) {
+        if (currentUserId == null) {
+            return Collections.emptySet();
         }
+        return customerFavoriteStoreRepository.findByTenantIdAndUserId(tenantId, currentUserId)
+                .stream()
+                .map(CustomerFavoriteStoreJpaEntity::getStoreId)
+                .collect(Collectors.toSet());
+    }
 
-        // Lấy danh sách ID cửa hàng yêu thích nếu đã đăng nhập
-        Set<UUID> favoriteStoreIds = Collections.emptySet();
-        if (currentUserId != null) {
-            favoriteStoreIds = customerFavoriteStoreRepository.findByTenantIdAndUserId(tenantId, currentUserId)
-                    .stream()
-                    .map(CustomerFavoriteStoreJpaEntity::getStoreId)
-                    .collect(Collectors.toSet());
-        }
-
-        // Ánh xạ sang DTO kèm khoảng cách GPS Haversine
-        final Set<UUID> finalFavIds = favoriteStoreIds;
-        List<StoreSummaryResponse> result = new ArrayList<>();
+    private List<StoreSummaryResponse> mapToStoreResponses(List<StoreJpaEntity> stores,
+                                                           Set<UUID> favoriteStoreIds,
+                                                           Double userLat,
+                                                           Double userLng) {
+        List<StoreSummaryResponse> responses = new ArrayList<>(stores.size());
         for (StoreJpaEntity store : stores) {
-            Double distanceKm = null;
-            if (userLat != null && userLng != null && store.getLatitude() != null && store.getLongitude() != null) {
-                distanceKm = calculateHaversineDistance(
-                        userLat,
-                        userLng,
-                        store.getLatitude().doubleValue(),
-                        store.getLongitude().doubleValue()
-                );
-            }
-            boolean isFav = finalFavIds.contains(store.getId());
-            result.add(tenantDtoMapper.toStoreSummaryResponse(store, distanceKm, isFav));
+            Double distanceKm = calculateStoreDistance(store, userLat, userLng);
+            boolean isFavorite = favoriteStoreIds.contains(store.getId());
+            responses.add(tenantDtoMapper.toStoreSummaryResponse(store, distanceKm, isFavorite));
         }
+        return responses;
+    }
 
-        // Sắp xếp theo khoảng cách tăng dần (gần nhất lên đầu) nếu có tọa độ GPS
+    private Double calculateStoreDistance(StoreJpaEntity store, Double userLat, Double userLng) {
+        if (userLat != null && userLng != null && store.getLatitude() != null && store.getLongitude() != null) {
+            return GeoUtils.calculateDistanceKm(
+                    userLat,
+                    userLng,
+                    store.getLatitude().doubleValue(),
+                    store.getLongitude().doubleValue()
+            );
+        }
+        return null;
+    }
+
+    private List<StoreSummaryResponse> sortByDistanceIfAvailable(List<StoreSummaryResponse> responses,
+                                                                 Double userLat,
+                                                                 Double userLng) {
         if (userLat != null && userLng != null) {
-            result.sort(Comparator.comparing(
+            responses.sort(Comparator.comparing(
                     StoreSummaryResponse::getDistanceKm,
                     Comparator.nullsLast(Double::compareTo)
             ));
         }
-
-        return result;
-    }
-
-    public static Double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = EARTH_RADIUS_KM * c;
-
-        return Math.round(distance * 100.0) / 100.0;
+        return responses;
     }
 }

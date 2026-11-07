@@ -24,32 +24,50 @@ public class ToggleFavoriteStoreUseCaseImpl implements ToggleFavoriteStoreUseCas
     @Override
     @Transactional
     public ToggleFavoriteResponse execute(UUID storeId, UUID userId, boolean favorite) {
-        UUID tenantId = TenantContext.getTenantId();
-        if (tenantId == null) {
-            throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
-        }
-
-        // Kiểm tra cửa hàng tồn tại trong tenant
-        storeRepository.findByIdAndTenantId(storeId, tenantId)
-                .orElseThrow(() -> new BusinessException(TenantErrorCode.STORE_NOT_FOUND, "Store with ID '" + storeId + "' does not exist in this tenant."));
+        UUID tenantId = validateAndGetTenantId();
+        validateStoreExists(storeId, tenantId);
 
         if (favorite) {
-            boolean alreadyFavorite = customerFavoriteStoreRepository.existsByTenantIdAndUserIdAndStoreId(tenantId, userId, storeId);
-            if (!alreadyFavorite) {
-                CustomerFavoriteStoreJpaEntity entity = CustomerFavoriteStoreJpaEntity.builder()
-                        .userId(userId)
-                        .storeId(storeId)
-                        .build();
-                entity.setTenantId(tenantId);
-                customerFavoriteStoreRepository.save(entity);
-            }
+            addFavoriteIfAbsent(tenantId, userId, storeId);
         } else {
-            customerFavoriteStoreRepository.deleteByTenantIdAndUserIdAndStoreId(tenantId, userId, storeId);
+            removeFavorite(tenantId, userId, storeId);
         }
 
         return ToggleFavoriteResponse.builder()
                 .storeId(storeId)
                 .isFavorite(favorite)
                 .build();
+    }
+
+    private UUID validateAndGetTenantId() {
+        UUID tenantId = TenantContext.getTenantId();
+        if (tenantId == null) {
+            throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
+        }
+        return tenantId;
+    }
+
+    private void validateStoreExists(UUID storeId, UUID tenantId) {
+        storeRepository.findByIdAndTenantId(storeId, tenantId)
+                .orElseThrow(() -> new BusinessException(
+                        TenantErrorCode.STORE_NOT_FOUND,
+                        "Store with ID '" + storeId + "' does not exist in this tenant."
+                ));
+    }
+
+    private void addFavoriteIfAbsent(UUID tenantId, UUID userId, UUID storeId) {
+        boolean alreadyFavorite = customerFavoriteStoreRepository.existsByTenantIdAndUserIdAndStoreId(tenantId, userId, storeId);
+        if (!alreadyFavorite) {
+            CustomerFavoriteStoreJpaEntity entity = CustomerFavoriteStoreJpaEntity.builder()
+                    .userId(userId)
+                    .storeId(storeId)
+                    .build();
+            entity.setTenantId(tenantId);
+            customerFavoriteStoreRepository.save(entity);
+        }
+    }
+
+    private void removeFavorite(UUID tenantId, UUID userId, UUID storeId) {
+        customerFavoriteStoreRepository.deleteByTenantIdAndUserIdAndStoreId(tenantId, userId, storeId);
     }
 }

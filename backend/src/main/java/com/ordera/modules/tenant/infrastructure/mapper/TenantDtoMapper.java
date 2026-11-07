@@ -19,6 +19,7 @@ import org.mapstruct.ReportingPolicy;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -48,62 +49,26 @@ public interface TenantDtoMapper {
             return null;
         }
         Map<String, Object> metadata = entity.getMetadata();
-        String slogan = null;
-        String currency = "NOK";
-        BigDecimal defaultVatRate = new BigDecimal("0.1500");
-        String supportPhone = null;
-        String supportEmail = null;
-
-        if (metadata != null) {
-            if (metadata.get("slogan") != null) {
-                slogan = String.valueOf(metadata.get("slogan"));
-            }
-            if (metadata.get("currency") != null) {
-                currency = String.valueOf(metadata.get("currency"));
-            }
-            if (metadata.get("defaultVatRate") != null) {
-                try {
-                    defaultVatRate = new BigDecimal(metadata.get("defaultVatRate").toString());
-                } catch (Exception ignored) {
-                }
-            }
-            if (metadata.get("supportPhone") != null) {
-                supportPhone = String.valueOf(metadata.get("supportPhone"));
-            }
-            if (metadata.get("supportEmail") != null) {
-                supportEmail = String.valueOf(metadata.get("supportEmail"));
-            }
-        }
 
         return TenantResponse.builder()
                 .id(entity.getId())
                 .code(entity.getCode())
                 .name(entity.getName())
-                .slogan(slogan)
+                .slogan(extractMetadataString(metadata, "slogan", null))
                 .logoUrl(entity.getLogoUrl())
                 .primaryColor(entity.getPrimaryColor())
                 .secondaryColor(entity.getSecondaryColor())
                 .status(entity.getStatus())
-                .currency(currency)
-                .defaultVatRate(defaultVatRate)
-                .supportPhone(supportPhone)
-                .supportEmail(supportEmail)
+                .currency(extractMetadataString(metadata, "currency", "NOK"))
+                .defaultVatRate(extractMetadataBigDecimal(metadata, "defaultVatRate", new BigDecimal("0.1500")))
+                .supportPhone(extractMetadataString(metadata, "supportPhone", null))
+                .supportEmail(extractMetadataString(metadata, "supportEmail", null))
                 .build();
     }
 
     default StoreSummaryResponse toStoreSummaryResponse(StoreJpaEntity entity, Double distanceKm, boolean isFavorite) {
         if (entity == null) {
             return null;
-        }
-        List<String> fulfillmentTypes = new ArrayList<>();
-        if (entity.isAcceptsPickup()) {
-            fulfillmentTypes.add("TAKEAWAY");
-        }
-        if (entity.isAcceptsDinein()) {
-            fulfillmentTypes.add("DINE_IN");
-        }
-        if (entity.isAcceptsDelivery()) {
-            fulfillmentTypes.add("DELIVERY");
         }
 
         return StoreSummaryResponse.builder()
@@ -120,7 +85,7 @@ public interface TenantDtoMapper {
                 .isOpen(entity.isActive())
                 .distanceKm(distanceKm)
                 .preparingTimeMinutes(entity.getPreparingTimeMinutes())
-                .supportedFulfillmentTypes(fulfillmentTypes)
+                .supportedFulfillmentTypes(resolveSupportedFulfillmentTypes(entity))
                 .isFavorite(isFavorite)
                 .build();
     }
@@ -128,16 +93,6 @@ public interface TenantDtoMapper {
     default StoreDetailResponse toStoreDetailResponse(StoreJpaEntity entity) {
         if (entity == null) {
             return null;
-        }
-        List<String> fulfillmentTypes = new ArrayList<>();
-        if (entity.isAcceptsPickup()) {
-            fulfillmentTypes.add("TAKEAWAY");
-        }
-        if (entity.isAcceptsDinein()) {
-            fulfillmentTypes.add("DINE_IN");
-        }
-        if (entity.isAcceptsDelivery()) {
-            fulfillmentTypes.add("DELIVERY");
         }
 
         return StoreDetailResponse.builder()
@@ -151,10 +106,27 @@ public interface TenantDtoMapper {
                 .openingHoursText(entity.getOpeningHours())
                 .isOpen(entity.isActive())
                 .preparingTimeMinutes(entity.getPreparingTimeMinutes())
-                .supportedFulfillmentTypes(fulfillmentTypes)
+                .supportedFulfillmentTypes(resolveSupportedFulfillmentTypes(entity))
                 .deliveryRadiusKm(entity.getDeliveryRadiusKm())
                 .deliveryFee(entity.getDeliveryFee())
                 .build();
+    }
+
+    default List<String> resolveSupportedFulfillmentTypes(StoreJpaEntity entity) {
+        if (entity == null) {
+            return Collections.emptyList();
+        }
+        List<String> types = new ArrayList<>();
+        if (entity.isAcceptsPickup()) {
+            types.add("TAKEAWAY");
+        }
+        if (entity.isAcceptsDinein()) {
+            types.add("DINE_IN");
+        }
+        if (entity.isAcceptsDelivery()) {
+            types.add("DELIVERY");
+        }
+        return types;
     }
 
     default StoreTableResponse toStoreTableResponse(StoreTableJpaEntity entity) {
@@ -171,5 +143,21 @@ public interface TenantDtoMapper {
                 .isOccupied(entity.isOccupied())
                 .build();
     }
-}
 
+    private static String extractMetadataString(Map<String, Object> metadata, String key, String defaultValue) {
+        if (metadata != null && metadata.get(key) != null) {
+            return String.valueOf(metadata.get(key));
+        }
+        return defaultValue;
+    }
+
+    private static BigDecimal extractMetadataBigDecimal(Map<String, Object> metadata, String key, BigDecimal defaultValue) {
+        if (metadata != null && metadata.get(key) != null) {
+            try {
+                return new BigDecimal(metadata.get(key).toString());
+            } catch (Exception ignored) {
+            }
+        }
+        return defaultValue;
+    }
+}

@@ -2,6 +2,7 @@ package com.ordera.modules.tenant.application.usecase.impl;
 
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
+import com.ordera.common.util.GeoUtils;
 import com.ordera.modules.tenant.application.usecase.GetFavoriteStoresUseCase;
 import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.mapper.TenantDtoMapper;
@@ -27,45 +28,69 @@ public class GetFavoriteStoresUseCaseImpl implements GetFavoriteStoresUseCase {
 
     @Override
     public List<StoreSummaryResponse> execute(UUID userId, Double userLat, Double userLng) {
+        UUID tenantId = validateAndGetTenantId();
+
+        List<UUID> favoriteStoreIds = getFavoriteStoreIds(tenantId, userId);
+        if (favoriteStoreIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<StoreJpaEntity> stores = findActiveStores(tenantId, favoriteStoreIds);
+        List<StoreSummaryResponse> responses = mapToStoreResponses(stores, userLat, userLng);
+        return sortByDistanceIfAvailable(responses, userLat, userLng);
+    }
+
+    private UUID validateAndGetTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
             throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
+        return tenantId;
+    }
 
-        List<CustomerFavoriteStoreJpaEntity> favorites = customerFavoriteStoreRepository.findByTenantIdAndUserId(tenantId, userId);
-        if (favorites.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<UUID> storeIds = favorites.stream()
+    private List<UUID> getFavoriteStoreIds(UUID tenantId, UUID userId) {
+        return customerFavoriteStoreRepository.findByTenantIdAndUserId(tenantId, userId)
+                .stream()
                 .map(CustomerFavoriteStoreJpaEntity::getStoreId)
                 .toList();
+    }
 
-        List<StoreJpaEntity> stores = storeRepository.findAllById(storeIds).stream()
-                .filter(s -> tenantId.equals(s.getTenantId()) && s.isActive())
+    private List<StoreJpaEntity> findActiveStores(UUID tenantId, List<UUID> storeIds) {
+        return storeRepository.findAllById(storeIds).stream()
+                .filter(store -> tenantId.equals(store.getTenantId()) && store.isActive())
                 .toList();
+    }
 
-        List<StoreSummaryResponse> result = new ArrayList<>();
+    private List<StoreSummaryResponse> mapToStoreResponses(List<StoreJpaEntity> stores, Double userLat, Double userLng) {
+        List<StoreSummaryResponse> responses = new ArrayList<>(stores.size());
         for (StoreJpaEntity store : stores) {
-            Double distanceKm = null;
-            if (userLat != null && userLng != null && store.getLatitude() != null && store.getLongitude() != null) {
-                distanceKm = GetStoresListUseCaseImpl.calculateHaversineDistance(
-                        userLat,
-                        userLng,
-                        store.getLatitude().doubleValue(),
-                        store.getLongitude().doubleValue()
-                );
-            }
-            result.add(tenantDtoMapper.toStoreSummaryResponse(store, distanceKm, true));
+            Double distanceKm = calculateStoreDistance(store, userLat, userLng);
+            responses.add(tenantDtoMapper.toStoreSummaryResponse(store, distanceKm, true));
         }
+        return responses;
+    }
 
+    private Double calculateStoreDistance(StoreJpaEntity store, Double userLat, Double userLng) {
+        if (userLat != null && userLng != null && store.getLatitude() != null && store.getLongitude() != null) {
+            return GeoUtils.calculateDistanceKm(
+                    userLat,
+                    userLng,
+                    store.getLatitude().doubleValue(),
+                    store.getLongitude().doubleValue()
+            );
+        }
+        return null;
+    }
+
+    private List<StoreSummaryResponse> sortByDistanceIfAvailable(List<StoreSummaryResponse> responses,
+                                                                 Double userLat,
+                                                                 Double userLng) {
         if (userLat != null && userLng != null) {
-            result.sort(Comparator.comparing(
+            responses.sort(Comparator.comparing(
                     StoreSummaryResponse::getDistanceKm,
                     Comparator.nullsLast(Double::compareTo)
             ));
         }
-
-        return result;
+        return responses;
     }
 }

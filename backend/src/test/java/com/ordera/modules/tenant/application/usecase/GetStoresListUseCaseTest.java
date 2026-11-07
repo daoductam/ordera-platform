@@ -2,6 +2,7 @@ package com.ordera.modules.tenant.application.usecase;
 
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
+import com.ordera.common.util.GeoUtils;
 import com.ordera.modules.tenant.application.usecase.impl.GetStoresListUseCaseImpl;
 import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.domain.model.FulfillmentType;
@@ -68,7 +69,7 @@ class GetStoresListUseCaseTest {
     @Test
     @DisplayName("should_calculate_accurate_haversine_distance_between_oslo_coordinates")
     void should_calculate_accurate_haversine_distance_between_oslo_coordinates() {
-        Double distance = GetStoresListUseCaseImpl.calculateHaversineDistance(
+        Double distance = GeoUtils.calculateDistanceKm(
                 59.9111, 10.7528,
                 59.9272, 10.7163
         );

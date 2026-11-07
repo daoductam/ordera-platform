@@ -50,6 +50,9 @@ class StoreControllerTest {
     @Mock
     private GetFavoriteStoresUseCase getFavoriteStoresUseCase;
 
+    @Mock
+    private GetFulfillmentOptionsUseCase getFulfillmentOptionsUseCase;
+
     @InjectMocks
     private StoreController storeController;
 
@@ -201,6 +204,19 @@ class StoreControllerTest {
     @Test
     @DisplayName("GET /api/v1/stores/fulfillment-options - should return 200 with options")
     void should_return_200_fulfillment_options() throws Exception {
+        when(getFulfillmentOptionsUseCase.execute(isNull())).thenReturn(
+                FulfillmentOptionsResponse.builder()
+                        .supportedTypes(List.of(
+                                FulfillmentOptionsResponse.SupportedTypeDto.builder()
+                                        .type("DINE_IN").label("Dine In").enabled(true).build()
+                        ))
+                        .timeOptions(FulfillmentOptionsResponse.TimeOptionsDto.builder()
+                                .asap(FulfillmentOptionsResponse.AsapOptionDto.builder()
+                                        .label("As soon as possible").build())
+                                .build())
+                        .build()
+        );
+
         mockMvc.perform(get("/api/v1/stores/fulfillment-options")
                         .header("X-Tenant-ID", tenantId.toString())
                         .accept(MediaType.APPLICATION_JSON))

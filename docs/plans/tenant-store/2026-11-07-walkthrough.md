@@ -1,6 +1,6 @@
 Started at:  2026/11/07 22:17:00
-Finished at: 2026/11/07 22:49:00
-Total time: 32 minutes
+Finished at: 2026/11/08 00:15:00
+Total time: ~120 minutes
 ---
 
 # Implementation Walkthrough: Phân hệ Tenant & Store (Clean Architecture 4 Lớp)
@@ -10,9 +10,9 @@ Total time: 32 minutes
 - **Spec:** [2026-11-07-spec.md](file:///d:/vibe-code/orderaapp/docs/plans/tenant-store/2026-11-07-spec.md)
 - **Plan:** [2026-11-07-plan.md](file:///d:/vibe-code/orderaapp/docs/plans/tenant-store/2026-11-07-plan.md)
 - **Branch:** `develop`
-- **Implementation approach:** Standard + ErrorCode Pattern Refactoring
-- **Execution mode:** Sequential Parallel
-- **Tasks completed:** 6/6 (100%)
+- **Implementation approach:** Clean Architecture + ErrorCode Pattern + Utility Architecture + Single Responsibility Refactoring
+- **Execution mode:** Sequential Iterative
+- **Tasks completed:** 8/8 (100%)
 
 ---
 
@@ -34,40 +34,57 @@ Total time: 32 minutes
   - `ErrorCode` độc lập hoàn toàn với Spring Framework (chứa `int getStatus()`), giúp Domain Layer giữ vững nguyên tắc Clean Architecture.
 
 ### Task 2 & 3: Repositories, Mappers & DTOs
-- **Status:** Completed
+- **Status:** Completed & Refactored
 - **Files created/modified:**
-  - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/persistence/repository/CustomerFavoriteStoreRepository.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/persistence/repository/KioskDeviceRepository.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/persistence/repository/StoreRepository.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/persistence/repository/StoreTableRepository.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/infrastructure/mapper/TenantDtoMapper.java`
-  - `backend/src/main/java/com/ordera/modules/tenant/presentation/dto/*.java`
+  - `CustomerFavoriteStoreRepository.java`
+  - `KioskDeviceRepository.java`
+  - `StoreRepository.java` (tìm kiếm linh hoạt với keyword nullable)
+  - `StoreTableRepository.java`
+  - `TenantDtoMapper.java`: Tách hàm `resolveSupportedFulfillmentTypes` loại bỏ hoàn toàn mã trùng lặp; tối ưu đọc metadata an toàn.
+  - `dto/*.java`
 
-### Task 4: 7 Use Cases Implementation
-- **Status:** Completed
+### Task 4: 8 Application Use Cases (Orchestrator Pattern)
+- **Status:** Completed & Refactored
 - **Files updated:**
-  - `GetTenantInfoUseCaseImpl`: Ném `BusinessException(TenantErrorCode.TENANT_NOT_FOUND)`.
-  - `GetStoresListUseCaseImpl`: Tính toán GPS Haversine, lọc theo `FulfillmentType`.
-  - `GetStoreDetailUseCaseImpl`: Ném `BusinessException(TenantErrorCode.STORE_NOT_FOUND)`.
-  - `GetStoreTablesUseCaseImpl`: Đọc danh sách bàn ăn.
-  - `ResolveTableQrUseCaseImpl`: Giải mã token QR và fallback phân tích số bàn (`Table 05`).
-  - `ToggleFavoriteStoreUseCaseImpl`: Thêm/xóa yêu thích.
-  - `GetFavoriteStoresUseCaseImpl`: Lấy danh sách chi nhánh yêu thích.
+  - `GetTenantInfoUseCaseImpl`: Đọc cấu hình thương hiệu hiện tại.
+  - `GetStoresListUseCaseImpl`: Điều phối tìm kiếm, lọc fulfillment và sắp xếp GPS Haversine.
+  - `GetStoreDetailUseCaseImpl`: Chi tiết chi nhánh.
+  - `GetStoreTablesUseCaseImpl`: Danh sách bàn ăn.
+  - `ResolveTableQrUseCaseImpl`: Giải mã token QR đa tầng (Exact ➜ Normalized ➜ Regex table number).
+  - `ToggleFavoriteStoreUseCaseImpl`: Thêm/xóa yêu thích chi nhánh.
+  - `GetFavoriteStoresUseCaseImpl`: Danh sách chi nhánh yêu thích đã được khử phụ thuộc chéo vào use case khác.
+  - `GetFulfillmentOptionsUseCaseImpl`: **(Mới)** Lấy động các hình thức nhận món & sinh khung giờ 30 phút theo giờ mở cửa thật của quán.
 
-### Task 5: Web Controllers & Exception Handling
+### Task 5: Common Utility Architecture (`com.ordera.common.util`)
 - **Status:** Completed
-- **Files updated:**
-  - `GlobalExceptionHandler.java`: Rút gọn còn **1 method duy nhất** `@ExceptionHandler(BusinessException.class)` bắt tất cả các lỗi nghiệp vụ có `ErrorCode`.
-  - `StoreController.java` & `TenantController.java`: Phục vụ 7 APIs chuẩn RESTful và RFC 7807.
+- **Classes added:**
+  - `GeoUtils`: Công thức Haversine $R = 6371.0\text{ km}$, làm tròn số thực, kiểm tra tọa độ.
+  - `QrCodeUtils`: Regex token bàn ăn, format tên bàn, chuẩn hóa token.
+  - `SecurityUtils`: Trích xuất User ID từ header / principal an toàn, parse UUID.
+  - `DateTimeUtils`: Tự động sinh danh sách slot hẹn giờ 30 phút từ chuỗi `opening_hours`.
 
-### Task 6: Unit Tests & WebMvc Tests Verification
+### Task 6: Presentation Controllers & Swagger/OpenAPI Enhancement
 - **Status:** Completed
-- **Results:** 45/45 tests PASS (100% SUCCESS) trong `mvn clean test`.
+- **Enhancements:**
+  - `StoreController.java` & `TenantController.java`: Rút gọn code, loại bỏ hoàn toàn hardcode builder.
+  - `OpenApiConfig.java`: Cấu hình tự động chèn header `X-Tenant-ID` vào Swagger UI parameters kèm giá trị mẫu và nút Authorize 🔓 toàn cục.
+
+### Task 7: Unit Tests & WebMvc Tests Verification
+- **Status:** Completed
+- **Results:** 65/65 tests PASS (100% SUCCESS) trong `mvn clean test`.
+  - 4 test suites tiện ích: `GeoUtilsTest`, `QrCodeUtilsTest`, `SecurityUtilsTest`, `DateTimeUtilsTest`.
+  - 8 test suites Use Cases.
+  - 2 test suites Controllers (`StoreControllerTest`, `TenantControllerTest`).
+  - 3 test suites các module cơ bản (Order, Ledger, Loyalty).
 
 ---
 
 ## Deviations from Plan
-Refactor từ individual exception classes sang `ErrorCode` + `BusinessException` theo đề xuất cải tiến của Tech Lead nhằm loại bỏ *Class Explosion*.
+1. Refactor từ individual exception classes sang `ErrorCode` + `BusinessException`.
+2. Tạo package `com.ordera.common.util` để gom các logic tính toán thuần túy, xóa bỏ phụ thuộc chéo giữa các UseCases.
+3. Bổ sung `GetFulfillmentOptionsUseCase` để xử lý dữ liệu động cho API `/fulfillment-options`, xóa bỏ hoàn toàn hardcode trong Controller.
+4. Áp dụng Orchestrator Pattern cho toàn bộ UseCases để đảm bảo Single Responsibility Principle.
+5. Soạn thảo sổ tay trực quan hóa luồng nghiệp vụ & toàn bộ 65 test cases bằng Mermaid Flowchart & Sequence Diagram tại `docs/plans/tenant-store/business-test-flows.md` phục vụ việc onboarding nhanh.
 
 ## Known Limitations
-None. Kiến trúc hiện tại sẵn sàng nhân rộng cho các phân hệ tiếp theo (Auth, Catalog, Order, Loyalty).
+None. Mã nguồn hoàn toàn sạch, tuân thủ SOLID và sẵn sàng bàn giao.

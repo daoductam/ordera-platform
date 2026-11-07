@@ -2,6 +2,7 @@ package com.ordera.modules.tenant.presentation;
 
 import com.ordera.common.api.ApiResponse;
 import com.ordera.common.exception.BusinessException;
+import com.ordera.common.util.SecurityUtils;
 import com.ordera.modules.tenant.application.usecase.*;
 import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.domain.model.FulfillmentType;
@@ -29,6 +30,7 @@ public class StoreController {
     private final ResolveTableQrUseCase resolveTableQrUseCase;
     private final ToggleFavoriteStoreUseCase toggleFavoriteStoreUseCase;
     private final GetFavoriteStoresUseCase getFavoriteStoresUseCase;
+    private final GetFulfillmentOptionsUseCase getFulfillmentOptionsUseCase;
 
     @Operation(summary = "Danh sách chi nhánh cửa hàng", description = "Tìm kiếm chi nhánh, tính khoảng cách GPS Haversine, lọc hình thức nhận")
     @GetMapping
@@ -47,7 +49,7 @@ public class StoreController {
             throw new BusinessException(TenantErrorCode.INVALID_QUERY_PARAM, "Giá trị 'fulfillmentType' không hợp lệ. Chỉ chấp nhận ALL, DINE_IN, TAKEAWAY, DELIVERY.");
         }
 
-        UUID userId = resolveCurrentUserId(userIdHeader, principal);
+        UUID userId = SecurityUtils.resolveCurrentUserId(userIdHeader, principal);
         List<StoreSummaryResponse> stores = getStoresListUseCase.execute(keyword, parsedType, latitude, longitude, userId);
         return ResponseEntity.ok(ApiResponse.ok("Stores retrieved successfully", stores));
     }
@@ -77,34 +79,7 @@ public class StoreController {
     @GetMapping("/fulfillment-options")
     public ResponseEntity<ApiResponse<FulfillmentOptionsResponse>> getFulfillmentOptions(
             @RequestParam(required = false) UUID storeId) {
-
-        FulfillmentOptionsResponse response = FulfillmentOptionsResponse.builder()
-                .supportedTypes(List.of(
-                        FulfillmentOptionsResponse.SupportedTypeDto.builder()
-                                .type("DINE_IN").label("Dine In").icon("utensils").enabled(true).build(),
-                        FulfillmentOptionsResponse.SupportedTypeDto.builder()
-                                .type("TAKEAWAY").label("Takeaway").icon("shopping-bag").enabled(true).build(),
-                        FulfillmentOptionsResponse.SupportedTypeDto.builder()
-                                .type("DELIVERY").label("Delivery").icon("bike").enabled(true).build()
-                ))
-                .timeOptions(FulfillmentOptionsResponse.TimeOptionsDto.builder()
-                        .asap(FulfillmentOptionsResponse.AsapOptionDto.builder()
-                                .label("As soon as possible").estimatedPreparingMinutes(15).build())
-                        .schedule(FulfillmentOptionsResponse.ScheduleOptionDto.builder()
-                                .label("Schedule")
-                                .sublabel("Select a time")
-                                .allowSameDayOnly(true)
-                                .availableSlots(Arrays.asList(
-                                        "11:30 - 12:00",
-                                        "12:00 - 12:30",
-                                        "12:30 - 13:00",
-                                        "17:30 - 18:00",
-                                        "18:00 - 18:30"
-                                ))
-                                .build())
-                        .build())
-                .build();
-
+        FulfillmentOptionsResponse response = getFulfillmentOptionsUseCase.execute(storeId);
         return ResponseEntity.ok(ApiResponse.ok("Fulfillment options retrieved successfully", response));
     }
 
@@ -115,7 +90,7 @@ public class StoreController {
             @RequestHeader(value = "X-User-ID", required = false) String userIdHeader,
             Principal principal) {
 
-        UUID userId = resolveCurrentUserId(userIdHeader, principal);
+        UUID userId = SecurityUtils.resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
             throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để lưu chi nhánh vào danh sách yêu thích.");
         }
@@ -131,7 +106,7 @@ public class StoreController {
             @RequestHeader(value = "X-User-ID", required = false) String userIdHeader,
             Principal principal) {
 
-        UUID userId = resolveCurrentUserId(userIdHeader, principal);
+        UUID userId = SecurityUtils.resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
             throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để gỡ chi nhánh khỏi danh sách yêu thích.");
         }
@@ -148,28 +123,12 @@ public class StoreController {
             @RequestHeader(value = "X-User-ID", required = false) String userIdHeader,
             Principal principal) {
 
-        UUID userId = resolveCurrentUserId(userIdHeader, principal);
+        UUID userId = SecurityUtils.resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
             throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để xem danh sách yêu thích.");
         }
 
         List<StoreSummaryResponse> favorites = getFavoriteStoresUseCase.execute(userId, latitude, longitude);
         return ResponseEntity.ok(ApiResponse.ok("Favorite stores retrieved successfully", favorites));
-    }
-
-    private UUID resolveCurrentUserId(String userIdHeader, Principal principal) {
-        if (userIdHeader != null && !userIdHeader.isBlank()) {
-            try {
-                return UUID.fromString(userIdHeader.trim());
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-        if (principal != null) {
-            try {
-                return UUID.fromString(principal.getName());
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-        return null;
     }
 }
