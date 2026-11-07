@@ -2,7 +2,7 @@
 ## Ordera Multi-Tenant Loyalty & Ordering Platform
 
 > **Chiến Lược Cách Ly Đa Thuê Thuần CSDL (PostgreSQL RLS) & Phân Vùng Sổ Cái (Declarative Range Partitioning)**  
-> **File Migration:** `V4__create_points_ledger.sql`, `V8__enable_rls_security_policies.sql`
+> **File Migration:** `V4__create_points_ledger.sql`, `V9__enable_rls_security_policies.sql`
 
 ---
 

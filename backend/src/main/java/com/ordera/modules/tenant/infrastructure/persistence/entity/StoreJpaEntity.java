@@ -33,6 +33,12 @@ public class StoreJpaEntity extends BaseTenantAuditEntity {
     @Column(name = "longitude", precision = 10, scale = 7)
     private BigDecimal longitude;
 
+    @Column(name = "cover_image_url")
+    private String coverImageUrl;
+
+    @Column(name = "logo_url")
+    private String logoUrl;
+
     @Column(name = "phone_number", length = 32)
     private String phoneNumber;
 
@@ -51,5 +57,20 @@ public class StoreJpaEntity extends BaseTenantAuditEntity {
     @Column(name = "accepts_dinein", nullable = false)
     @Builder.Default
     private boolean acceptsDinein = true;
-}
 
+    @Column(name = "accepts_delivery", nullable = false)
+    @Builder.Default
+    private boolean acceptsDelivery = true;
+
+    @Column(name = "delivery_radius_km", precision = 5, scale = 2)
+    @Builder.Default
+    private BigDecimal deliveryRadiusKm = new BigDecimal("5.00");
+
+    @Column(name = "delivery_fee", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal deliveryFee = BigDecimal.ZERO;
+
+    @Column(name = "preparing_time_minutes")
+    @Builder.Default
+    private Integer preparingTimeMinutes = 15;
+}
