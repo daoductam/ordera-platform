@@ -24,6 +24,7 @@ class OrderJpaEntityTest {
         OrderJpaEntity order = OrderJpaEntity.builder()
                 .storeId(storeId)
                 .userId(userId)
+                .orderNumber("#005")
                 .orderCode("ORD-20261105-0891")
                 .pickupPersonName("David Nguyen")
                 .pickupPersonPhone("+4797362748")
@@ -32,13 +33,18 @@ class OrderJpaEntityTest {
                 .tipAmount(new BigDecimal("10.00"))
                 .totalAmount(new BigDecimal("177.00"))
                 .pointsEarned(170)
+                .appliedGiftTitle("Tumbler Cup")
+                .eReceiptEmail("david@example.com")
                 .build();
         order.setTenantId(tenantId);
 
         // Assert
         assertEquals(tenantId, order.getTenantId());
         assertEquals(storeId, order.getStoreId());
+        assertEquals("#005", order.getOrderNumber());
         assertEquals("ORD-20261105-0891", order.getOrderCode());
+        assertEquals("Tumbler Cup", order.getAppliedGiftTitle());
+        assertEquals("david@example.com", order.getEReceiptEmail());
         assertEquals("COUNTER", order.getPickupMethod());
         assertEquals("ASAP", order.getPickupTimeType());
         assertEquals("PENDING", order.getStatus());

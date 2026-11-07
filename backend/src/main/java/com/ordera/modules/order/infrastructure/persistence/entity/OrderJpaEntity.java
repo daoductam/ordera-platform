@@ -32,6 +32,9 @@ public class OrderJpaEntity extends BaseTenantEntity {
     @Column(name = "user_id")
     private UUID userId;
 
+    @Column(name = "order_number", length = 16)
+    private String orderNumber;
+
     @Column(name = "order_code", nullable = false, length = 32)
     private String orderCode;
 
@@ -93,6 +96,15 @@ public class OrderJpaEntity extends BaseTenantEntity {
 
     @Column(name = "applied_voucher_id")
     private UUID appliedVoucherId;
+
+    @Column(name = "applied_gift_id")
+    private UUID appliedGiftId;
+
+    @Column(name = "applied_gift_title", length = 128)
+    private String appliedGiftTitle;
+
+    @Column(name = "e_receipt_email")
+    private String eReceiptEmail;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
