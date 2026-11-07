@@ -69,6 +69,19 @@
 ```
 
 #### 4. Phản hồi Lỗi Chi tiết
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Số điện thoại sai định dạng E.164 (`422 Unprocessable Entity`):**
 ```json
 {
@@ -172,6 +185,8 @@
   "data": {
     "isProfileComplete": false,
     "tempAuthToken": "temp_auth_98fbc10293da4cba829",
+    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyX3BlbmRpbmciLCJyb2xlIjoiUFJPRklMRV9JTkNPTVBMRVRFIiwiZXhwIjoxODAxOTAwNTAwfQ...",
+    "tokenType": "Bearer",
     "phoneNumber": "+4797362748",
     "user": null
   },
@@ -180,6 +195,19 @@
 ```
 
 #### 5. Phản hồi Lỗi Chi tiết
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Mã OTP sai (`400 Bad Request`):**
 ```json
 {
@@ -243,13 +271,15 @@
 | `phoneNumber` | `String` | Có | Định dạng E.164 | Số điện thoại đăng ký |
 | `email` | `String` | Có | `@NotBlank`, `@Email` | Địa chỉ email đăng ký |
 | `fullName` | `String` | Có | `@NotBlank`, `@Size(min=2, max=128)` | Họ tên của khách hàng (vd: *ABY TRAN*) |
+| `dateOfBirth` | `LocalDate` | Không | Định dạng `YYYY-MM-DD` | Ngày sinh của khách hàng (vd: `2000-08-23`, dùng để tặng voucher sinh nhật) |
 
 ```json
 {
   "channel": "EMAIL",
   "phoneNumber": "+4797362748",
   "email": "abytran@ordera.no",
-  "fullName": "ABY TRAN"
+  "fullName": "ABY TRAN",
+  "dateOfBirth": "2000-08-23"
 }
 ```
 
@@ -270,6 +300,19 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Số điện thoại hoặc Email đã tồn tại (`409 Conflict`):**
 ```json
 {
@@ -348,6 +391,19 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Mã OTP sai (`400 Bad Request`):**
 ```json
 {
@@ -361,6 +417,32 @@
 }
 ```
 
+- **Mã OTP đã hết hạn hiệu lực (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "OTP_EXPIRED",
+    "message": "Mã xác thực đăng ký đã hết hạn 120 giây. Vui lòng bấm gửi lại mã mới.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Tài khoản đã tồn tại trong hệ thống (`409 Conflict`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "USER_ALREADY_EXISTS",
+    "message": "Số điện thoại hoặc Email này đã được đăng ký tài khoản.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 3.5: Cấp Lại Token (Refresh Access Token)
@@ -368,7 +450,7 @@
 - **HTTP Method:** `POST`
 - **URL Path:** `/api/v1/auth/refresh-token`
 - **Operation ID:** `refreshToken`
-- **Mô tả:** Sử dụng Refresh Token để cấp phát một Access Token mới mà không yêu cầu người dùng phải nhập lại mã OTP.
+- **Mô tả:** Sử dụng Refresh Token để cấp phát một Access Token mới mà không yêu cầu người dùng phải nhập lại mã OTP. Hỗ trợ xoay vòng Refresh Token (Token Rotation) nhằm tăng cường bảo mật.
 - **Frontend Gọi tại:** `apiClient.ts` (Interceptor bắt lỗi 401 tự động refresh token)
 
 #### 1. Request Headers
@@ -397,6 +479,8 @@
   "message": "Cấp mới Access Token thành công",
   "data": {
     "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkYXZpZC5uZ3V5ZW4iLCJleHAiOjE4MDE5ODAwMDB9...",
+    "refreshToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJkYXZpZC5uZ3V5ZW4iLCJ0eXBlIjoicmVmcmVzaCJ9...",
+    "tokenType": "Bearer",
     "expiresIn": 86400
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
@@ -404,6 +488,19 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Refresh Token hết hạn hoặc không hợp lệ (`401 Unauthorized`):**
 ```json
 {
@@ -417,6 +514,19 @@
 }
 ```
 
+- **Token bị thu hồi hoặc đã đưa vào Blacklist (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TOKEN_INVALID_OR_REVOKED",
+    "message": "Refresh Token không hợp lệ hoặc đã bị thu hồi do đăng xuất.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 3.6: Đăng Xuất & Thu Hồi Phiên (Logout)
@@ -424,7 +534,7 @@
 - **HTTP Method:** `POST`
 - **URL Path:** `/api/v1/auth/logout`
 - **Operation ID:** `logout`
-- **Mô tả:** Đưa token JWT hiện tại vào Blacklist trong Redis cho đến khi token tự hết hạn để ngăn chặn tái sử dụng và thu hồi Refresh Token.
+- **Mô tả:** Đưa token JWT hiện tại vào Blacklist trong Redis cho đến khi token tự hết hạn để ngăn chặn tái sử dụng, đồng thời thu hồi và xóa Refresh Token session trong Redis.
 - **Màn hình Prototype:** `04.06` (Nút Logout dưới đáy trang tài khoản)
 - **Frontend Gọi tại:** `AccountPage.tsx`, `AuthContext.tsx`
 
@@ -433,8 +543,20 @@
 |:---|:---|:---:|:---|
 | `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
 | `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` |
+| `Content-Type`  | `String` | **Có** | `application/json` |
 
-#### 2. Phản hồi Thành công (200 OK)
+#### 2. Request Body Schema
+| Trường | Kiểu | Bắt buộc | Ràng buộc | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `refreshToken` | `String` | Không | Chuỗi JWT hợp lệ | Refresh Token cần thu hồi khỏi session Redis |
+
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzUxMiJ9..."
+}
+```
+
+#### 3. Phản hồi Thành công (200 OK)
 - **Status:** `200 OK`
 - **Body:**
 ```json
@@ -445,3 +567,46 @@
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
 ```
+
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Token không hợp lệ hoặc đã hết hạn (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Phiên xác thực không hợp lệ hoặc đã hết hạn.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+---
+
+## Ghi Chú Kỹ Thuật & Cấu Trúc Cache Redis (Technical & Redis Auth Notes)
+
+1. **Cấu trúc Không gian Khóa Redis (Redis Key Naming Convention):**
+   - `auth:otp:{tenantId}:{recipient}`: Chuỗi OTP 6 số ngẫu nhiên (TTL 120s).
+   - `auth:otp:cooldown:{tenantId}:{recipient}`: Cờ đánh dấu cooldown chống spam gửi lại (TTL 120s).
+   - `auth:otp:attempts:{tenantId}:{recipient}`: Bộ đếm số lần nhập sai (ngưỡng khóa: $\ge 5$ lần).
+   - `auth:temp_token:{tenantId}:{tempAuthToken}`: Lưu trạng thái SĐT đã xác thực nhưng chưa hoàn thiện hồ sơ (TTL 900s / 15 phút), phục vụ gọi tiếp API 4.3 `complete-profile`.
+   - `auth:blacklist:{jti}`: Đánh dấu ID định danh của JWT Token sau khi gọi Logout, TTL bằng thời gian sống còn lại của Access Token (tối đa 24 giờ).
+2. **Nguyên tắc Phân lập Đa khách thuê (Multi-Tenancy):**
+   - Toàn bộ dữ liệu Redis Key và bản ghi Database bắt buộc chứa tiền tố `tenantId` để ngăn ngừa rò rỉ token hoặc nhầm lẫn SĐT giữa các thương hiệu khác nhau.
+3. **Mối quan hệ Dữ liệu Giữa `users` và `member_profiles`:**
+   - Bảng `users` (CSDL Phân hệ 02) lưu trữ định danh gốc: SĐT, Email, Họ tên, Trạng thái kích hoạt, Phân quyền hệ thống.
+   - Bảng `member_profiles` (CSDL Phân hệ 03) lưu trữ thuộc tính hội viên thương hiệu: Điểm khả dụng, Điểm trọn đời, Bậc thẻ (`New`, `Silver`...), `date_of_birth` (nhận voucher sinh nhật), và `avatar_url`.
