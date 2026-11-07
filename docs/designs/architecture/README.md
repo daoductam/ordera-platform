@@ -33,3 +33,4 @@ Tài liệu Kiến trúc này được đặt ngang hàng và liên kết trực
 - 📋 [**Tài liệu Đặc tả Yêu cầu Nghiệp vụ SRS**](../srs/): Ma trận phân quyền 7 Actors và 8 Luồng nghiệp vụ cốt lõi.
 - 📱 [**Tài liệu Phân tích Prototype**](../../prototype/): 73 màn hình Mobile Web PWA & 32 màn hình Kiosk POS Touch Terminal.
 - ⚡ [**Sổ Tay Câu Lệnh Prompt Phát Triển**](../../END_TO_END_PROMPTS.md): Kịch bản phát triển tự động hóa cho AI Agent.
+
