@@ -152,6 +152,9 @@
                 "name": "Laks Maki",
                 "description": "8 miếng cuộn cá hồi Na Uy tươi kèm bơ sáp và dưa chuột giòn",
                 "basePrice": 150.00,
+                "originalPrice": 180.00,
+                "piecesText": "8 biter",
+                "dietaryTags": ["Popular", "Gluten Free"],
                 "imageUrl": "https://storage.ordera.no/products/laks-maki.jpg",
                 "isPopular": true,
                 "isAvailable": true,
@@ -162,6 +165,9 @@
                 "name": "Tuna Maki",
                 "description": "8 miếng cuộn cá ngừ đại dương với sốt cay đặc biệt",
                 "basePrice": 72.00,
+                "originalPrice": null,
+                "piecesText": "8 biter",
+                "dietaryTags": ["Spicy"],
                 "imageUrl": "https://storage.ordera.no/products/tuna-maki.jpg",
                 "isPopular": false,
                 "isAvailable": true,
@@ -177,6 +183,33 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy Cửa hàng (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "STORE_NOT_FOUND",
+    "message": "Store with ID 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b99' does not exist.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 2.3: Chi Tiết Món Ăn & Nhóm Tùy Chọn (Get Product Modifiers)
@@ -187,12 +220,17 @@
 - **Mô tả:** Lấy danh sách các nhóm tùy chọn (Size, Topping, Mức ngọt, Mức đá) khi khách hàng chạm vào một món ăn trong danh sách để mở Modal tùy biến (`01.06`, `06.06`).
 - **Màn hình Prototype:** `01.06`, `06.06`
 
-#### 1. Path Parameters
+#### 1. Request Headers
+| Header | Kiểu | Bắt buộc | Mẫu |
+|:---|:---|:---:|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
+
+#### 2. Path Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
 |:---|:---|:---:|:---|
 | `productId` | `UUID` | **Có** | ID của món ăn |
 
-#### 2. Phản hồi Thành công (200 OK)
+#### 3. Phản hồi Thành công (200 OK)
 - **Status:** `200 OK`
 - **Body:**
 ```json
@@ -252,7 +290,20 @@
 }
 ```
 
-#### 3. Phản hồi Lỗi
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Không tìm thấy Món ăn (`404 Not Found`):**
 ```json
 {
@@ -307,6 +358,33 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy Cửa hàng (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "STORE_NOT_FOUND",
+    "message": "Store with ID 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b99' does not exist.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 2.5: Tìm kiếm Món ăn (Search Products)
@@ -330,7 +408,7 @@
 #### 3. Query Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
 |:---|:---|:---:|:---|
-| `query` | `String` | Có | Từ khóa tìm kiếm (vd: `maki`, `salmon`) |
+| `query` | `String` | Có | Từ khóa tìm kiếm (vd: `maki`, `salmon`, tối thiểu 2 ký tự) |
 
 #### 4. Phản hồi Thành công (200 OK)
 ```json
@@ -342,6 +420,9 @@
       "id": "d1eebc99-9c0b-4ef8-bb6d-6bb9bd380d01",
       "name": "Laks Maki",
       "basePrice": 150.00,
+      "originalPrice": 180.00,
+      "piecesText": "8 biter",
+      "dietaryTags": ["Popular", "Gluten Free"],
       "categoryName": "Maki",
       "imageUrl": "https://storage.ordera.no/products/laks-maki.jpg",
       "isPopular": true
@@ -350,3 +431,60 @@
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
 ```
+
+#### 5. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Từ khóa tìm kiếm không hợp lệ (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_QUERY_PARAM",
+    "message": "Search query must contain at least 2 characters.",
+    "details": {
+      "field": "query",
+      "rejectedValue": "a"
+    }
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy Cửa hàng (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "STORE_NOT_FOUND",
+    "message": "Store with ID 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b99' does not exist.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+---
+
+## Ghi Chú Kỹ Thuật & Đồng Bộ Cơ Sở Dữ Liệu (Technical & DB Sync Notes)
+
+1. **Đồng bộ Đa khách thuê (Multi-Tenancy):**
+   - Mọi truy vấn thực đơn (`categories`, `subcategories`, `products`, `modifiers`, `promotion_banners`) bắt buộc lọc kép theo `tenant_id` lấy từ `TenantContextHolder` và `store_id` (hoặc store áp dụng chung toàn tenant).
+2. **Hỗ trợ Hiển thị Giá khuyến mãi & Tag khẩu phần (Prototype 01.06):**
+   - Các trường `originalPrice` (giá gạch ngang khi có ưu đãi), `piecesText` (ví dụ `"8 biter"`), và `dietaryTags` (`["Popular", "Gluten Free"]`) được bổ sung trực tiếp vào Product DTO để phục vụ giao diện mà không cần hardcode phía Client.
+3. **Mô hình DDL Flyway bổ sung (Upcoming Migration):**
+   - Bổ sung bảng `subcategories` hỗ trợ phân nhóm con (Pill buttons: *Fresh maki*, *Fried maki*).
+   - Bổ sung bảng `promotion_banners` hỗ trợ banner chiến dịch tiếp thị trên đầu thực đơn cửa hàng.
+   - Bổ sung các cột `original_price`, `pieces_text`, `dietary_tags` vào bảng `products`.
+   - Bổ sung cột `icon` vào bảng `categories`.
