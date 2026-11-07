@@ -84,7 +84,7 @@ Total time: ~120 minutes
 2. Tạo package `com.ordera.common.util` để gom các logic tính toán thuần túy, xóa bỏ phụ thuộc chéo giữa các UseCases.
 3. Bổ sung `GetFulfillmentOptionsUseCase` để xử lý dữ liệu động cho API `/fulfillment-options`, xóa bỏ hoàn toàn hardcode trong Controller.
 4. Áp dụng Orchestrator Pattern cho toàn bộ UseCases để đảm bảo Single Responsibility Principle.
-5. Soạn thảo sổ tay trực quan hóa luồng nghiệp vụ & toàn bộ 65 test cases bằng Mermaid Flowchart & Sequence Diagram tại `docs/plans/tenant-store/business-test-flows.md` phục vụ việc onboarding nhanh.
+5. Soạn thảo sổ tay trực quan hóa luồng nghiệp vụ & biểu đồ trình tự 8 Use Cases bằng Mermaid Flowchart & Sequence Diagram tại `docs/plans/tenant-store/business-flows.md` phục vụ việc onboarding nhanh.
 
 ## Known Limitations
 None. Mã nguồn hoàn toàn sạch, tuân thủ SOLID và sẵn sàng bàn giao.
