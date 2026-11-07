@@ -70,6 +70,7 @@ Quản lý quà tặng vật lý như cốc giữ nhiệt Tumbler (Figma Nhóm 0
 | `image_url` | `TEXT` | YES | | | Đường dẫn ảnh ly giữ nhiệt |
 | `points_cost` | `INT` | NO | `100` | | Số điểm cần để đổi (100 Points) |
 | `stock_quantity`| `INT` | NO | `10` | | Số lượng tồn kho hiện tại (`Quantity left: 10 Pieces`) |
+| `tag` | `VARCHAR(64)` | YES | | | Tag nhãn nổi bật trên giao diện (ví dụ: `Hot Reward`, `Limited Edition` - Prototype 07.04) |
 | `is_active` | `BOOLEAN` | NO | `true` | | Quà còn trong chương trình đổi thưởng không |
 | `created_at` | `TIMESTAMPTZ` | NO | `now()` | | Thời gian tạo quà |
 
@@ -86,11 +87,89 @@ Lưu trữ việc thành viên đổi điểm nhận quà vật lý tại quầy
 | `gift_id` | `UUID` | NO | | FK -> `loyalty_gifts(id)` | Món quà được đổi |
 | `points_spent` | `INT` | NO | | | Số điểm đã trừ |
 | `redemption_code`| `VARCHAR(32)`| NO | | UK | Mã nhận quà 8 ký tự để khách đưa cho nhân viên quầy quét |
-| `status` | `VARCHAR(32)` | NO | `'PENDING'` | | Trạng thái: `PENDING` (chờ nhận tại quầy), `CLAIMED` (đã nhận cốc), `CANCELLED` (hủy) |
+| `status` | `VARCHAR(32)` | NO | `'PENDING'` | | Trạng thái: `PENDING` (chờ nhận tại quầy/chờ xuất kho), `SELECTED` (đang gán vào đơn hàng checkout), `CLAIMED` (đã trao quà), `CANCELLED` (hủy) |
+| `applied_order_id`| `UUID` | YES | | FK -> `orders(id)` ON DELETE SET NULL | Đơn hàng áp dụng quà tặng đi kèm (Figma 08.09, 08.10) |
 | `claimed_at` | `TIMESTAMPTZ` | YES | | | Thời điểm nhân viên quầy xác nhận trao quà |
 | `created_at` | `TIMESTAMPTZ` | NO | `now()` | | Thời điểm bấm Get now đổi quà |
 
 #### Indexes & Constraints
 - `uq_gift_redemption_code`: UNIQUE (`redemption_code`)
 - `idx_gift_redemption_member`: (`member_id`, `status`)
+- `idx_gift_redemption_applied_order`: (`applied_order_id`)
+
+---
+
+## Tham Khảo DDL Flyway Mở Rộng (Migration Script Reference)
+
+```sql
+-- Flyway Script: V6__create_vouchers_and_rewards.sql
+
+-- 1. Bảng mẫu voucher
+CREATE TABLE vouchers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id),
+    code VARCHAR(64) NOT NULL,
+    title VARCHAR(128) NOT NULL,
+    description VARCHAR(255),
+    discount_type VARCHAR(16) NOT NULL, -- FIXED_AMOUNT, PERCENTAGE
+    discount_value NUMERIC(12,2) NOT NULL,
+    min_order_value NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    points_cost INT NOT NULL DEFAULT 0,
+    valid_from TIMESTAMPTZ NOT NULL DEFAULT now(),
+    valid_until TIMESTAMPTZ NOT NULL,
+    max_issuance INT,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_vouchers_tenant_code UNIQUE (tenant_id, code)
+);
+
+CREATE INDEX idx_vouchers_active ON vouchers (tenant_id, is_active, valid_until);
+
+-- 2. Bảng ví voucher người dùng
+CREATE TABLE user_vouchers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id),
+    member_id UUID NOT NULL REFERENCES member_profiles(id) ON DELETE CASCADE,
+    voucher_id UUID NOT NULL REFERENCES vouchers(id),
+    status VARCHAR(32) NOT NULL DEFAULT 'AVAILABLE', -- AVAILABLE, IN_USE, USED, EXPIRED
+    applied_order_id UUID,
+    redeemed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    used_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_user_vouchers_member_status ON user_vouchers (member_id, status);
+CREATE INDEX idx_user_vouchers_applied_order ON user_vouchers (applied_order_id);
+
+-- 3. Bảng kho quà hiện vật
+CREATE TABLE loyalty_gifts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id),
+    title VARCHAR(128) NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    points_cost INT NOT NULL DEFAULT 100,
+    stock_quantity INT NOT NULL DEFAULT 10,
+    tag VARCHAR(64),
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 4. Bảng lượt đổi quà hiện vật
+CREATE TABLE user_gift_redemptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id),
+    member_id UUID NOT NULL REFERENCES member_profiles(id),
+    gift_id UUID NOT NULL REFERENCES loyalty_gifts(id),
+    points_spent INT NOT NULL,
+    redemption_code VARCHAR(32) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING', -- PENDING, SELECTED, CLAIMED, CANCELLED
+    applied_order_id UUID,
+    claimed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_gift_redemption_code UNIQUE (redemption_code)
+);
+
+CREATE INDEX idx_gift_redemption_member ON user_gift_redemptions (member_id, status);
+CREATE INDEX idx_gift_redemption_applied_order ON user_gift_redemptions (applied_order_id);
+```
 

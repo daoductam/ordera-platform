@@ -118,6 +118,19 @@
 ```
 
 #### 5. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Chưa đăng nhập (`401 Unauthorized`):**
 ```json
 {
@@ -202,6 +215,33 @@
 }
 ```
 
+#### 3. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để xem danh mục đổi thưởng.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 5.3: Đổi Điểm Lấy Voucher Giảm Giá (Redeem Voucher Reward)
@@ -245,6 +285,45 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để đổi voucher ưu đãi.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy voucher (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VOUCHER_NOT_FOUND",
+    "message": "Voucher không tồn tại hoặc đã bị gỡ khỏi danh mục đổi thưởng.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Điểm khả dụng không đủ (`422 Unprocessable Entity`):**
 ```json
 {
@@ -285,12 +364,18 @@
 - **Khóa Phân Tán:** Chiếm giữ đồng thời `lock:member:{memberId}` và `lock:gift:{giftId}`.
 - **Màn hình Prototype:** `07.04`
 
-#### 1. Path Parameters
+#### 1. Request Headers
+| Header | Kiểu | Bắt buộc | Mẫu |
+|:---|:---|:---:|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
+| `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` |
+
+#### 2. Path Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
 |:---|:---|:---:|:---|
 | `giftId` | `UUID` | **Có** | ID quà tặng trong bảng `loyalty_gifts` |
 
-#### 2. Phản hồi Thành công (201 Created)
+#### 3. Phản hồi Thành công (201 Created)
 - **Status:** `201 Created`
 - **Body:**
 ```json
@@ -311,7 +396,63 @@
 }
 ```
 
-#### 3. Phản hồi Lỗi
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để đổi quà tặng.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy quà tặng (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "GIFT_NOT_FOUND",
+    "message": "Món quà này không tồn tại hoặc đã ngừng chương trình tặng quà.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Điểm khả dụng không đủ (`422 Unprocessable Entity`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "POINTS_INSUFFICIENT",
+    "message": "Số dư điểm khả dụng không đủ để đổi quà tặng này.",
+    "details": {
+      "currentPoints": 120,
+      "requiredPoints": 1000,
+      "pointsShortage": 880
+    }
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Quà đã hết số lượng tồn kho (`409 Conflict`):**
 ```json
 {
@@ -352,6 +493,33 @@
     "totalAvailableRewards": 3,
     "activeVouchersCount": 2,
     "availableGiftsCount": 1
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+#### 3. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để xem thông tin tổng quan ưu đãi.",
+    "details": null
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
@@ -434,6 +602,46 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để xem danh sách ưu đãi áp dụng.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy giỏ hàng (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CART_NOT_FOUND",
+    "message": "Giỏ hàng không tồn tại hoặc đã hết hạn phiên làm việc.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 5.7: Kiểm tra Mã Khuyến Mãi Nhập Tay (Validate Manual Promo Code)
@@ -481,6 +689,32 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để kiểm tra mã khuyến mãi.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Mã không tồn tại hoặc đã hết hạn (`404 Not Found`):**
 ```json
 {
@@ -489,6 +723,22 @@
     "code": "PROMO_CODE_NOT_FOUND",
     "message": "Mã khuyến mãi không hợp lệ hoặc đã hết hạn sử dụng.",
     "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Đơn hàng chưa đạt điều kiện áp dụng mã (`422 Unprocessable Entity`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "PROMO_CODE_INELIGIBLE",
+    "message": "Đơn hàng chưa đạt giá trị tối thiểu để áp dụng mã khuyến mãi này.",
+    "details": {
+      "currentSubtotal": 120.00,
+      "minOrderRequired": 200.00
+    }
   },
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
@@ -546,6 +796,45 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để áp dụng voucher.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy voucher trong ví (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VOUCHER_NOT_FOUND",
+    "message": "Voucher không tồn tại trong ví hoặc không thuộc về người dùng này.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 - **Đơn hàng chưa đạt giá trị tối thiểu (`422 Unprocessable Entity`):**
 ```json
 {
@@ -608,6 +897,46 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để gỡ bỏ voucher khỏi giỏ hàng.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy giỏ hàng hoặc voucher trong giỏ (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CART_OR_VOUCHER_NOT_FOUND",
+    "message": "Giỏ hàng không tồn tại hoặc mã voucher chưa từng được áp dụng vào giỏ hàng này.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 5.10: Áp Dụng Quà Tặng Hội Viên Vào Giỏ Hàng (Apply Gift to Cart)
@@ -655,6 +984,46 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để chọn quà tặng tri ân.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy quà tặng hợp lệ trong ví (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "GIFT_NOT_FOUND",
+    "message": "Quà tặng không tồn tại trong ví đổi thưởng của bạn hoặc đã được sử dụng.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
 ---
 
 ### API 5.11: Gỡ Bỏ Quà Tặng Khỏi Giỏ Hàng (Remove Gift from Cart)
@@ -697,3 +1066,60 @@
   "timestamp": "2026-11-05T20:45:00.000Z"
 }
 ```
+
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để gỡ quà tặng.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+- **Không tìm thấy quà tặng trong đơn hàng (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "GIFT_NOT_FOUND",
+    "message": "Quà tặng không tồn tại trong giỏ hàng hiện tại.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:45:00.000Z"
+}
+```
+
+---
+
+## Ghi Chú Kỹ Thuật & Chu Trình Trạng Thái Ưu Đãi (Technical & State Machine Notes)
+
+1. **Vòng đời Trạng thái Voucher (`user_vouchers.status`):**
+   - `AVAILABLE`: Khách hàng sở hữu voucher khả dụng trong ví.
+   - `IN_USE`: Khi khách hàng chọn áp dụng mã vào giỏ hàng (`POST /api/v1/cart/voucher/apply`), voucher tạm thời bị khóa cho giỏ hàng đó để tránh áp dụng đồng thời trên nhiều thiết bị.
+   - `USED`: Khi đơn hàng thanh toán thành công (`COMPLETED`), voucher chính thức được đánh dấu đã sử dụng kèm `used_at` và `order_id`.
+   - Nếu giỏ hàng bị hủy, hết hạn hoặc khách ấn `[Remove from the Cart]`, voucher được hoàn trả về trạng thái `AVAILABLE`.
+
+2. **Quy Tắc Kết Hợp Ưu Đãi Giỏ Hàng (Cart Offers Combination Rules):**
+   - Trong mỗi giỏ hàng/đơn hàng, hệ thống cho phép kết hợp tối đa **01 Mã giảm giá (Voucher Fixed/Percentage)** VÀ **01 Quà tặng tri ân (Physical Loyalty Gift)** cùng lúc (theo đúng thiết kế giao diện Figma Drawer Prototype 08).
+   - Không được áp dụng đồng thời 2 Voucher trên cùng một đơn hàng.
+
+3. **Cơ Chế Khóa Phân Tán Đổi Quà (Redisson Distributed Lock):**
+   - Khi thực hiện đổi quà vật phẩm (`POST /api/v1/rewards/gifts/{giftId}/redeem`), hệ thống kích hoạt Redisson multi-lock trên `lock:member:{memberId}` và `lock:gift:{giftId}` nhằm ngăn ngừa hiện tượng race condition trừ điểm vượt mức hoặc vượt quá số lượng quà tặng tồn kho (`stock_quantity`).
