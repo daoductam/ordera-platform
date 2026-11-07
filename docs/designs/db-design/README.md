@@ -91,13 +91,14 @@ erDiagram
 
 Tài liệu được tách thành các file chi tiết tương ứng với từng Domain module:
 
-1. 🏬 [`01-tenants-and-stores-db.md`](./01-tenants-and-stores-db.md) — Bảng `tenants`, `stores`, `store_tables`.
+1. 🏬 [`01-tenants-and-stores-db.md`](./01-tenants-and-stores-db.md) — Bảng `tenants`, `stores`, `store_tables`, `kiosk_devices`.
 2. 🔐 [`02-users-and-identity-db.md`](./02-users-and-identity-db.md) — Bảng `users`, `otp_audit_logs`.
 3. 🎖️ [`03-loyalty-and-points-ledger-db.md`](./03-loyalty-and-points-ledger-db.md) — Bảng `tier_definitions`, `member_profiles`, `points_ledger` (Partitioned), `support_claims`.
 4. 🍣 [`04-catalog-and-menu-db.md`](./04-catalog-and-menu-db.md) — Bảng `categories`, `products`, `product_modifier_groups`, `product_modifiers`.
 5. 🎁 [`05-rewards-and-vouchers-db.md`](./05-rewards-and-vouchers-db.md) — Bảng `vouchers`, `user_vouchers`, `loyalty_gifts`, `user_gift_redemptions`.
-6. 🛒 [`06-orders-and-checkout-db.md`](./06-orders-and-checkout-db.md) — Bảng `orders`, `order_items`, `order_item_modifiers`.
+6. 🛒 [`06-orders-and-checkout-db.md`](./06-orders-and-checkout-db.md) — Bảng `orders`, `order_items`, `order_item_modifiers`, `carts`, `cart_items`.
 7. 🛡️ [`07-rls-and-partitioning.md`](./07-rls-and-partitioning.md) — Chiến lược Row-Level Security, Hibernate Interceptor & Phân vùng dữ liệu RANGE theo năm.
+8. 🔔 [`08-notifications-and-support-db.md`](./08-notifications-and-support-db.md) — Bảng `system_notifications`, `user_notifications`, `support_inquiries`.
 
 ---
 
