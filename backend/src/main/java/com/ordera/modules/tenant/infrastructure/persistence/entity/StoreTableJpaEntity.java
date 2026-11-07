@@ -28,6 +28,9 @@ public class StoreTableJpaEntity extends BaseTenantEntity {
     @Column(name = "table_number", nullable = false, length = 32)
     private String tableNumber;
 
+    @Column(name = "zone", length = 100)
+    private String zone;
+
     @Column(name = "seating_capacity", nullable = false)
     @Builder.Default
     private int seatingCapacity = 4;
@@ -44,4 +47,3 @@ public class StoreTableJpaEntity extends BaseTenantEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 }
-

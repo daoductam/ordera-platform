@@ -108,15 +108,16 @@ Bộ migration SQL được đặt tại thư mục `backend/src/main/resources/
 
 ```tree
 db/migration/
-├── V1__create_tenants_and_stores.sql      # Bảng tenants, stores, store_tables
-├── V2__create_users_and_identity.sql      # Bảng users, otp_audit_logs
-├── V3__create_loyalty_and_tiers.sql       # Bảng tier_definitions, member_profiles, support_claims
-├── V4__create_points_ledger.sql           # Bảng points_ledger (Partitioned)
-├── V5__create_catalog_and_modifiers.sql   # Bảng categories, products, product_modifiers
-├── V6__create_vouchers_and_rewards.sql    # Bảng vouchers, user_vouchers, loyalty_gifts, user_gift_redemptions
-├── V7__create_orders_and_checkout.sql     # Bảng orders, order_items, order_item_modifiers
-├── V8__enable_rls_security_policies.sql   # Script kích hoạt RLS & Policies
-└── V9__seed_demo_data_linn_sushi.sql      # Dữ liệu mẫu ban đầu khớp với Figma
+├── V1__create_tenants_and_stores.sql          # Bảng tenants, stores, store_tables, kiosk_devices
+├── V2__create_users_and_identity.sql          # Bảng users, otp_audit_logs, customer_favorite_stores
+├── V3__create_loyalty_and_tiers.sql           # Bảng tier_definitions, member_profiles, support_claims
+├── V4__create_points_ledger.sql               # Bảng points_ledger (Partitioned) & Trigger
+├── V5__create_catalog_and_modifiers.sql       # Bảng categories, subcategories, products, modifiers, banners
+├── V6__create_vouchers_and_rewards.sql        # Bảng vouchers, user_vouchers, loyalty_gifts, user_gift_redemptions
+├── V7__create_orders_and_checkout.sql         # Bảng orders, order_items, order_item_modifiers, carts, cart_items
+├── V8__create_notifications_and_support.sql   # Bảng system_notifications, user_notifications, support_inquiries
+├── V9__enable_rls_security_policies.sql       # Script kích hoạt RLS & Policies cho toàn bộ 21 bảng
+└── V10__seed_demo_data_linn_sushi.sql         # Dữ liệu mẫu ban đầu khớp 100% Figma 2.0 (Linn Sushi)
 ```
 
 ---

@@ -3,7 +3,7 @@
 
 > **Phân hệ Quản trị Thương hiệu, Điểm bán, Bàn ăn & Cửa hàng Yêu thích**  
 > **Ánh xạ Frontend:** `StoreDiscoveryPage.tsx`, `RestaurantList.tsx`, `LocationConfirmModal.tsx`  
-> **File Migration:** `V1__create_tenants_and_stores.sql` & `V10__add_store_fields_and_favorites.sql`  
+> **File Migration:** `V1__create_tenants_and_stores.sql` & `V2__create_users_and_identity.sql`  
 > **JPA Entities:** `TenantJpaEntity.java`, `StoreJpaEntity.java`, `StoreTableJpaEntity.java`, `CustomerFavoriteStoreJpaEntity.java`
 
 ---

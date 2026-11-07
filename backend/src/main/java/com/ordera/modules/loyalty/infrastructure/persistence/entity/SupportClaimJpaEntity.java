@@ -24,6 +24,9 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 public class SupportClaimJpaEntity extends BaseTenantEntity {
 
+    @Column(name = "store_id")
+    private UUID storeId;
+
     @Column(name = "member_id", nullable = false)
     private UUID memberId;
 
@@ -57,4 +60,3 @@ public class SupportClaimJpaEntity extends BaseTenantEntity {
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 }
-

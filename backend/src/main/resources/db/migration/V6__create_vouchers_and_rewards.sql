@@ -1,6 +1,7 @@
 -- ==============================================================================
 -- V6__create_vouchers_and_rewards.sql
--- Phân hệ 5: Ví Voucher & Đổi Thưởng (Vouchers, Gifts, Wallets)
+-- Phân hệ 5: Ví Voucher, Đổi Thưởng & Quà Hiện Vật Loyalty
+-- Ánh xạ: docs/designs/db-design/05-rewards-and-vouchers-db.md
 -- ==============================================================================
 
 -- 1. Bảng vouchers (Kho Mã Giảm Giá & Ưu đãi)
@@ -9,7 +10,7 @@ CREATE TABLE vouchers (
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
     code VARCHAR(64) NOT NULL,
     title VARCHAR(128) NOT NULL,
-    description VARCHAR(255) NOT NULL,
+    description VARCHAR(255),
     discount_type VARCHAR(16) NOT NULL, -- FIXED_AMOUNT, PERCENTAGE
     discount_value NUMERIC(12,2) NOT NULL,
     min_order_value NUMERIC(12,2) NOT NULL DEFAULT 0.00,
@@ -22,7 +23,7 @@ CREATE TABLE vouchers (
     CONSTRAINT uq_vouchers_tenant_code UNIQUE (tenant_id, code)
 );
 
-COMMENT ON TABLE vouchers IS 'Kho định nghĩa các chương trình ưu đãi, mã giảm giá và đổi thưởng';
+COMMENT ON TABLE vouchers IS 'Kho định nghĩa các chương trình ưu đãi, mã giảm giá và đổi thưởng (Figma 07: Voucher 100 NOK, Giảm -30%)';
 COMMENT ON COLUMN vouchers.id IS 'Khóa chính mẫu voucher';
 COMMENT ON COLUMN vouchers.tenant_id IS 'Khóa ngoại thuộc thương hiệu phát hành';
 COMMENT ON COLUMN vouchers.code IS 'Mã voucher nhập tay (SAVE100, OFF30)';
@@ -52,7 +53,7 @@ CREATE TABLE user_vouchers (
     used_at TIMESTAMPTZ
 );
 
-COMMENT ON TABLE user_vouchers IS 'Ví lưu trữ các voucher mà từng khách hàng đang sở hữu trong My Rewards';
+COMMENT ON TABLE user_vouchers IS 'Ví lưu trữ các voucher mà từng khách hàng đang sở hữu trong My Rewards (Figma 07.03, 07.07, 07.08)';
 COMMENT ON COLUMN user_vouchers.id IS 'Khóa chính bản ghi ví voucher';
 COMMENT ON COLUMN user_vouchers.tenant_id IS 'Khóa ngoại định danh thương hiệu';
 COMMENT ON COLUMN user_vouchers.member_id IS 'Khóa ngoại khách hàng sở hữu voucher';
@@ -65,7 +66,7 @@ COMMENT ON COLUMN user_vouchers.used_at IS 'Thời điểm voucher được than
 CREATE INDEX idx_user_vouchers_member_status ON user_vouchers(member_id, status);
 CREATE INDEX idx_user_vouchers_applied_order ON user_vouchers(applied_order_id);
 
--- 3. Bảng loyalty_gifts (Kho Quà tặng Hiện vật)
+-- 3. Bảng loyalty_gifts (Kho Quà tặng Hiện vật Loyalty)
 CREATE TABLE loyalty_gifts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
@@ -74,18 +75,20 @@ CREATE TABLE loyalty_gifts (
     image_url TEXT,
     points_cost INT NOT NULL DEFAULT 100,
     stock_quantity INT NOT NULL DEFAULT 10,
+    tag VARCHAR(64),
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-COMMENT ON TABLE loyalty_gifts IS 'Danh mục quà tặng hiện vật đổi bằng điểm (ly giữ nhiệt tumbler, móc khóa)';
+COMMENT ON TABLE loyalty_gifts IS 'Danh mục quà tặng hiện vật đổi bằng điểm (ly giữ nhiệt tumbler, móc khóa) (Figma 07: Tumbler cup gift)';
 COMMENT ON COLUMN loyalty_gifts.id IS 'Khóa chính quà tặng';
 COMMENT ON COLUMN loyalty_gifts.tenant_id IS 'Định danh thương hiệu';
 COMMENT ON COLUMN loyalty_gifts.title IS 'Tên quà tặng (Gift Name - Cốc Tumbler Màu Hồng)';
-COMMENT ON COLUMN loyalty_gifts.description IS 'Mô tả chi tiết và hướng dẫn nhận quà tại quầy';
+COMMENT ON COLUMN loyalty_gifts.description IS 'Mô tả chi tiết và hướng dẫn nhận quà tại quầy của Admin';
 COMMENT ON COLUMN loyalty_gifts.image_url IS 'Đường dẫn ảnh ly tumbler';
 COMMENT ON COLUMN loyalty_gifts.points_cost IS 'Số điểm cần để đổi (100 Points)';
 COMMENT ON COLUMN loyalty_gifts.stock_quantity IS 'Số lượng tồn kho còn lại (Quantity left: 10 Pieces)';
+COMMENT ON COLUMN loyalty_gifts.tag IS 'Tag nhãn nổi bật trên giao diện (Hot Reward, Limited Edition - Prototype 07.04)';
 COMMENT ON COLUMN loyalty_gifts.is_active IS 'Quà còn mở cho đổi thưởng không';
 COMMENT ON COLUMN loyalty_gifts.created_at IS 'Thời gian tạo quà';
 
@@ -97,7 +100,8 @@ CREATE TABLE user_gift_redemptions (
     gift_id UUID NOT NULL REFERENCES loyalty_gifts(id) ON DELETE RESTRICT,
     points_spent INT NOT NULL,
     redemption_code VARCHAR(32) NOT NULL UNIQUE,
-    status VARCHAR(32) NOT NULL DEFAULT 'PENDING', -- PENDING, CLAIMED, CANCELLED
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING', -- PENDING, SELECTED, CLAIMED, CANCELLED
+    applied_order_id UUID,
     claimed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -109,7 +113,10 @@ COMMENT ON COLUMN user_gift_redemptions.member_id IS 'Khóa ngoại thành viên
 COMMENT ON COLUMN user_gift_redemptions.gift_id IS 'Khóa ngoại món quà được đổi';
 COMMENT ON COLUMN user_gift_redemptions.points_spent IS 'Số điểm đã trừ trong tài khoản';
 COMMENT ON COLUMN user_gift_redemptions.redemption_code IS 'Mã nhận quà 8 chữ số độc nhất cho nhân viên quầy quét';
-COMMENT ON COLUMN user_gift_redemptions.status IS 'Trạng thái: PENDING (chờ nhận), CLAIMED (đã nhận cốc), CANCELLED (hủy)';
+COMMENT ON COLUMN user_gift_redemptions.status IS 'Trạng thái: PENDING (chờ nhận), SELECTED (đang gán đơn), CLAIMED (đã nhận), CANCELLED (hủy)';
+COMMENT ON COLUMN user_gift_redemptions.applied_order_id IS 'Đơn hàng áp dụng quà tặng đi kèm (Figma 08.09, 08.10)';
 COMMENT ON COLUMN user_gift_redemptions.claimed_at IS 'Thời điểm nhân viên quầy bàn giao quà cho khách';
 COMMENT ON COLUMN user_gift_redemptions.created_at IS 'Thời điểm khách bấm đổi quà';
 
+CREATE INDEX idx_gift_redemption_member ON user_gift_redemptions(member_id, status);
+CREATE INDEX idx_gift_redemption_applied_order ON user_gift_redemptions(applied_order_id);

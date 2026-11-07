@@ -3,7 +3,7 @@
 
 > **Phân hệ Hòm Thư Đa Danh Mục (Messages & News), Quản lý Trạng Thái Đã Đọc & Phiếu Yêu Cầu Hỗ Trợ Điểm Thiếu**  
 > **Ánh xạ Frontend:** `NotificationListView.tsx`, `NotificationDetailModal.tsx`, `MissingPointsBanner.tsx`  
-> **File Migration:** `V12__create_notifications_and_support.sql`  
+> **File Migration:** `V8__create_notifications_and_support.sql`  
 
 ---
 
