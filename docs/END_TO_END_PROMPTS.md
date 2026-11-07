@@ -3,17 +3,29 @@
 
 > **Mục đích:** Tập hợp sẵn các câu lệnh Prompt chuẩn hóa theo từng giai đoạn (Phase) và từng phân hệ tính năng (Feature). Bạn chỉ cần **Copy & Paste** từng câu lệnh vào ô chat với AI Agent để hệ thống tự động thực thi tuần tự từ phân tích, lập kế hoạch, viết code, kiểm thử tự động đến commit git.
 >
-> **5 Trụ Cột Kiến Trúc Kỹ Thuật Áp Dụng Xuyên Suốt (Bắt buộc tuân thủ):**
+> **8 Trụ Cột Kiến Trúc Kỹ Thuật Áp Dụng Xuyên Suốt (Bắt buộc tuân thủ):**
 > 1. **Kiến Trúc Doanh Nghiệp Toàn Diện (Enterprise Blueprint):** Tuân thủ tuyệt đối [docs/designs/architecture/enterprise-architecture.md](designs/architecture/enterprise-architecture.md) theo mô hình Modular Monolith phân tách rõ ràng 4 tiers: Client Tier, Edge Gateway Tier, Backend Modular Monolith Tier, và Data Tier.
 > 2. **Clean Architecture 4 Lớp Tách Biệt Tuyệt Đối:**
->    - `domain` (`com.ordera.modules.<module>.domain`): Pure Java POJO chứa Entities, Value Objects, Domain Exceptions, Domain Rules (Hoàn toàn độc lập, không phụ thuộc Framework hay Database).
+>    - `domain` (`com.ordera.modules.<module>.domain`): Pure Java POJO chứa Entities, Value Objects, Domain Enums, Domain Rules (Hoàn toàn độc lập, không phụ thuộc Framework hay Database).
 >    - `application` (`com.ordera.modules.<module>.application`): UseCase Interfaces & Implementations (`usecase/`, `usecase/impl/`), Domain Services (`service/`), Điều phối giao dịch ACID (`@Transactional`).
 >    - `infrastructure` (`com.ordera.modules.<module>.infrastructure`): JPA Hibernate Entities (`*JpaEntity.java`), Spring Data Repositories, Redisson Distributed Locks, Adapters tích hợp bên thứ ba (SMS, Mail), MapStruct Mappers (`*DtoMapper.java`).
 >    - `presentation` (`com.ordera.modules.<module>.presentation`): REST Controllers (`*Controller.java`), Request/Response DTOs, Bean Validation (`@Valid`, `@NotNull`, `@Pattern`, `@DecimalMin`), Chuẩn bọc `ApiResponse<T>` và mã lỗi RFC 7807 Problem Details.
-> 3. **Bảo Mật Phân Lập Multi-Tenant (Default ON):** Mọi truy vấn CSDL đều phải lọc theo `X-Tenant-ID` qua `TenantContextHolder` (ThreadLocal) và kích hoạt PostgreSQL Row-Level Security (RLS) `SET LOCAL app.current_tenant_id = ?` (ngăn chặn 100% lỗ hổng IDOR).
-> 4. **Sổ Cái Điểm Kép Bất Biến (Immutable Points Accounting):** Tuyệt đối không UPDATE trực tiếp cột điểm. Mọi biến động đều ghi bản ghi mới vào `points_ledger` kèm `reference_id` và `reference_type`.
-> 5. **Khóa Phân Tán Redisson (Distributed Lock):** Bắt buộc sử dụng `RLock` cho các tác vụ nhạy cảm (trừ điểm, đổi quà, áp mã voucher, checkout) để triệt tiêu race condition.
-> 6. **Quy Chuẩn Commit:** Tuân thủ skill `action-commit` (`develop: ...` kèm trailer `Co-authored-by: AI Agent <agent@ai-kit>`).
+> 3. **Chuẩn Hóa Mã Lỗi Doanh Nghiệp (ErrorCode & BusinessException RFC 7807 Pattern):**
+>    - Tuyệt đối **KHÔNG tạo class Exception con riêng lẻ** cho từng nghiệp vụ (như `UserNotFoundException`, `OtpInvalidException`...).
+>    - Mọi module đều định nghĩa một Enum `<Module>ErrorCode` implement `com.ordera.common.error.ErrorCode` (chứa `HttpStatus`, mã lỗi `code`, thông điệp mặc định `message`).
+>    - Ném lỗi thống nhất qua class duy nhất `BusinessException(ErrorCode, Object... args)`. `GlobalExceptionHandler` tự động chuyển đổi thành Problem Details RFC 7807.
+> 4. **Tầng Tiện Ích Độc Lập & Nhạc Trưởng UseCase (Common Util & Orchestrator Pattern):**
+>    - Logic tính toán thuần túy (công thức Haversine, regex token, format ngày giờ/khung giờ, bóc tách User ID / Principal, parse UUID an toàn) bắt buộc phải đặt trong `com.ordera.common.util.*` với Lombok `@UtilityClass`, không phụ thuộc Spring Context hay JPA Entities.
+>    - Tuân thủ nguyên tắc Single Responsibility: phương thức `execute()` của UseCase chỉ giữ vai trò nhạc trưởng (Orchestrator Pattern) điều phối các bước ở mức trừu tượng cao; toàn bộ logic con được tách thành private helper methods có tên thể hiện rõ mục đích hoặc gọi qua Common Util. Cấm viết god methods dài 50–100 dòng.
+> 5. **Bảo Mật Phân Lập Multi-Tenant (Default ON):** Mọi truy vấn CSDL đều phải lọc theo `X-Tenant-ID` qua `TenantContextHolder` (ThreadLocal) và kích hoạt PostgreSQL Row-Level Security (RLS) `SET LOCAL app.current_tenant_id = ?` (ngăn chặn 100% lỗ hổng IDOR).
+> 6. **Sổ Cái Điểm Kép Bất Biến (Immutable Points Accounting):** Tuyệt đối không UPDATE trực tiếp cột điểm. Mọi biến động đều ghi bản ghi mới vào `points_ledger` kèm `reference_id` và `reference_type`.
+> 7. **Khóa Phân Tán Redisson (Distributed Lock):** Bắt buộc sử dụng `RLock` cho các tác vụ nhạy cảm (trừ điểm, đổi quà, áp mã voucher, checkout) để triệt tiêu race condition.
+> 8. **Tài Liệu Hóa Luồng Nghiệp Vụ & Biểu Đồ Trình Tự Trực Quan (Business Flows & Sequence Diagrams):**
+>    - Mỗi phân hệ hoàn thành đều phải biên soạn file `docs/plans/<module>/business-flows.md` gồm:
+>      + Biểu đồ Cây quyết định nghiệp vụ (Flowchart TD) thể hiện logic rẽ nhánh và kết quả nghiệp vụ (200 OK / 400 Bad Request / 404 Not Found), cấm đưa tên hàm unit test vào nhãn biểu đồ.
+>      + Biểu đồ Trình tự tương tác phân tầng (Sequence Diagram) chuẩn hóa từ Client $\rightarrow$ Controller $\rightarrow$ UseCase $\rightarrow$ Common Util $\rightarrow$ Repository $\rightarrow$ Database $\rightarrow$ DtoMapper $\rightarrow$ Client.
+>      + Sử dụng bảng màu Dark Mode High Contrast (`classDef ok`, `classDef fail`, `classDef c1/c2/c3` có thuộc tính `color:#...` rõ ràng).
+> 9. **Quy Chuẩn Commit:** Tuân thủ skill `action-commit` (`develop: ...` kèm trailer `Co-authored-by: AI Agent <agent@ai-kit>`).
 
 ---
 
@@ -42,14 +54,14 @@
 ## Giai Đoạn 1: Triển Khai Toàn Diện 8 Module Backend (Clean Architecture 4 Lớp)
 
 ### Prompt 1.1: Phân hệ Cửa Hàng, Chi Nhánh, Bàn Ăn & Thiết Bị Kiosk (Tenant & Store Module)
-> **Mục tiêu:** Cung cấp thông tin đại lý thương hiệu, danh sách chi nhánh (Linn Sushi Sentrum), vị trí GPS, danh sách bàn ăn, giải mã QR Token, yêu thích cửa hàng và quản lý thiết bị Kiosk quầy thu ngân.
+> **Mục tiêu:** Cung cấp thông tin đại lý thương hiệu, danh sách chi nhánh (Linn Sushi Sentrum), vị trí GPS, danh sách bàn ăn, giải mã QR Token 3 tầng, tùy chọn nhận hàng động (Dine-in, Takeaway, Delivery), yêu thích cửa hàng và quản lý thiết bị Kiosk quầy thu ngân.
 
 ```markdown
 /feature Hãy triển khai tính năng: Phân hệ Cửa Hàng, Chi Nhánh, Bàn Ăn & Thiết Bị Kiosk (Tenant & Store Module) cho Backend theo Clean Architecture 4 lớp.
 
 Tài liệu kỹ thuật bắt buộc:
 1. Architecture Blueprint: docs/designs/architecture/enterprise-architecture.md (Clean Architecture 4 lớp & PostgreSQL RLS).
-2. API Design: docs/designs/api-design/01-tenant-and-store-api.md (Đầy đủ 7 API: 1.1 Tenant info, 1.2 Danh sách chi nhánh, 1.3 Chi tiết chi nhánh, 1.4 Danh sách bàn, 1.5 Giải mã QR bàn, 1.6 Yêu thích cửa hàng, 1.7 Danh sách cửa hàng yêu thích).
+2. API Design: docs/designs/api-design/01-tenant-and-store-api.md (Đầy đủ 8 API: 1.1 Tenant info, 1.2 Danh sách chi nhánh, 1.3 Chi tiết chi nhánh, 1.4 Danh sách bàn, 1.5 Giải mã QR bàn, 1.6 Yêu thích cửa hàng, 1.7 Danh sách cửa hàng yêu thích, 1.8 Tùy chọn nhận hàng động & khung giờ).
 3. DB Design: docs/designs/db-design/01-tenants-and-stores-db.md (Bảng tenants, stores, store_tables, customer_favorite_stores, kiosk_devices).
 4. Migration: backend/src/main/resources/db/migration/V1__create_tenants_and_stores.sql & V11__create_kiosk_devices.sql.
 
@@ -57,19 +69,23 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
 - Package: com.ordera.modules.tenant
 - Tầng Domain (domain/):
   + Models: Tenant, Store, StoreTable, CustomerFavoriteStore, KioskDevice, FulfillmentType (DINE_IN, TAKEAWAY, DELIVERY).
-  + Exceptions: StoreNotFoundException, TableNotFoundException, InvalidQrTokenException.
+  + ErrorCode: TenantErrorCode (TENANT_HEADER_MISSING, STORE_NOT_FOUND, TABLE_NOT_FOUND, INVALID_QR_TOKEN, INVALID_QUERY_PARAM, UNAUTHORIZED) implement ErrorCode interface, ném lỗi qua BusinessException. Cấm tạo Exception classes riêng lẻ.
   + Rules: Đảm bảo độc lập hoàn toàn với Spring Framework và JPA.
 - Tầng Application (application/):
-  + UseCases: GetTenantInfoUseCase, GetStoresListUseCase (tính khoảng cách Haversine GPS), GetStoreDetailUseCase, GetStoreTablesUseCase, ResolveTableQrUseCase (giải mã token QR-LINN-SENTRUM-T05), ToggleFavoriteStoreUseCase, GetFavoriteStoresUseCase.
+  + Common Util (com.ordera.common.util): GeoUtils (Haversine formula), QrCodeUtils (regex token, format số bàn), SecurityUtils (resolve user ID, parse UUID), DateTimeUtils (sinh slot 30 phút theo opening_hours thực).
+  + UseCases: GetTenantInfoUseCase, GetStoresListUseCase, GetStoreDetailUseCase, GetStoreTablesUseCase, ResolveTableQrUseCase (giải mã 3 tầng: Exact ➜ Normalized ➜ Regex table number), ToggleFavoriteStoreUseCase, GetFavoriteStoresUseCase, GetFulfillmentOptionsUseCase.
+  + Orchestrator Pattern: execute() chỉ giữ vai trò điều phối các bước, tách toàn bộ logic tính toán con thành private helper methods hoặc Common Util.
   + Orchestration: Sử dụng @Transactional(readOnly = true) cho các truy vấn dữ liệu.
 - Tầng Infrastructure (infrastructure/):
   + Persistence: TenantJpaEntity, StoreJpaEntity, StoreTableJpaEntity, CustomerFavoriteStoreJpaEntity, KioskDeviceJpaEntity kế thừa BaseEntity (tenant_id).
-  + Repositories: Spring Data JPA Repositories lọc tự động theo app.current_tenant_id.
+  + Repositories: Spring Data JPA Repositories lọc tự động theo tenant_id qua TenantContext.
   + Mappers: TenantDtoMapper (MapStruct) ánh xạ Domain <-> JPA <-> DTO.
 - Tầng Presentation (presentation/):
   + Controllers: TenantController, StoreController với request validation (@Valid, @NotNull).
-  + Response Envelope: Mọi response bọc trong ApiResponse<T>, xử lý lỗi chuẩn RFC 7807 (400 TENANT_HEADER_MISSING, 404 STORE_NOT_FOUND).
-- Kiểm thử: Viết Unit tests AAA (Arrange - Act - Assert) cho UseCases và Web Layer.
+  + Response Envelope: Mọi response bọc trong ApiResponse<T>, xử lý lỗi chuẩn RFC 7807 qua BusinessException.
+  + Swagger UI: Cấu hình OpenApiConfig tự động chèn header X-Tenant-ID và nút Authorize toàn cục.
+- Tài liệu hóa: Biên soạn docs/plans/tenant-store/business-flows.md với Mermaid Flowchart nghiệp vụ và Sequence Diagram Clean Architecture cho 8 Use Cases.
+- Kiểm thử: Viết Unit tests AAA (Arrange - Act - Assert) cho UseCases, Utils và WebMvc Controller (đạt 100% pass).
 - Kiểm tra `mvn test` và commit vào nhánh develop theo skill action-commit.
 ```
 
@@ -91,20 +107,24 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
 - Package: com.ordera.modules.auth
 - Tầng Domain (domain/):
   + Models: User, UserRole (CUSTOMER, STAFF, ADMIN), OtpSession, TokenPair, OtpChannel (SMS, EMAIL).
-  + Exceptions: OtpInvalidException, OtpExpiredException, OtpCooldownActiveException, MaxOtpAttemptsExceededException, PhoneAlreadyExistsException.
+  + ErrorCode: AuthErrorCode (OTP_INVALID, OTP_EXPIRED, OTP_COOLDOWN_ACTIVE, OTP_MAX_ATTEMPTS_EXCEEDED, PHONE_ALREADY_EXISTS, INVALID_CREDENTIALS, TOKEN_EXPIRED, TOKEN_REVOKED) implement ErrorCode interface, ném lỗi qua BusinessException. Cấm tạo Exception classes riêng lẻ.
+  + Rules: Đảm bảo độc lập hoàn toàn với Spring Framework và JPA.
 - Tầng Application (application/):
+  + Common Util (com.ordera.common.util): Tái sử dụng SecurityUtils; bổ sung OtpUtils (sinh OTP ngẫu nhiên 6 số, băm SHA-256), TokenUtils nếu cần.
   + UseCases:
     * SendOtpUseCase: Kiểm tra cooldown 120s trên Redis (`otp:cooldown:{phone}`), sinh mã OTP 6 số, băm SHA-256 lưu Redis TTL 120s (`otp:code:{phone}`), ghi nhật ký otp_audit_logs.
     * VerifyOtpUseCase: Kiểm tra số lần nhập sai trên Redis (`otp:attempts:{phone}`, tối đa 5 lần khóa 15 phút), đối soát mã OTP, trả về cờ isProfileComplete.
     * RegisterMemberUseCase: Tiếp nhận họ tên (David Nguyen), SĐT, Email và ngày sinh dateOfBirth, tạo tài khoản users và tự động khởi tạo hồ sơ member_profiles (hạng New Member, 0 điểm).
     * RefreshTokenUseCase & LogoutUseCase: Cấp lại token và đưa token thu hồi vào Redis Blacklist (`blacklist:token:{jti}`).
+  + Orchestrator Pattern: execute() chỉ giữ vai trò điều phối các bước, phân rã logic chi tiết thành các private helper methods có tên rõ nghĩa.
   + Services: JwtTokenProviderService (HMAC-SHA512, claims: userId, tenantId, role).
 - Tầng Infrastructure (infrastructure/):
   + Persistence: UserJpaEntity, OtpAuditLogJpaEntity và UserJpaRepository.
   + Adapters: TelnyxSmsAdapter (gửi SMS), MailHogEmailAdapter (gửi Email OTP), RedisTokenBlacklistAdapter.
   + Mappers: AuthDtoMapper (MapStruct).
 - Tầng Presentation (presentation/):
-  + Controllers: AuthController bọc ApiResponse<T>, mã lỗi RFC 7807 (401 OTP_INVALID, 409 OTP_COOLDOWN_ACTIVE, 429 OTP_MAX_ATTEMPTS_EXCEEDED).
+  + Controllers: AuthController bọc ApiResponse<T>, xử lý lỗi chuẩn RFC 7807 qua BusinessException và AuthErrorCode.
+- Tài liệu hóa: Biên soạn docs/plans/auth/business-flows.md với Mermaid Flowchart nghiệp vụ và Sequence Diagram Clean Architecture cho cả 5 Use Cases (chuẩn Dark Mode, không đưa tên hàm test vào biểu đồ).
 - Kiểm thử: Unit tests kiểm tra đầy đủ các kịch bản thành công, sai OTP, hết hạn OTP, quá 5 lần thử và refresh token.
 - Kiểm tra `mvn test` và commit vào nhánh develop theo skill action-commit.
 ```
@@ -127,20 +147,24 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
 - Package: com.ordera.modules.catalog
 - Tầng Domain (domain/):
   + Models: Category, Subcategory, Product, ModifierGroup, Modifier, PromotionBanner, DietaryTag (GLUTEN_FREE, VEGAN, HALAL, NUT_FREE).
-  + Exceptions: CategoryNotFoundException, ProductNotFoundException, ModifierGroupNotFoundException.
+  + ErrorCode: CatalogErrorCode (CATEGORY_NOT_FOUND, PRODUCT_NOT_FOUND, MODIFIER_GROUP_NOT_FOUND, INVALID_MODIFIER_SELECTION) implement ErrorCode interface, ném lỗi qua BusinessException. Cấm tạo Exception classes riêng lẻ.
+  + Rules: Đảm bảo độc lập hoàn toàn với Spring Framework và JPA.
 - Tầng Application (application/):
+  + Common Util (com.ordera.common.util): Tái sử dụng SecurityUtils để parse UUID và thông tin request an toàn.
   + UseCases:
     * GetCategoriesUseCase & GetSubcategoriesUseCase: Lấy danh mục món theo thứ tự hiển thị display_order và chi nhánh.
     * GetStoreMenuUseCase: Trả về cây thực đơn phân cấp hoàn chỉnh (Categories ➜ Subcategories ➜ Products).
     * GetProductDetailUseCase: Lấy chi tiết món kèm originalPrice, piecesText, dietaryTags và các nhóm modifier (bắt buộc/tùy chọn).
     * GetPromotionBannersUseCase: Lấy danh sách banner quảng cáo đang kích hoạt (Hot Deals, Seasonal).
+  + Orchestrator Pattern: execute() chỉ giữ vai trò điều phối các bước, phân rã logic duyệt cây phân cấp/modifier thành các private helper methods.
 - Tầng Infrastructure (infrastructure/):
   + Persistence: CategoryJpaEntity, SubcategoryJpaEntity, ProductJpaEntity, ProductModifierGroupJpaEntity, ProductModifierJpaEntity, PromotionBannerJpaEntity.
   + Repositories: Tự động lọc theo tenant_id và cờ is_available = true.
   + Mappers: CatalogDtoMapper (MapStruct).
 - Tầng Presentation (presentation/):
-  + Controllers: CategoryController, ProductController, PromotionController chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 (404 CATEGORY_NOT_FOUND, 404 PRODUCT_NOT_FOUND).
-- Kiểm thử: Unit tests kiểm tra tính đúng đắn của dữ liệu phân cấp và nhóm modifier.
+  + Controllers: CategoryController, ProductController, PromotionController chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 qua BusinessException và CatalogErrorCode.
+- Tài liệu hóa: Biên soạn docs/plans/catalog/business-flows.md với Mermaid Flowchart nghiệp vụ và Sequence Diagram Clean Architecture cho cả 6 Use Cases (chuẩn Dark Mode, không đưa tên hàm test vào biểu đồ).
+- Kiểm thử: Unit tests kiểm tra tính đúng đắn của dữ liệu phân cấp và nhóm modifier (đạt 100% pass).
 - Kiểm tra `mvn test` và commit vào nhánh develop theo skill action-commit.
 ```
 
@@ -162,22 +186,25 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
 - Package: com.ordera.modules.loyalty & com.ordera.modules.ledger
 - Tầng Domain (domain/):
   + Models: MemberProfile, MemberTier (NEW, SILVER, GOLD, PLATINUM, DIAMOND, RUBY), TransactionType (ORDER_EARN, VOUCHER_REDEEM, GIFT_REDEEM, TIER_BONUS, CLAIM_CREDIT, KIOSK_EARN), SupportClaim.
-  + Exceptions: InvalidTierTransitionException, ReceiptExpiredException, ClaimAlreadyExistsException.
+  + ErrorCode: LoyaltyErrorCode (INVALID_TIER_TRANSITION, RECEIPT_EXPIRED, CLAIM_ALREADY_EXISTS, CLAIM_NOT_FOUND, INSUFFICIENT_POINTS) implement ErrorCode interface, ném lỗi qua BusinessException. Cấm tạo Exception classes riêng lẻ.
   + NGUYÊN TẮC BẤT BIẾN: Tuyệt đối không UPDATE trực tiếp cột điểm. Mọi biến động đều phải chèn bản ghi mới vào points_ledger.
 - Tầng Application (application/):
+  + Common Util (com.ordera.common.util): Tái sử dụng SecurityUtils; bổ sung LoyaltyTierUtils (công thức tính tỷ lệ thăng hạng, ngưỡng điểm) nếu cần.
   + UseCases:
     * GetMemberProfileUseCase: Trả về thông tin hội viên, hạng thẻ, currentPoints, lifetimePoints, barcodeToken, nextTier, progressPercentage, hasMissingPointsNotice.
     * UpdateProfileUseCase & UploadAvatarUseCase: Cập nhật thông tin và đường dẫn ảnh đại diện.
     * AccruePointsUseCase: Chiếm giữ Redisson Lock `lock:tenant:{tenantId}:member:{memberId}`, chèn bản ghi mới vào points_ledger, tự động thăng hạng thẻ (Silver 100, Gold 400, Platinum 1000, Diamond 2000, Ruby 4000) và cập nhật cache current_points.
     * GetPointsLedgerHistoryUseCase: Truy vấn lịch sử phân trang từ bảng phân vùng points_ledger theo thời gian giảm dần.
     * SubmitSupportClaimUseCase: Tiếp nhận mã hóa đơn (vd: RCP-8921-X), storeId, số tiền và ảnh biên lai trong vòng 30 ngày, tạo support_claims (PENDING).
+  + Orchestrator Pattern: execute() chỉ giữ vai trò điều phối các bước, phân rã logic tính điểm/thăng hạng thành các private helper methods.
 - Tầng Infrastructure (infrastructure/):
   + Persistence: MemberProfileJpaEntity, TierDefinitionJpaEntity, PointsLedgerJpaEntity, SupportClaimJpaEntity.
   + Repositories: MemberProfileJpaRepository, PointsLedgerJpaRepository.
   + Mappers: LoyaltyDtoMapper (MapStruct).
 - Tầng Presentation (presentation/):
-  + Controllers: MemberLoyaltyController, SupportClaimController với chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 (400 CLAIM_ALREADY_EXISTS, 422 RECEIPT_EXPIRED).
-- Kiểm thử: Unit tests kiểm tra công thức nâng hạng tự động, khóa phân tán Redisson và kiểm tra tính bất biến của sổ cái.
+  + Controllers: MemberLoyaltyController, SupportClaimController với chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 qua BusinessException và LoyaltyErrorCode.
+- Tài liệu hóa: Biên soạn docs/plans/loyalty/business-flows.md với Mermaid Flowchart nghiệp vụ và Sequence Diagram Clean Architecture cho 7 Use Cases (chuẩn Dark Mode, không đưa tên hàm test vào biểu đồ).
+- Kiểm thử: Unit tests kiểm tra công thức nâng hạng tự động, khóa phân tán Redisson và kiểm tra tính bất biến của sổ cái (đạt 100% pass).
 - Kiểm tra `mvn test` và commit vào nhánh develop theo skill action-commit.
 ```
 
@@ -199,22 +226,25 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
 - Package: com.ordera.modules.reward
 - Tầng Domain (domain/):
   + Models: Voucher, UserVoucher (AVAILABLE, IN_USE, USED, EXPIRED), LoyaltyGift, UserGiftRedemption (PENDING, SELECTED, CLAIMED).
-  + Exceptions: InsufficientPointsException, GiftOutOfStockException, PromoCodeNotFoundException, MinimumOrderNotMetException.
+  + ErrorCode: RewardErrorCode (INSUFFICIENT_POINTS, GIFT_OUT_OF_STOCK, PROMO_CODE_NOT_FOUND, MINIMUM_ORDER_NOT_MET, VOUCHER_ALREADY_USED, VOUCHER_EXPIRED, INVALID_REWARD_COMBINATION) implement ErrorCode interface, ném lỗi qua BusinessException. Cấm tạo Exception classes riêng lẻ.
   + QUY TẮC KẾT HỢP: Trong một đơn hàng cho phép kết hợp tối đa 01 Voucher VÀ 01 Quà hiện vật (Cốc Tumbler).
 - Tầng Application (application/):
+  + Common Util (com.ordera.common.util): Tái sử dụng SecurityUtils để parse UUID và bóc tách User ID an toàn.
   + UseCases:
     * RedeemVoucherUseCase: Kiểm tra số dư điểm, chiếm giữ Redisson Lock `lock:tenant:{tenantId}:member:{memberId}`, trừ điểm khả dụng qua AccruePointsUseCase (VOUCHER_REDEEM), tạo bản ghi user_vouchers.
     * RedeemPhysicalGiftUseCase: Chiếm giữ đồng thời Redisson multi-lock `lock:member:{memberId}` và `lock:gift:{giftId}`, kiểm tra tồn kho stock_quantity > 0, trừ 1 tồn kho, sinh mã nhận quà 8 ký tự, tạo user_gift_redemptions.
     * GetAvailableOffersForCartUseCase: Lọc các voucher trong ví thỏa mãn giá trị đơn hàng tối thiểu min_order_value và quà tặng có thể chọn kèm.
     * ApplyVoucherToCartUseCase & RemoveVoucherFromCartUseCase: Khóa voucher sang IN_USE khi áp vào giỏ hàng và hoàn trả sang AVAILABLE nếu khách gỡ bỏ.
     * ApplyGiftToCartUseCase & RemoveGiftFromCartUseCase: Gán/gỡ quà hiện vật đi kèm đơn hàng checkout.
+  + Orchestrator Pattern: execute() chỉ giữ vai trò điều phối các bước, phân rã logic thẩm định điều kiện voucher/gift thành các private helper methods có tên rõ nghĩa.
 - Tầng Infrastructure (infrastructure/):
   + Persistence: VoucherJpaEntity, UserVoucherJpaEntity, LoyaltyGiftJpaEntity, UserGiftRedemptionJpaEntity.
   + Repositories: VoucherJpaRepository, UserVoucherJpaRepository, LoyaltyGiftJpaRepository.
   + Mappers: RewardDtoMapper (MapStruct).
 - Tầng Presentation (presentation/):
-  + Controllers: RewardController, CartOfferController với chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 (422 INSUFFICIENT_POINTS, 409 GIFT_OUT_OF_STOCK, 404 PROMO_CODE_NOT_FOUND, 422 MINIMUM_ORDER_NOT_MET).
-- Kiểm thử: Unit tests cho kịch bản đủ điểm, thiếu điểm, hết tồn kho quà và race condition đồng thời.
+  + Controllers: RewardController, CartOfferController với chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 qua BusinessException và RewardErrorCode.
+- Tài liệu hóa: Biên soạn docs/plans/reward/business-flows.md với Mermaid Flowchart nghiệp vụ và Sequence Diagram Clean Architecture cho toàn bộ Use Cases (chuẩn Dark Mode, không đưa tên hàm test vào biểu đồ).
+- Kiểm thử: Unit tests cho kịch bản đủ điểm, thiếu điểm, hết tồn kho quà và race condition đồng thời (đạt 100% pass).
 - Kiểm tra `mvn test` và commit vào nhánh develop theo skill action-commit.
 ```
 
@@ -236,8 +266,9 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
 - Package: com.ordera.modules.order
 - Tầng Domain (domain/):
   + Models: Cart, CartItem, Order, OrderItem, OrderItemModifier, OrderStatus (PENDING, PREPARING, READY, COMPLETED, CANCELLED), PaymentStatus, PickupMethod (COUNTER, TABLE).
-  + Exceptions: CartEmptyException, MinimumOrderValueNotMetException, IdempotentOperationConflictException, StockUnavailableException.
+  + ErrorCode: OrderErrorCode (CART_EMPTY, MINIMUM_ORDER_VALUE_NOT_MET, IDEMPOTENT_OPERATION_CONFLICT, STOCK_UNAVAILABLE, ORDER_NOT_FOUND, INVALID_ORDER_STATUS) implement ErrorCode interface, ném lỗi qua BusinessException. Cấm tạo Exception classes riêng lẻ.
 - Tầng Application (application/):
+  + Common Util (com.ordera.common.util): Tái sử dụng SecurityUtils; bổ sung OrderCalculationUtils (tính toán Subtotal, Discount, Tip, VAT 15% Total * 15 / 115, và pointsToEarn bằng BigDecimal scale = 2).
   + UseCases:
     * CartService: Quản lý giỏ hàng trên Redis Cache key `cart:{tenantId}:{cartId}` (TTL 7 ngày). Thêm món kèm danh sách modifier đã chọn, cập nhật số lượng và ghi chú dị ứng tối đa 200 ký tự.
     * PreviewCheckoutCalculationUseCase: Tính toán chính xác Subtotal, Discount, Tip, VAT 15% (Total * 15 / 115), Total và số điểm thưởng dự kiến: `pointsToEarn = floor((subtotal - discount) * tierRate)`. Tiền tip không được tính vào điểm thưởng.
@@ -250,14 +281,16 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
       - Xóa giỏ hàng khỏi Redis sau khi tạo đơn thành công.
     * ReorderPastOrderUseCase: Sao chép các món từ đơn hàng cũ vào giỏ hàng mới.
     * SendEReceiptEmailUseCase: Sinh hóa đơn điện tử PDF và gửi tới địa chỉ Email của khách qua JavaMailSender.
+  + Orchestrator Pattern: execute() chỉ giữ vai trò điều phối các bước, phân tách rõ ràng việc validate giỏ, tính toán tiền tệ, và chốt đơn thành các private helper methods.
 - Tầng Infrastructure (infrastructure/):
   + Persistence: OrderJpaEntity, OrderItemJpaEntity, OrderItemModifierJpaEntity.
   + Repositories: OrderJpaRepository, OrderItemJpaRepository.
   + Adapters: RedisCartStorageAdapter, JavaMailReceiptAdapter.
   + Mappers: OrderDtoMapper (MapStruct).
 - Tầng Presentation (presentation/):
-  + Controllers: CartController, OrderController với chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 (400 CART_EMPTY, 422 MIN_ORDER_VALUE_NOT_MET, 409 IDEMPOTENT_OPERATION_CONFLICT).
-- Kiểm thử: Unit tests kiểm tra độ chính xác số học BigDecimal (scale = 2), công thức VAT 15%, chiết khấu voucher, và logic tích điểm.
+  + Controllers: CartController, OrderController với chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 qua BusinessException và OrderErrorCode.
+- Tài liệu hóa: Biên soạn docs/plans/order/business-flows.md với Mermaid Flowchart nghiệp vụ và Sequence Diagram Clean Architecture cho toàn bộ 10 Use Cases (chuẩn Dark Mode, không đưa tên hàm test vào biểu đồ).
+- Kiểm thử: Unit tests kiểm tra độ chính xác số học BigDecimal (scale = 2), công thức VAT 15%, chiết khấu voucher, và logic tích điểm (đạt 100% pass).
 - Kiểm tra `mvn test` và commit vào nhánh develop theo skill action-commit.
 ```
 
@@ -280,20 +313,23 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
 - Package: com.ordera.modules.kiosk
 - Tầng Domain (domain/):
   + Models: KioskSession, KioskDevice, HardwareStatus (ONLINE, OFFLINE, OUT_OF_PAPER, DECLINED).
-  + Exceptions: InvalidPhoneNumberException, KioskDeviceNotFoundException, InvalidStaffPinException.
+  + ErrorCode: KioskErrorCode (INVALID_PHONE_NUMBER, KIOSK_DEVICE_NOT_FOUND, INVALID_STAFF_PIN, KIOSK_SESSION_EXPIRED) implement ErrorCode interface, ném lỗi qua BusinessException. Cấm tạo Exception classes riêng lẻ.
 - Tầng Application (application/):
+  + Common Util (com.ordera.common.util): Tái sử dụng SecurityUtils; bổ sung KioskQueueUtils (sinh số thứ tự nhiệt dạng #A-08) nếu cần.
   + UseCases:
     * KioskIdentifyCustomerUseCase: Nhận diện SĐT từ bàn phím số Kiosk, tra cứu tên, hạng thẻ, số điểm hiện có và tỷ lệ hoàn điểm. Nếu khách mới trả về isRegistered = false để Kiosk cho phép bấm Skip.
     * KioskQuickEarnUseCase: Dùng khi khách thanh toán POS ngoài, khách gõ SĐT tích điểm -> tính điểm theo hạng thẻ, ghi sổ cái points_ledger (TransactionType = KIOSK_EARN), sinh số thứ tự queueNumber (#A-08) và gửi lệnh in nhiệt.
     * ResetKioskSessionUseCase: Xóa session tạm thời trên Redis khi khách bấm Start Over hoặc bộ đếm thời gian 60 giây hết hạn do khách bỏ đi.
     * GetKioskConfigUseCase: Cung cấp thông tin cấu hình trạm Kiosk theo deviceId và ghi nhận last_heartbeat_at.
+  + Orchestrator Pattern: execute() chỉ giữ vai trò điều phối các bước, phân tách rõ ràng việc thẩm định SĐT và sinh phiếu in.
 - Tầng Infrastructure (infrastructure/):
   + Persistence: KioskDeviceJpaEntity và KioskDeviceJpaRepository.
   + Adapters: RedisKioskSessionAdapter, ThermalPrinterAdapter.
   + Mappers: KioskDtoMapper (MapStruct).
 - Tầng Presentation (presentation/):
-  + Controllers: KioskController với header bắt buộc X-Tenant-ID, X-Kiosk-Device-ID và mã lỗi RFC 7807 (400 INVALID_PHONE_NUMBER, 404 KIOSK_DEVICE_NOT_FOUND, 401 INVALID_STAFF_PIN).
-- Kiểm thử: Unit tests cho luồng tra cứu khách hàng, tích điểm nhanh và reset phiên làm việc.
+  + Controllers: KioskController với header bắt buộc X-Tenant-ID, X-Kiosk-Device-ID và mã lỗi RFC 7807 qua BusinessException và KioskErrorCode.
+- Tài liệu hóa: Biên soạn docs/plans/kiosk/business-flows.md với Mermaid Flowchart nghiệp vụ và Sequence Diagram Clean Architecture cho cả 5 Use Cases (chuẩn Dark Mode, không đưa tên hàm test vào biểu đồ).
+- Kiểm thử: Unit tests cho luồng tra cứu khách hàng, tích điểm nhanh và reset phiên làm việc (đạt 100% pass).
 - Kiểm tra `mvn test` và commit vào nhánh develop theo skill action-commit.
 ```
 
@@ -315,21 +351,24 @@ Yêu cầu thực hiện theo cấu trúc Clean Architecture:
 - Package: com.ordera.modules.notification
 - Tầng Domain (domain/):
   + Models: SystemNotification (Category: MESSAGES, NEWS, VOUCHER, GIFTS), UserNotification, SupportInquiry (PENDING, IN_REVIEW, RESOLVED, REJECTED).
-  + Exceptions: NotificationNotFoundException, InquiryValidationException.
+  + ErrorCode: NotificationErrorCode (NOTIFICATION_NOT_FOUND, INQUIRY_NOT_FOUND, INQUIRY_VALIDATION_FAILED) implement ErrorCode interface, ném lỗi qua BusinessException. Cấm tạo Exception classes riêng lẻ.
 - Tầng Application (application/):
+  + Common Util (com.ordera.common.util): Tái sử dụng SecurityUtils để parse UUID và bóc tách User ID an toàn.
   + UseCases:
     * GetUnreadNotificationCountUseCase: Đếm số lượng thông báo chưa đọc của hội viên hiển thị badge đỏ trên icon quả chuông.
     * GetNotificationsListUseCase: Lấy danh sách thông báo phân trang theo tab Messages hoặc News.
     * GetNotificationDetailUseCase: Lấy chi tiết bài viết, banner ảnh và tự động đánh dấu đã đọc.
     * MarkNotificationReadUseCase & MarkAllNotificationsReadUseCase: Cập nhật trạng thái đọc của người dùng trong bảng user_notifications.
     * SubmitMissingPointsInquiryUseCase: Tiếp nhận phiếu yêu cầu tra cứu điểm cũ (Email, SĐT, mã hóa đơn cũ, ghi chú và ảnh chứng từ), sinh ticket_code (INQ-20250317-009) để Admin đối soát cơ sở dữ liệu cũ.
+  + Orchestrator Pattern: execute() chỉ giữ vai trò điều phối các bước, phân tách rõ ràng việc đọc dữ liệu và đánh dấu trạng thái.
 - Tầng Infrastructure (infrastructure/):
   + Persistence: SystemNotificationJpaEntity, UserNotificationJpaEntity, SupportInquiryJpaEntity.
   + Repositories: SystemNotificationJpaRepository, UserNotificationJpaRepository, SupportInquiryJpaRepository.
   + Mappers: NotificationDtoMapper (MapStruct).
 - Tầng Presentation (presentation/):
-  + Controllers: NotificationController, SupportInquiryController với chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 (404 NOTIFICATION_NOT_FOUND, 400 VALIDATION_FAILED).
-- Kiểm thử: Unit tests cho các UseCases thông báo và gửi phiếu hỗ trợ.
+  + Controllers: NotificationController, SupportInquiryController với chuẩn Envelope ApiResponse<T> và mã lỗi RFC 7807 qua BusinessException và NotificationErrorCode.
+- Tài liệu hóa: Biên soạn docs/plans/notification/business-flows.md với Mermaid Flowchart nghiệp vụ và Sequence Diagram Clean Architecture cho 6 Use Cases (chuẩn Dark Mode, không đưa tên hàm test vào biểu đồ).
+- Kiểm thử: Unit tests cho các UseCases thông báo và gửi phiếu hỗ trợ (đạt 100% pass).
 - Kiểm tra `mvn test` và commit vào nhánh develop theo skill action-commit.
 ```
 
