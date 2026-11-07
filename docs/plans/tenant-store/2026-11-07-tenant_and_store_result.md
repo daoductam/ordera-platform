@@ -15,7 +15,7 @@ Total time: ~105 minutes
 | Planning | Plan | `docs/plans/tenant-store/2026-11-07-plan.md` | Approved |
 | Implementation | Walkthrough | `docs/plans/tenant-store/2026-11-07-walkthrough.md` | Complete |
 | Architecture Docs | Sequence Diagram | `docs/diagrams/resolve-table-qr-sequence.adoc` | Complete |
-| Visual Business Flows | Mermaid Flowcharts & Sequence | `docs/plans/tenant-store/business-test-flows.md` | Complete |
+| Visual Business Flows | Mermaid Flowcharts & Sequence | `docs/plans/tenant-store/business-flows.md` | Complete |
 | Verification | Result | (this file) | Approved |
 
 ---
@@ -69,6 +69,6 @@ Total time: ~105 minutes
 - [x] Hardcoding in `/fulfillment-options` eliminated via dynamic UseCase
 - [x] Swagger UI configured with `X-Tenant-ID` header & Authorize scheme
 - [x] Sequence diagram documented in `docs/diagrams/resolve-table-qr-sequence.adoc`
-- [x] Onboarding business & test flows documented with Mermaid diagrams in `docs/plans/tenant-store/business-test-flows.md`
+- [x] Onboarding business & sequence flows documented with Mermaid diagrams in `docs/plans/tenant-store/business-flows.md`
 - [x] All 65 tests passed in `mvn clean test`
 - [x] Ready for commit to develop

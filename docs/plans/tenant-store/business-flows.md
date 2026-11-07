@@ -1,8 +1,8 @@
-# Sổ Tay Luồng Nghiệp Vụ & Kiểm Thử: Phân Hệ Tenant & Store
-## Business & Test Flows Guide (Clean Architecture & Mermaid Visualizations)
+# Sổ Tay Luồng Nghiệp Vụ & Biểu Đồ Trình Tự: Phân Hệ Tenant & Store
+## Business & Sequence Flows Guide (Clean Architecture & Mermaid Visualizations)
 
-> **Dành cho:** Thành viên mới (Developer, QA/Tester, Solution Architect)  
-> **Mục đích:** Giúp người mới nắm bắt toàn bộ luồng nghiệp vụ, thứ tự tương tác giữa các tầng Clean Architecture và toàn bộ 65 ca kiểm thử biên (Edge Cases / Exception Scenarios) một cách trực quan trong vòng 5–10 phút mà không cần phải đọc từng dòng mã nguồn.
+> **Dành cho:** Thành viên mới (Developer, Solution Architect, Business Analyst, QA)  
+> **Mục đích:** Giúp người mới nắm bắt toàn bộ luồng nghiệp vụ thực tế, quy tắc đa thương hiệu (Multi-Tenant Isolation) và thứ tự tương tác giữa các tầng Clean Architecture qua biểu đồ trực quan trong vòng 5–10 phút mà không cần phải đọc từng dòng mã nguồn.
 
 ---
 
@@ -56,18 +56,17 @@ flowchart LR
 
 - **API:** `GET /api/v1/tenants/current`
 - **Use Case:** `GetTenantInfoUseCase`
-- **Test File:** `GetTenantInfoUseCaseTest.java`, `TenantControllerTest.java`
 
-### Biểu đồ Luồng Quyết Định (Decision Tree & Test Cases)
+### 1. Biểu đồ Luồng Nghiệp Vụ (Flowchart)
 ```mermaid
 flowchart TD
     Start(["Client gọi GET /api/v1/tenants/current"]) --> CheckHdr{"X-Tenant-ID hợp lệ?"}
-    CheckHdr -- Không --> ErrHdr["❌ 400 TENANT_HEADER_MISSING<br>test: should_throw_TENANT_HEADER_MISSING_when_tenant_is_null"]
+    CheckHdr -- Không --> ErrHdr["❌ 400 Bad Request<br>Thiếu header định danh X-Tenant-ID"]
     CheckHdr -- Có --> QueryDB["Truy vấn bảng tenants theo ID"]
     QueryDB --> CheckExist{"Tìm thấy Tenant?"}
-    CheckExist -- Không --> ErrNotFound["❌ 404 TENANT_NOT_FOUND<br>test: should_throw_TENANT_NOT_FOUND_when_tenant_not_in_db"]
-    CheckExist -- Có --> MapDTO["TenantDtoMapper trích xuất metadata slogan, vat, currency"]
-    MapDTO --> Success(["✅ 200 OK - TenantResponse<br>test: should_return_tenant_details_when_tenant_exists"])
+    CheckExist -- Không --> ErrNotFound["❌ 404 Not Found<br>Không tìm thấy thương hiệu trong DB"]
+    CheckExist -- Có --> MapDTO["TenantDtoMapper trích xuất slogan, vat, currency"]
+    MapDTO --> Success(["✅ 200 OK<br>Thông tin thương hiệu (TenantResponse)"])
 
     classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
     classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
@@ -75,7 +74,7 @@ flowchart TD
     class ErrHdr,ErrNotFound fail;
 ```
 
-### Biểu đồ Trình Tự (Sequence Diagram)
+### 2. Biểu đồ Trình Tự Tương Tác (Sequence Diagram)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -113,17 +112,16 @@ sequenceDiagram
 - **API:** `GET /api/v1/stores?keyword=...&fulfillmentType=...&latitude=...&longitude=...`
 - **Use Case:** `GetStoresListUseCase`
 - **Util:** `GeoUtils.calculateDistanceKm`
-- **Test File:** `GetStoresListUseCaseTest.java`, `StoreControllerTest.java`
 
-### Biểu đồ Luồng Quyết Định (Decision Tree & Test Cases)
+### 1. Biểu đồ Luồng Nghiệp Vụ (Flowchart)
 ```mermaid
 flowchart TD
     Start(["Client gọi GET /api/v1/stores"]) --> CheckType{"Enum fulfillmentType hợp lệ?"}
-    CheckType -- Không --> ErrParam["❌ 400 INVALID_QUERY_PARAM<br>test: should_return_400_when_fulfillment_type_invalid"]
+    CheckType -- Không --> ErrParam["❌ 400 Bad Request<br>Tham số fulfillmentType không thuộc ALL/DINE_IN/TAKEAWAY/DELIVERY"]
     CheckType -- Có --> CheckTenant{"X-Tenant-ID hợp lệ?"}
-    CheckTenant -- Không --> ErrHdr["❌ 400 TENANT_HEADER_MISSING<br>test: should_throw_TENANT_HEADER_MISSING_when_tenant_is_null"]
-    CheckTenant -- Có --> Search["SearchStores theo keyword nullable"]
-    Search --> FilterType["Lọc danh sách theo DINE_IN, TAKEAWAY hoặc DELIVERY"]
+    CheckTenant -- Không --> ErrHdr["❌ 400 Bad Request<br>Thiếu header X-Tenant-ID"]
+    CheckTenant -- Có --> Search["SearchStores theo keyword (nếu có)"]
+    Search --> FilterType["Lọc danh sách theo loại hình DINE_IN, TAKEAWAY hoặc DELIVERY"]
     FilterType --> CheckUser{"Khách đã đăng nhập?"}
     CheckUser -- Có --> LoadFavs["Lấy tập hợp Store ID yêu thích của user"]
     CheckUser -- Không --> EmptyFavs["Tập hợp yêu thích rỗng"]
@@ -131,8 +129,8 @@ flowchart TD
     EmptyFavs --> CalcGPS
     CalcGPS --> SortGPS{"Có tọa độ GPS?"}
     SortGPS -- Có --> DoSort["Sắp xếp tăng dần theo khoảng cách gần nhất lên đầu"]
-    SortGPS -- Không --> KeepOrder["Giữ nguyên thứ tự truy vấn"]
-    DoSort --> Success(["✅ 200 OK - Danh sách StoreSummaryResponse<br>test: should_filter_by_fulfillment_type_and_sort_by_distance_ascending"])
+    SortGPS -- Không --> KeepOrder["Giữ nguyên thứ tự danh sách"]
+    DoSort --> Success(["✅ 200 OK<br>Danh sách chi nhánh (sắp xếp khoảng cách & cờ yêu thích)"])
     KeepOrder --> Success
 
     classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
@@ -141,7 +139,7 @@ flowchart TD
     class ErrParam,ErrHdr fail;
 ```
 
-### Biểu đồ Trình Tự (Sequence Diagram)
+### 2. Biểu đồ Trình Tự Tương Tác (Sequence Diagram)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -182,18 +180,17 @@ sequenceDiagram
 
 - **API:** `GET /api/v1/stores/{storeId}`
 - **Use Case:** `GetStoreDetailUseCase`
-- **Test File:** `GetStoreDetailUseCaseTest.java`, `StoreControllerTest.java`
 
-### Biểu đồ Luồng Quyết Định (Decision Tree & Test Cases)
+### 1. Biểu đồ Luồng Nghiệp Vụ (Flowchart)
 ```mermaid
 flowchart TD
     Start(["Client gọi GET /api/v1/stores/{storeId}"]) --> CheckTenant{"X-Tenant-ID hợp lệ?"}
-    CheckTenant -- Không --> ErrHdr["❌ 400 TENANT_HEADER_MISSING<br>test: should_throw_when_tenant_is_null"]
+    CheckTenant -- Không --> ErrHdr["❌ 400 Bad Request<br>Thiếu header X-Tenant-ID"]
     CheckTenant -- Có --> FindStore["Truy vấn Store theo storeId & tenantId"]
     FindStore --> Exist{"Chi nhánh tồn tại?"}
-    Exist -- Không --> ErrStore["❌ 404 STORE_NOT_FOUND<br>test: should_throw_when_store_does_not_exist"]
+    Exist -- Không --> ErrStore["❌ 404 Not Found<br>Chi nhánh không tồn tại trong thương hiệu"]
     Exist -- Có --> MapDetail["TenantDtoMapper ánh xạ StoreDetailResponse"]
-    MapDetail --> Success(["✅ 200 OK - Chi tiết giờ mở cửa, ảnh bìa, logo, bán kính ship<br>test: should_return_store_detail_when_store_exists"])
+    MapDetail --> Success(["✅ 200 OK<br>Chi tiết chi nhánh (giờ mở cửa, ảnh bìa, logo, bán kính & phí ship)"])
 
     classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
     classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
@@ -201,7 +198,7 @@ flowchart TD
     class ErrHdr,ErrStore fail;
 ```
 
-### Biểu đồ Trình Tự (Sequence Diagram)
+### 2. Biểu đồ Trình Tự Tương Tác (Sequence Diagram)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -235,19 +232,18 @@ sequenceDiagram
 
 - **API:** `GET /api/v1/stores/{storeId}/tables`
 - **Use Case:** `GetStoreTablesUseCase`
-- **Test File:** `GetStoreTablesUseCaseTest.java`, `StoreControllerTest.java`
 
-### Biểu đồ Luồng Quyết Định (Decision Tree & Test Cases)
+### 1. Biểu đồ Luồng Nghiệp Vụ (Flowchart)
 ```mermaid
 flowchart TD
     Start(["Client gọi GET /api/v1/stores/{storeId}/tables"]) --> CheckTenant{"X-Tenant-ID hợp lệ?"}
-    CheckTenant -- Không --> ErrHdr["❌ 400 TENANT_HEADER_MISSING<br>test: should_throw_when_tenant_is_null"]
+    CheckTenant -- Không --> ErrHdr["❌ 400 Bad Request<br>Thiếu header X-Tenant-ID"]
     CheckTenant -- Có --> CheckStore["Xác thực Store thuộc Tenant"]
     CheckStore --> StoreOK{"Cửa hàng tồn tại?"}
-    StoreOK -- Không --> ErrStore["❌ 404 STORE_NOT_FOUND<br>test: should_throw_when_store_does_not_exist"]
+    StoreOK -- Không --> ErrStore["❌ 404 Not Found<br>Chi nhánh không tồn tại trong thương hiệu"]
     StoreOK -- Có --> QueryTables["Truy vấn bảng store_tables theo tenantId & storeId"]
     QueryTables --> MapTables["Ánh xạ List StoreTableResponse"]
-    MapTables --> Success(["✅ 200 OK - Danh sách bàn ăn, sức chứa, số bàn, khu vực<br>test: should_return_tables_list_when_store_exists"])
+    MapTables --> Success(["✅ 200 OK<br>Danh sách bàn ăn tại chi nhánh (sức chứa, khu vực, mã QR)"])
 
     classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
     classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
@@ -255,7 +251,7 @@ flowchart TD
     class ErrHdr,ErrStore fail;
 ```
 
-### Biểu đồ Trình Tự (Sequence Diagram)
+### 2. Biểu đồ Trình Tự Tương Tác (Sequence Diagram)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -293,15 +289,14 @@ sequenceDiagram
 - **API:** `GET /api/v1/stores/tables/qr/{qrToken}`
 - **Use Case:** `ResolveTableQrUseCase`
 - **Util:** `QrCodeUtils`
-- **Test File:** `ResolveTableQrUseCaseTest.java`, `StoreControllerTest.java`
 
-### Biểu đồ Luồng Quyết Định (Decision Tree & Test Cases)
+### 1. Biểu đồ Luồng Nghiệp Vụ (Flowchart)
 ```mermaid
 flowchart TD
     Start(["Khách quét mã QR trên mặt bàn"]) --> CheckTenant{"X-Tenant-ID hợp lệ?"}
-    CheckTenant -- Không --> ErrHdr["❌ 400 TENANT_HEADER_MISSING<br>test: should_throw_when_tenant_is_null"]
+    CheckTenant -- Không --> ErrHdr["❌ 400 Bad Request<br>Thiếu header X-Tenant-ID"]
     CheckTenant -- Có --> CheckBlank{"Token rỗng hoặc blank?"}
-    CheckBlank -- Có --> ErrBlank["❌ 400 INVALID_QR_TOKEN<br>test: should_throw_when_token_is_blank"]
+    CheckBlank -- Có --> ErrBlank["❌ 400 Bad Request<br>Mã QR token bị rỗng"]
     CheckBlank -- Không --> Tier1["Tầng 1: Khớp chính xác Token không phân biệt hoa thường"]
     
     Tier1 --> Match1{"Tìm thấy bàn?"}
@@ -314,11 +309,11 @@ flowchart TD
     
     Tier3 --> Match3{"Tìm thấy bàn?"}
     Match3 -- Có --> CheckStore
-    Match3 -- Không --> ErrInvalid["❌ 400 INVALID_QR_TOKEN<br>test: should_throw_when_qr_token_is_invalid"]
+    Match3 -- Không --> ErrInvalid["❌ 400 Bad Request<br>Mã QR không phân giải được ra bàn nào trong quán"]
     
     CheckStore --> StoreOK{"Cửa hàng tồn tại trong Tenant?"}
-    StoreOK -- Không --> ErrStore["❌ 404 STORE_NOT_FOUND<br>test: should_throw_STORE_NOT_FOUND_when_store_not_in_tenant"]
-    StoreOK -- Có --> Success(["✅ 200 OK - ResolvedTableQrResponse<br>test: should_resolve_table_by_fallback_regex_pattern"])
+    StoreOK -- Không --> ErrStore["❌ 404 Not Found<br>Cửa hàng sở hữu bàn không tồn tại"]
+    StoreOK -- Có --> Success(["✅ 200 OK<br>Thông tin bàn đã giải mã (storeName, tableNumber, zone, capacity)"])
 
     classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
     classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
@@ -326,7 +321,7 @@ flowchart TD
     class ErrHdr,ErrBlank,ErrInvalid,ErrStore fail;
 ```
 
-### Biểu đồ Trình Tự Giải Mã Đa Tầng (Sequence Diagram)
+### 2. Biểu đồ Trình Tự Tương Tác (Sequence Diagram)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -372,25 +367,24 @@ sequenceDiagram
 - **API:** `GET /api/v1/stores/fulfillment-options?storeId=...`
 - **Use Case:** `GetFulfillmentOptionsUseCase`
 - **Util:** `DateTimeUtils.generateTimeSlots`
-- **Test File:** `GetFulfillmentOptionsUseCaseTest.java`, `StoreControllerTest.java`
 
-### Biểu đồ Luồng Quyết Định (Decision Tree & Test Cases)
+### 1. Biểu đồ Luồng Nghiệp Vụ (Flowchart)
 ```mermaid
 flowchart TD
     Start(["Client gọi GET /api/v1/stores/fulfillment-options"]) --> CheckTenant{"X-Tenant-ID hợp lệ?"}
-    CheckTenant -- Không --> ErrHdr["❌ 400 TENANT_HEADER_MISSING<br>test: should_throw_when_tenant_is_null"]
+    CheckTenant -- Không --> ErrHdr["❌ 400 Bad Request<br>Thiếu header X-Tenant-ID"]
     CheckTenant -- Có --> CheckStoreId{"Có truyền tham số storeId?"}
     
-    CheckStoreId -- Không --> DefaultTenant["Trả về cấu hình mặc định toàn thương hiệu: Bật cả 3 loại, prepTime=15p, slots mặc định"]
+    CheckStoreId -- Không --> DefaultTenant["Trả về cấu hình mặc định toàn thương hiệu:<br>Bật cả 3 loại nhận hàng, prepTime=15p, slots mặc định"]
     CheckStoreId -- Có --> QueryStore["Truy vấn Store theo storeId & tenantId"]
     
     QueryStore --> StoreOK{"Cửa hàng tồn tại?"}
-    StoreOK -- Không --> ErrStore["❌ 404 STORE_NOT_FOUND<br>test: should_throw_when_store_not_found"]
+    StoreOK -- Không --> ErrStore["❌ 404 Not Found<br>Cửa hàng không tồn tại"]
     StoreOK -- Có --> ReadStore["Đọc cờ acceptsDinein, acceptsPickup, acceptsDelivery và prepTime"]
     ReadStore --> GenSlots["Gọi DateTimeUtils.generateTimeSlots sinh slot 30p theo giờ mở cửa thật"]
     
-    GenSlots --> Success(["✅ 200 OK - FulfillmentOptionsResponse động<br>test: should_return_store_specific_options"])
-    DefaultTenant --> SuccessDefault(["✅ 200 OK - FulfillmentOptionsResponse mặc định<br>test: should_return_default_options_when_storeId_null"])
+    GenSlots --> Success(["✅ 200 OK<br>Tùy chọn nhận hàng & khung giờ động theo cửa hàng"])
+    DefaultTenant --> SuccessDefault(["✅ 200 OK<br>Tùy chọn nhận hàng mặc định toàn thương hiệu"])
 
     classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
     classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
@@ -398,7 +392,7 @@ flowchart TD
     class ErrHdr,ErrStore fail;
 ```
 
-### Biểu đồ Trình Tự (Sequence Diagram)
+### 2. Biểu đồ Trình Tự Tương Tác (Sequence Diagram)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -440,28 +434,27 @@ sequenceDiagram
 - **API:** `POST & DELETE /api/v1/stores/{storeId}/favorite`
 - **Use Case:** `ToggleFavoriteStoreUseCase`
 - **Util:** `SecurityUtils.resolveCurrentUserId`
-- **Test File:** `ToggleFavoriteStoreUseCaseTest.java`, `StoreControllerTest.java`
 
-### Biểu đồ Luồng Quyết Định (Decision Tree & Test Cases)
+### 1. Biểu đồ Luồng Nghiệp Vụ (Flowchart)
 ```mermaid
 flowchart TD
     Start(["Client gửi POST hoặc DELETE /api/v1/stores/{id}/favorite"]) --> CheckAuth{"Người dùng đã đăng nhập?<br>SecurityUtils.resolveCurrentUserId"}
-    CheckAuth -- Chưa --> ErrAuth["❌ 401 UNAUTHORIZED<br>test: should_return_401_when_user_not_logged_in"]
+    CheckAuth -- Chưa --> ErrAuth["❌ 401 Unauthorized<br>Khách chưa đăng nhập hội viên"]
     CheckAuth -- Đã login --> CheckTenant{"X-Tenant-ID hợp lệ?"}
-    CheckTenant -- Không --> ErrHdr["❌ 400 TENANT_HEADER_MISSING<br>test: should_throw_when_tenant_is_null"]
+    CheckTenant -- Không --> ErrHdr["❌ 400 Bad Request<br>Thiếu header X-Tenant-ID"]
     CheckTenant -- Có --> CheckStore["Kiểm tra Store tồn tại trong Tenant"]
     CheckStore --> StoreOK{"Store tồn tại?"}
-    StoreOK -- Không --> ErrStore["❌ 404 STORE_NOT_FOUND<br>test: should_throw_when_store_does_not_exist"]
+    StoreOK -- Không --> ErrStore["❌ 404 Not Found<br>Chi nhánh không tồn tại"]
     
     StoreOK -- Có --> Action{"Hành động là POST hay DELETE?"}
     Action -- POST --> CheckAlready{"Đã có trong danh sách yêu thích?"}
     CheckAlready -- Chưa --> SaveDB["Tạo mới CustomerFavoriteStoreJpaEntity và lưu DB"]
-    CheckAlready -- Đã có --> Skip["Bỏ qua không tạo trùng - Idempotent"]
-    SaveDB --> RetPost(["✅ 200 OK - isFavorite: true<br>test: should_save_favorite_when_not_favorited_yet"])
+    CheckAlready -- Đã có --> Skip["Bỏ qua không tạo trùng (Idempotent)"]
+    SaveDB --> RetPost(["✅ 200 OK<br>Đã lưu yêu thích (isFavorite: true)"])
     Skip --> RetPost
     
     Action -- DELETE --> DeleteDB["Xóa bản ghi khỏi customer_favorite_stores"]
-    DeleteDB --> RetDel(["✅ 200 OK - isFavorite: false<br>test: should_delete_favorite_successfully"])
+    DeleteDB --> RetDel(["✅ 200 OK<br>Đã hủy yêu thích (isFavorite: false)"])
 
     classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
     classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
@@ -469,7 +462,7 @@ flowchart TD
     class ErrAuth,ErrHdr,ErrStore fail;
 ```
 
-### Biểu đồ Trình Tự (Sequence Diagram)
+### 2. Biểu đồ Trình Tự Tương Tác (Sequence Diagram)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -516,23 +509,22 @@ sequenceDiagram
 - **API:** `GET /api/v1/stores/favorites?latitude=...&longitude=...`
 - **Use Case:** `GetFavoriteStoresUseCase`
 - **Util:** `SecurityUtils`, `GeoUtils`
-- **Test File:** `GetFavoriteStoresUseCaseTest.java`, `StoreControllerTest.java`
 
-### Biểu đồ Luồng Quyết Định (Decision Tree & Test Cases)
+### 1. Biểu đồ Luồng Nghiệp Vụ (Flowchart)
 ```mermaid
 flowchart TD
     Start(["Client gọi GET /api/v1/stores/favorites"]) --> CheckAuth{"Người dùng đã đăng nhập?"}
-    CheckAuth -- Chưa --> ErrAuth["❌ 401 UNAUTHORIZED<br>test: should_return_401_when_user_not_logged_in"]
+    CheckAuth -- Chưa --> ErrAuth["❌ 401 Unauthorized<br>Khách chưa đăng nhập hội viên"]
     CheckAuth -- Có --> CheckTenant{"X-Tenant-ID hợp lệ?"}
-    CheckTenant -- Không --> ErrHdr["❌ 400 TENANT_HEADER_MISSING<br>test: should_throw_when_tenant_is_null"]
+    CheckTenant -- Không --> ErrHdr["❌ 400 Bad Request<br>Thiếu header X-Tenant-ID"]
     CheckTenant -- Có --> QueryFavs["Truy vấn customer_favorite_stores theo userId"]
     
     QueryFavs --> HasFavs{"Có chi nhánh nào không?"}
-    HasFavs -- Không --> RetEmpty(["✅ 200 OK - Danh sách rỗng []<br>test: should_return_empty_list_when_user_has_no_favorites"])
+    HasFavs -- Không --> RetEmpty(["✅ 200 OK<br>Danh sách rỗng (Chưa lưu quán nào)"])
     HasFavs -- Có --> LoadStores["Tải các chi nhánh đang Active thuộc Tenant"]
     LoadStores --> CalcDist["GeoUtils tính khoảng cách GPS nếu có tọa độ"]
     CalcDist --> SortDist["Sắp xếp khoảng cách tăng dần"]
-    SortDist --> RetList(["✅ 200 OK - Danh sách chi nhánh với isFavorite=true<br>test: should_return_favorites_sorted_by_distance_when_gps_provided"])
+    SortDist --> RetList(["✅ 200 OK<br>Danh sách quán yêu thích (sắp xếp khoảng cách GPS)"])
 
     classDef ok fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5;
     classDef fail fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fef2f2;
@@ -540,7 +532,7 @@ flowchart TD
     class ErrAuth,ErrHdr fail;
 ```
 
-### Biểu đồ Trình Tự (Sequence Diagram)
+### 2. Biểu đồ Trình Tự Tương Tác (Sequence Diagram)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -583,28 +575,3 @@ sequenceDiagram
     UC-->>Ctrl: List<StoreSummaryResponse>
     Ctrl-->>C: 200 OK
 ```
-
----
-
-## 🎯 Tóm Tắt Ma Trận Kiểm Thử (65 Tests Checklist)
-
-| Nhóm Kiểm Thử | File Test | Số Ca Kiểm Thử | Mục Tiêu Bao Phủ |
-| :--- | :--- | :---: | :--- |
-| **Tiện Ích Chung** | `GeoUtilsTest` | 5 | Công thức Haversine, làm tròn `BigDecimal`, kiểm tra biên tọa độ GPS. |
-| | `QrCodeUtilsTest` | 4 | Regex bóc tách số bàn, format số bàn, normalize token. |
-| | `SecurityUtilsTest` | 5 | Parse UUID an toàn, trích xuất User ID từ Header hoặc Principal. |
-| | `DateTimeUtilsTest` | 2 | Sinh slot 30 phút theo giờ mở cửa thật, fallback slot mặc định. |
-| **Application Layer** | `GetTenantInfoUseCaseTest` | 3 | Kiểm tra tenant hợp lệ, missing header, không tìm thấy tenant. |
-| | `GetStoresListUseCaseTest` | 4 | Tìm kiếm, lọc fulfillment, tính khoảng cách GPS, cờ yêu thích. |
-| | `GetStoreDetailUseCaseTest` | 3 | Trả chi tiết quán, missing header, store không tồn tại. |
-| | `GetStoreTablesUseCaseTest` | 3 | Lấy danh sách bàn theo quán, missing header, store không tồn tại. |
-| | `ResolveTableQrUseCaseTest` | 5 | Giải mã 3 tầng: Exact, Normalized, Fallback Regex, bắt token lỗi. |
-| | `GetFulfillmentOptionsUseCaseTest` | 4 | Tùy chọn động theo quán, tùy chọn mặc định, missing header, store 404. |
-| | `ToggleFavoriteStoreUseCaseTest` | 4 | Thêm mới, thêm trùng (idempotent), xóa yêu thích, store không tồn tại. |
-| | `GetFavoriteStoresUseCaseTest` | 3 | Danh sách rỗng, danh sách có sắp xếp khoảng cách GPS, missing header. |
-| **Presentation Layer** | `TenantControllerTest` | 3 | Kiểm thử WebMvc MockMvc với các mã HTTP 200, 400. |
-| | `StoreControllerTest` | 12 | Kiểm thử WebMvc MockMvc đầy đủ cho cả 6 endpoint Stores & Security. |
-| **Core Modules** | `PointsLedgerJpaEntityTest` | 2 | Kiểm thử bất biến số dư điểm thưởng Ledger. |
-| | `MemberTierTest` | 2 | Kiểm thử 6 hạng hội viên Loyalty. |
-| | `OrderJpaEntityTest` | 1 | Kiểm thử Entity đơn hàng và tính thuế. |
-| **Tổng Cộng** | **17 Test Suites** | **65 Tests** | **🟢 ĐẠT 100% PASS** |
