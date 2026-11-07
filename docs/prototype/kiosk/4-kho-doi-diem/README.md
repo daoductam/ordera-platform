@@ -88,3 +88,4 @@ flowchart TD
    - Huy hiệu `Sold Out` màu đỏ thay thế cho giá điểm, nút đổi quà chuyển sang trạng thái tạm khóa để tránh phát sinh khiếu nại tại quầy.
 3. **Đơn hàng chưa đạt giá trị tối thiểu của Voucher (Minimum Order Constraint):**
    - Nếu giỏ hàng hiện tại chưa đủ 250 NOK khi áp dụng Voucher 100 NOK, hệ thống vẫn cho phép gắn voucher nhưng hiển thị dòng nhắc nhở trong giỏ: *"Cần mua thêm 80 NOK để kích hoạt giảm giá 100 NOK."*
+

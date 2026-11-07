@@ -114,3 +114,4 @@ flowchart TD
    - Hệ thống hiển thị popup xác nhận: *"Bạn có chắc chắn muốn xóa toàn bộ món trong giỏ hàng và đặt lại từ đầu?"*. Nếu khách đồng ý, gọi API xóa giỏ hàng và trả về menu trắng.
 3. **Món ăn hết hàng trong lúc đang xem (Real-time Stock Sync):**
    - Thẻ món tự động mờ đi, nút `[+]` chuyển thành `Sold Out`, không thể click thêm vào giỏ.
+

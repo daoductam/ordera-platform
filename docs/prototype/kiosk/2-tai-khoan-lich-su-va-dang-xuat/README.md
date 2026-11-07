@@ -112,3 +112,4 @@ flowchart TD
    - Nút `[Done]` hiển thị spinner loading; nếu kết nối thất bại, hiển thị thông báo lỗi màu đỏ ngay trong modal: *"Không thể lưu thông tin lúc này. Vui lòng kiểm tra lại kết nối mạng."*
 3. **Không có đơn hàng nào trong lịch sử (Empty Order History):**
    - Tab hiển thị hình minh họa trống kèm dòng chữ: *"You have no active orders. Start ordering now to earn more loyalty points!"* kèm nút điều hướng nhanh về thực đơn **K05.01**.
+

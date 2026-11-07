@@ -82,3 +82,4 @@ flowchart TD
    - Cho phép khách hàng báo trực tiếp với nhân viên thu ngân tại quầy bằng cách cung cấp số điện thoại đã đăng ký và hóa đơn giấy cũ để thu ngân tra cứu trên POS.
 3. **Mã QR hết hạn (Token Expiry):**
    - Mã QR có thời hạn 15 phút. Nếu khách quét sau 15 phút, trang web di động sẽ yêu cầu nhập lại mã OTP để xác minh danh tính chủ tài khoản.
+

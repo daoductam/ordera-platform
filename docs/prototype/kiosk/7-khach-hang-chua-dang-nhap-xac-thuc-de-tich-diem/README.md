@@ -102,3 +102,4 @@ flowchart TD
    - Sau khi đếm ngược 90 giây kết thúc, dòng *"Resend a new OTP in 90s"* chuyển thành nút bấm vàng: `[Resend OTP via SMS]` hoặc tùy chọn `[Bỏ qua tích điểm & Thanh toán ngay]`.
 3. **Số điện thoại nhập sai định dạng:**
    - Hệ thống hiển thị cảnh báo đỏ ngay dưới ô nhập SĐT: *"Vui lòng nhập đúng số điện thoại (tối thiểu 8 chữ số)."* và khóa nút `[Redeem]`.
+

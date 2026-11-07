@@ -114,3 +114,4 @@ flowchart TD
   - `GET /api/v1/kiosk/config/{deviceId}` (Cấu hình thiết bị Kiosk & kết nối máy in/đầu đọc thẻ)
 - **Database Specification:** [`docs/designs/db-design/01-tenants-and-stores-db.md`](../designs/db-design/01-tenants-and-stores-db.md)
   - Bảng `kiosk_devices`: Quản lý danh sách phần cứng trạm Kiosk theo chi nhánh, trạng thái máy in và máy quẹt thẻ.
+

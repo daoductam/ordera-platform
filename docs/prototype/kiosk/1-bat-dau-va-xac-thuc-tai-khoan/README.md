@@ -113,3 +113,4 @@ flowchart TD
    - Hệ thống khóa tạm thời việc thử lại trong 15 phút, hiển thị thông báo: *"Bạn đã nhập sai mã quá số lần quy định. Vui lòng thử lại sau 15 phút hoặc liên hệ nhân viên quầy."*
 3. **Mất kết nối Internet / SMS Gateway trục trặc:**
    - Kiosk hiển thị cảnh báo: *"Không thể gửi tin nhắn SMS lúc này. Vui lòng chuyển sang đăng nhập bằng Email hoặc quét mã QR trên điện thoại."*
+

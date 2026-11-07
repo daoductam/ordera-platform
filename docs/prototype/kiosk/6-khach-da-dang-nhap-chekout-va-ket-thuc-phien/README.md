@@ -106,3 +106,4 @@ flowchart TD
    - Khi bấm `[🧾 Get Receipt]`, nếu máy in Kiosk báo cờ `printerPaperStatus = 'OUT_OF_PAPER'`, hệ thống tự động chuyển sang mở popup nhập email nhận E-Receipt và thông báo cho khách hàng: *"Máy in tạm hết giấy, hóa đơn chi tiết đã được gửi vào email của bạn."*
 3. **Thẻ ngân hàng bị từ chối (Card Payment Declined):**
    - Kiosk hiển thị màn hình thông báo lỗi quẹt thẻ: *"Giao dịch không thành công. Vui lòng kiểm tra lại thẻ hoặc chọn phương thức thanh toán khác."* kèm nút bấm `[Thử lại]` mà không làm mất món trong giỏ hàng.
+
