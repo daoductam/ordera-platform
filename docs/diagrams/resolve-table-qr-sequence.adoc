@@ -1,0 +1,216 @@
+= Sequence Diagram: Resolve Table QR Code
+:api: GET /api/v1/stores/tables/qr/{qrToken}
+:author: Ordera Architecture Team
+:revnumber: 1.0
+:revdate: 2026-11-07
+:toc:
+
+== Overview
+
+Describes the flow for `GET /api/v1/stores/tables/qr/{qrToken}` — Quét và giải mã mã QR bàn ăn để xác định số bàn, khu vực và thông tin chi nhánh cửa hàng phục vụ khách đặt món tại bàn (Dine-In).
+
+== Participants
+
+|===
+| Name | Type | Description
+
+| Customer / Mobile PWA
+| Actor
+| Khách hàng tại nhà hàng sử dụng camera hoặc trình duyệt quét mã QR vật lý gắn trên mặt bàn.
+
+| Ordera PWA (Frontend)
+| Client App
+| Giao diện ứng dụng PWA gửi HTTP request giải mã QR kèm header định danh thương hiệu `X-Tenant-ID`.
+
+| Ordera Backend (core-api)
+| Service
+| Backend Modular Monolith Spring Boot 3.3.5 xử lý giải mã, kiểm tra tenant và áp dụng Clean Architecture.
+
+| PostgreSQL Database
+| Database
+| Hệ quản trị cơ sở dữ liệu lưu trữ bảng `store_tables` và `stores` với phân vùng bảo mật multi-tenant.
+|===
+
+'''
+
+== L1 — System-Level Flow
+
+[plantuml, resolve-table-qr-l1, svg]
+....
+@startuml
+!theme toy
+autonumber
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Resolve Table QR Code — L1: System Flow
+
+actor "Customer" as client
+participant "Ordera PWA (Frontend)" as fe
+participant "Ordera Backend (core-api)" as be
+database "PostgreSQL" as db
+
+' === 1. User scans QR code ===
+client -> fe: Scan QR code on table\n(e.g., QR-LINN-SENTRUM-T05)
+activate fe
+
+fe -> be: [HTTP/REST] GET /api/v1/stores/tables/qr/{qrToken}\nHeader: X-Tenant-ID: {tenantId}
+activate be
+
+' === 2. Validation ===
+be -> be: Validate X-Tenant-ID header & qrToken
+alt Missing X-Tenant-ID Header
+  be --> fe: HTTP 400 Bad Request\n{"code": "TENANT_HEADER_MISSING", ...}
+  fe --> client: Display error "Thiếu thông tin thương hiệu"
+else Blank QR Token
+  be --> fe: HTTP 400 Bad Request\n{"code": "INVALID_QR_TOKEN", ...}
+  fe --> client: Display error "Mã QR không hợp lệ"
+end
+
+' === 3. Query Database with 3-tier fallback ===
+be -> db: Query StoreTable by exact token / normalized / table pattern
+db --> be: StoreTable record (or empty)
+
+alt Table Not Found in Tenant
+  be --> fe: HTTP 400 Bad Request\n{"code": "INVALID_QR_TOKEN", "message": "Mã QR bàn ăn không hợp lệ..."}
+  fe --> client: Display error "Không tìm thấy bàn ăn tương ứng"
+end
+
+' === 4. Query Store Details ===
+be -> db: Query Store by store_id & tenant_id
+db --> be: Store record (or empty)
+
+alt Store Not Found
+  be --> fe: HTTP 404 Not Found\n{"code": "STORE_NOT_FOUND", ...}
+  fe --> client: Display error "Cửa hàng không tồn tại"
+end
+
+' === 5. Successful Response ===
+be --> fe: HTTP 200 OK\n{"code": 200, "message": "Table resolved successfully", "data": {storeId, storeName, tableId, tableNumber, zone, capacity, isOccupied}}
+deactivate be
+
+fe --> client: Render Table & Store confirmation screen\n(Bắt đầu luồng đặt món tại bàn Dine-In)
+deactivate fe
+
+@enduml
+....
+
+'''
+
+== L2 — Internal Flow (Backend)
+
+[plantuml, resolve-table-qr-l2, svg]
+....
+@startuml
+!theme toy
+autonumber
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Resolve Table QR Code — L2: Internal Backend Flow
+
+participant "TenantInterceptor" as interceptor
+participant "StoreController" as ctrl
+participant "ResolveTableQrUseCase" as svc
+participant "GlobalExceptionHandler" as handler
+database "PostgreSQL" as db
+
+' === Step 1: Interceptor intercepts request ===
+[-> interceptor: HTTP GET /api/v1/stores/tables/qr/{qrToken}\n(Header: X-Tenant-ID)
+activate interceptor
+
+interceptor -> interceptor: preHandle()\nExtract X-Tenant-ID -> TenantContext.setTenantId(uuid)
+interceptor -> ctrl: Forward to Controller
+deactivate interceptor
+activate ctrl
+
+' === Step 2: Controller invokes UseCase ===
+ctrl -> svc: execute(qrToken)
+activate svc
+
+' === Step 3: Tenant validation ===
+svc -> svc: TenantContext.getTenantId()
+alt tenantId == null
+  svc --> handler: throw BusinessException(TENANT_HEADER_MISSING)
+  activate handler
+  handler --> ctrl: ResponseEntity.status(400).body(ApiResponse.error(...))
+  ctrl --> [: HTTP 400 TENANT_HEADER_MISSING
+end
+
+' === Step 4: Token validation ===
+svc -> svc: Validate qrToken.isNotBlank()
+alt qrToken is null or blank
+  svc --> handler: throw BusinessException(INVALID_QR_TOKEN)
+  handler --> ctrl: ResponseEntity.status(400).body(ApiResponse.error(...))
+  ctrl --> [: HTTP 400 INVALID_QR_TOKEN
+end
+
+' === Step 5: QR Resolution Strategy ===
+group 3-Tier QR Resolution Strategy
+  ' 5.1 Exact match
+  svc -> db: SELECT StoreTable WHERE tenant_id = ? AND LOWER(qr_code_token) = LOWER(?)
+  db --> svc: Optional<StoreTable>
+
+  ' 5.2 Normalize hyphen to underscore
+  alt Table not found & token contains '-'
+    svc -> svc: normalizedToken = rawToken.replace("-", "_")
+    svc -> db: SELECT StoreTable WHERE tenant_id = ? AND LOWER(qr_code_token) = LOWER(normalizedToken)
+    db --> svc: Optional<StoreTable>
+  end
+
+  ' 5.3 Regex fallback pattern
+  alt Table still not found
+    svc -> svc: TABLE_NUM_PATTERN.matcher(rawToken)\nExtract digits (e.g., "T05" -> 5)
+    alt Pattern matches table number
+      svc -> db: SELECT all StoreTable WHERE tenant_id = ?
+      db --> svc: List<StoreTable>
+      svc -> svc: Filter matching "Table 05" or "Table 5"
+    end
+  end
+end
+
+alt Table not resolved across all strategies
+  svc --> handler: throw BusinessException(INVALID_QR_TOKEN, "Mã QR bàn ăn không hợp lệ...")
+  handler --> ctrl: ResponseEntity.status(400).body(ApiResponse.error(...))
+  ctrl --> [: HTTP 400 INVALID_QR_TOKEN
+end
+
+' === Step 6: Query Store ===
+svc -> db: SELECT Store WHERE id = table.store_id AND tenant_id = ?
+db --> svc: Optional<Store>
+
+alt Store not found
+  svc --> handler: throw BusinessException(STORE_NOT_FOUND)
+  handler --> ctrl: ResponseEntity.status(404).body(ApiResponse.error(...))
+  ctrl --> [: HTTP 404 STORE_NOT_FOUND
+  deactivate handler
+end
+
+' === Step 7: Map and Return DTO ===
+svc -> svc: Build ResolvedTableQrResponse\n(storeId, storeName, tableId, tableNumber, zone, capacity, isOccupied)
+svc --> ctrl: ResolvedTableQrResponse
+deactivate svc
+
+ctrl -> ctrl: Wrap in ApiResponse.ok("Table resolved successfully", response)
+ctrl --> [: HTTP 200 OK (ApiResponse<ResolvedTableQrResponse>)
+deactivate ctrl
+
+[-> interceptor: afterCompletion()
+activate interceptor
+interceptor -> interceptor: TenantContext.clear()
+deactivate interceptor
+
+@enduml
+....
+
+'''
+
+== Notes
+
+* *Multi-Tenant Isolation:* `TenantInterceptor` đảm bảo biến môi trường ThreadLocal `TenantContext` luôn được giải phóng sau mỗi request trong `afterCompletion()`. Mọi truy vấn DB bắt buộc bao gồm điều kiện `tenant_id` để ngăn ngừa lỗ hổng IDOR.
+* *Chiến lược phân giải QR linh hoạt (3-Tier QR Resolution):*
+  1. Khớp chính xác mã token không phân biệt hoa/thường (`findByTenantIdAndQrCodeTokenIgnoreCase`).
+  2. Khớp mã sau khi chuẩn hóa dấu nối (`-` ➜ `_`).
+  3. Phân tích chuỗi số từ token qua Regular Expression `(?i)(?:t|tbl|table)[-_ ]*(\\d+)` để map ngược lại `Table 05` hoặc `Table 5`. Giúp người dùng hoặc kiosk quét được cả các mẫu mã QR in ấn cũ hoặc mã rút gọn.
+* *Error Handling:* Sử dụng mô hình `ErrorCode` enum (`TenantErrorCode`) ném qua `BusinessException`, được `GlobalExceptionHandler` bắt và chuyển đổi thành cấu trúc chuẩn RFC 7807 (`ApiResponse.error(...)`).
+
