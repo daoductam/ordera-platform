@@ -22,7 +22,8 @@ public interface StoreRepository extends JpaRepository<StoreJpaEntity, UUID> {
     Optional<StoreJpaEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 
     @Query("SELECT s FROM StoreJpaEntity s WHERE s.tenantId = :tenantId AND s.active = true " +
-           "AND (:keyword IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(s.address) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (:keyword IS NULL OR :keyword = '' " +
+           "OR LOWER(s.name) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')) " +
+           "OR LOWER(s.address) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))")
     List<StoreJpaEntity> searchStores(@Param("tenantId") UUID tenantId, @Param("keyword") String keyword);
 }

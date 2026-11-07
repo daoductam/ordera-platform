@@ -40,7 +40,12 @@ public class GetStoresListUseCaseImpl implements GetStoresListUseCase {
             throw new BusinessException(TenantErrorCode.TENANT_HEADER_MISSING);
         }
 
-        List<StoreJpaEntity> stores = storeRepository.searchStores(tenantId, keyword);
+        List<StoreJpaEntity> stores;
+        if (keyword != null && !keyword.isBlank()) {
+            stores = storeRepository.searchStores(tenantId, keyword.trim());
+        } else {
+            stores = storeRepository.findByTenantIdAndActive(tenantId, true);
+        }
 
         // Lọc theo hình thức phục vụ (Fulfillment Type)
         if (fulfillmentType != null && fulfillmentType != FulfillmentType.ALL) {
