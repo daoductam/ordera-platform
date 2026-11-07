@@ -51,6 +51,19 @@
 ```
 
 #### 3. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
 - **Chưa đăng nhập (`401 Unauthorized`):**
 ```json
 {
@@ -134,6 +147,33 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để xem danh sách thông báo.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
 ---
 
 ### API 8.3: Chi Tiết Thông Báo (Get Notification Detail)
@@ -146,10 +186,10 @@
 - **Frontend Gọi tại:** `NotificationDetailModal.tsx`
 
 #### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Mẫu |
-|:---|:---|:---:|:---|
-| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
-| `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` |
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID Tenant thương hiệu |
+| `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` | JWT Access Token |
 
 #### 2. Path Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
@@ -178,6 +218,32 @@
 ```
 
 #### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để xem nội dung chi tiết thông báo.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
 - **Không tìm thấy thông báo (`404 Not Found`):**
 ```json
 {
@@ -202,10 +268,10 @@
 - **Màn hình Prototype:** `05.03`
 
 #### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Mẫu |
-|:---|:---|:---:|:---|
-| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
-| `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` |
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID Tenant thương hiệu |
+| `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` | JWT Access Token |
 
 #### 2. Path Parameters
 | Tham số | Kiểu | Bắt buộc | Mô tả |
@@ -226,6 +292,46 @@
 }
 ```
 
+#### 4. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để cập nhật trạng thái thông báo.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
+- **Không tìm thấy thông báo (`404 Not Found`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "NOTIFICATION_NOT_FOUND",
+    "message": "Không tìm thấy thông báo để đánh dấu đã đọc.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
 ---
 
 ### API 8.5: Đánh Dấu Tất Cả Thông Báo Đã Đọc (Mark All Notifications Read)
@@ -237,10 +343,10 @@
 - **Màn hình Prototype:** `05.02`
 
 #### 1. Request Headers
-| Header | Kiểu | Bắt buộc | Mẫu |
-|:---|:---|:---:|:---|
-| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` |
-| `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` |
+| Header | Kiểu | Bắt buộc | Mẫu | Mô tả |
+|:---|:---|:---:|:---|:---|
+| `X-Tenant-ID` | `UUID` | **Có** | `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` | ID Tenant thương hiệu |
+| `Authorization` | `String` | **Có** | `Bearer eyJhbGciOiJIUzUxMiJ9...` | JWT Access Token |
 
 #### 2. Phản hồi Thành công (200 OK)
 ```json
@@ -252,6 +358,33 @@
     "unreadCount": 0
   },
   "timestamp": "2026-11-05T20:56:00.000Z"
+}
+```
+
+#### 3. Phản hồi Lỗi
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
+}
+```
+
+- **Chưa đăng nhập (`401 Unauthorized`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Vui lòng đăng nhập để cập nhật trạng thái thông báo.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:56:15.000Z"
 }
 ```
 
@@ -315,15 +448,45 @@
 ```
 
 #### 4. Phản hồi Lỗi (RFC 7807)
-- **Dữ liệu không hợp lệ (`422 Unprocessable Entity`):**
+- **Thiếu Header `X-Tenant-ID` (`400 Bad Request`):**
 ```json
 {
-  "type": "https://api.orderaapp.com/errors/validation-failed",
-  "title": "Validation Failed",
-  "status": 422,
-  "detail": "Email hoặc số điện thoại không đúng định dạng.",
-  "instance": "/api/v1/support/missing-points/submit",
-  "code": "VALIDATION_FAILED",
+  "success": false,
+  "error": {
+    "code": "TENANT_HEADER_MISSING",
+    "message": "Header 'X-Tenant-ID' is required for multi-tenant data isolation.",
+    "details": null
+  },
   "timestamp": "2026-11-05T20:57:00.000Z"
 }
 ```
+
+- **Dữ liệu không hợp lệ (`422 Unprocessable Entity`):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Email hoặc số điện thoại không đúng định dạng.",
+    "details": null
+  },
+  "timestamp": "2026-11-05T20:57:00.000Z"
+}
+```
+
+---
+
+## Ghi Chú Kỹ Thuật & Phân Định Nghiệp Vụ Hỗ Trợ Điểm (Technical & Support Architecture Notes)
+
+1. **Phân Định 2 Luồng Hỗ Trợ / Khiếu Nại Điểm Thưởng (Disambiguation Rule):**
+   - **Luồng Khiếu nại Hóa đơn tại quầy (API 4.7 `POST /api/v1/loyalty/claims`):**
+     - Áp dụng khi hội viên mua hàng tại quầy trong vòng 30 ngày bị nhân viên quên quét mã barcode/SĐT để tích điểm.
+     - Bắt buộc phải có JWT Token của hội viên đã đăng nhập.
+     - Yêu cầu mã hóa đơn in trên phiếu (`receiptCode`), ngày mua, số tiền thanh toán và ảnh biên lai.
+   - **Luồng Trợ giúp Thất lạc Điểm cũ do Nâng cấp Hệ thống (API 8.6 `POST /api/v1/support/missing-points/submit`):**
+     - Áp dụng cho thông báo *"Missing Your Points?"* (`05.03`) khi khách hàng thắc mắc điểm tích lũy của hệ thống cũ chưa đồng bộ sang Ordera Loyalty 2.0.
+     - Cho phép khách chưa đăng nhập gửi phiếu hỗ trợ bằng cách nhập Email và SĐT cũ để CSKH đối soát thủ công và khôi phục điểm thưởng.
+
+2. **Cơ Chế Phân Phối Thông Báo (Fan-out on Read):**
+   - Thông báo chung của hệ thống / chiến dịch (`system_notifications`) được lưu trữ 1 bản ghi duy nhất theo thương hiệu (`tenant_id`).
+   - Khi hội viên truy cập hòm thư, bảng `user_notifications` sẽ lưu vết trạng thái đọc (`is_read`, `read_at`) riêng cho từng người dùng, tối ưu hóa dung lượng lưu trữ cơ sở dữ liệu.
