@@ -19,7 +19,7 @@ public class UserGiftRedemption {
     private int pointsSpent;
     private String redemptionCode;
     private String status;
+    private UUID appliedOrderId;
     private Instant claimedAt;
     private Instant createdAt;
 }
-
