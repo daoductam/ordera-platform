@@ -37,3 +37,4 @@ public class SendRegisterOtpRequest {
 
     private LocalDate dateOfBirth;
 }
+

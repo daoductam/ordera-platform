@@ -30,3 +30,4 @@ public class OtpSession {
     private Instant expiresAt;
     private Instant createdAt;
 }
+

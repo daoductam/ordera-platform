@@ -78,10 +78,29 @@ class VerifyRegisterOtpUseCaseTest {
                 .build();
 
         when(otpStoragePort.getOtp(tenantId, request.getEmail())).thenReturn(Optional.of("222222"));
+        when(otpStoragePort.incrementAttempts(eq(tenantId), eq(request.getEmail()), anyLong())).thenReturn(1);
 
         assertThatThrownBy(() -> verifyRegisterOtpUseCase.execute(request))
                 .isInstanceOf(BusinessException.class)
                 .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode()).isEqualTo(AuthErrorCode.OTP_INVALID));
+
+        verify(otpStoragePort).incrementAttempts(eq(tenantId), eq(request.getEmail()), eq(900L));
+    }
+
+    @Test
+    @DisplayName("should throw OTP_MAX_ATTEMPTS_EXCEEDED when attempts reach or exceed 5")
+    void should_throwException_when_maxAttemptsExceeded() {
+        VerifyRegisterOtpRequest request = VerifyRegisterOtpRequest.builder()
+                .phoneNumber("+4797362748")
+                .email("abytran@ordera.no")
+                .otpCode("111111")
+                .build();
+
+        when(otpStoragePort.getAttempts(tenantId, request.getEmail())).thenReturn(5);
+
+        assertThatThrownBy(() -> verifyRegisterOtpUseCase.execute(request))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode()).isEqualTo(AuthErrorCode.OTP_MAX_ATTEMPTS_EXCEEDED));
     }
 
     @Test
@@ -150,3 +169,4 @@ class VerifyRegisterOtpUseCaseTest {
         verify(memberProfileRepository).save(any(MemberProfileJpaEntity.class));
     }
 }
+

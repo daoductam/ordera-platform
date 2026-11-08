@@ -23,10 +23,10 @@ Total time: 5 minutes
 
 ## Code Review Summary
 
-- **Verdict:** **GREEN** (Approved)
+- **Verdict:** **GREEN** (Approved after Review Fixes)
 - **Critical issues:** 0
-- **Warnings:** 0
-- **Suggestions:** 0
+- **Warnings:** 0 (2 warnings identified and resolved during code review: RefreshToken TTL calculation and registration OTP brute-force protection)
+- **Suggestions:** 0 (MAX_ATTEMPTS constant extracted)
 - **Compliance Checklist:**
   - [x] **Clean Architecture Isolation:** Domain layer (`com.ordera.modules.auth.domain`) contains pure Java models and `AuthErrorCode` implementing `ErrorCode`. Zero framework/JPA imports.
   - [x] **No Custom Exception Classes:** All errors thrown via `new BusinessException(AuthErrorCode.<CODE>)`.
@@ -103,3 +103,4 @@ Total time: 5 minutes
 - [x] Documentation: `2026-11-08-walkthrough.md` & `business-flows.md` complete
 - [x] Clean Architecture 4-layer structure strictly enforced
 - [x] Ready for Git commit on `develop`
+

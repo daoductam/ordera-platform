@@ -85,7 +85,7 @@ class RefreshTokenUseCaseTest {
         when(claims.get("tenantId", String.class)).thenReturn(tenantId.toString());
         when(claims.get("role", String.class)).thenReturn("CUSTOMER");
         when(tokenBlacklistPort.isBlacklisted(jti)).thenReturn(false);
-        when(jwtTokenProviderService.getRemainingTtlMs(jti)).thenReturn(500000L);
+        when(claims.getExpiration()).thenReturn(new java.util.Date(System.currentTimeMillis() + 500000L));
 
         TokenPair newPair = TokenPair.builder()
                 .accessToken("new-access-token")
@@ -105,3 +105,4 @@ class RefreshTokenUseCaseTest {
         verify(tokenBlacklistPort).blacklistToken(eq(jti), anyLong());
     }
 }
+

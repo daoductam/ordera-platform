@@ -27,3 +27,4 @@ public class VerifyOtpResponse {
     private String phoneNumber;
     private String tempAuthToken;
 }
+

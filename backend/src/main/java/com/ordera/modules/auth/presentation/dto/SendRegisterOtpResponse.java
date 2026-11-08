@@ -17,3 +17,4 @@ public class SendRegisterOtpResponse {
     private String recipientMasked;
     private long cooldownSeconds;
 }
+

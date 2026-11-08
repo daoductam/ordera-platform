@@ -23,3 +23,4 @@ public class SendOtpRequest {
     @Pattern(regexp = "^\\+[1-9]\\d{7,14}$", message = "Số điện thoại phải tuân thủ định dạng quốc tế E.164 (bắt đầu bằng dấu +, ví dụ: +4797362748)")
     private String phoneNumber;
 }
+

@@ -23,3 +23,4 @@ public class VerifyOtpRequest {
     @Pattern(regexp = "^\\d{6}$", message = "Mã xác thực OTP phải gồm đúng 6 chữ số")
     private String otpCode;
 }
+

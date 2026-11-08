@@ -30,3 +30,4 @@ public class AuthUserResponse {
     private Integer currentPoints;
     private Integer lifetimePoints;
 }
+

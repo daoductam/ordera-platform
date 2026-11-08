@@ -19,3 +19,4 @@ public class SendOtpResponse {
     private long cooldownSeconds;
     private long resendAllowedAfterSeconds;
 }
+

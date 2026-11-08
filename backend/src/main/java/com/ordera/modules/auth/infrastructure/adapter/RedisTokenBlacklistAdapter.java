@@ -41,3 +41,4 @@ public class RedisTokenBlacklistAdapter implements TokenBlacklistPort {
         return Boolean.TRUE.equals(exists);
     }
 }
+

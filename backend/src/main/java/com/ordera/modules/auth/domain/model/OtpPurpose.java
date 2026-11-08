@@ -8,3 +8,4 @@ public enum OtpPurpose {
     REGISTER,
     PASSWORD_RESET
 }
+

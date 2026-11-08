@@ -9,3 +9,4 @@ public interface LogoutUseCase {
 
     void execute(String authHeader, LogoutRequest request);
 }
+

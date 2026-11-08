@@ -10,3 +10,4 @@ public interface VerifyOtpUseCase {
 
     VerifyOtpResponse execute(VerifyOtpRequest request);
 }
+

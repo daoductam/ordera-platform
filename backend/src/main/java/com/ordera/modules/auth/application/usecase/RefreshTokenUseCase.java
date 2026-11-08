@@ -10,3 +10,4 @@ public interface RefreshTokenUseCase {
 
     RefreshTokenResponse execute(RefreshTokenRequest request);
 }
+

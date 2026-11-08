@@ -14,3 +14,4 @@ public interface EmailSenderPort {
      */
     void sendEmail(String toRecipient, String subject, String content);
 }
+

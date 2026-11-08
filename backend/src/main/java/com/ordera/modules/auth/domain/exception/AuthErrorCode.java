@@ -30,3 +30,4 @@ public enum AuthErrorCode implements ErrorCode {
     private final int status;
     private final String defaultMessage;
 }
+

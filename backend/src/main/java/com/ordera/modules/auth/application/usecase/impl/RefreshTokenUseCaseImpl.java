@@ -70,7 +70,10 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
     }
 
     private void revokeOldRefreshToken(Claims claims) {
-        long remainingTtl = jwtTokenProviderService.getRemainingTtlMs(claims.getId());
+        long remainingTtl = 0;
+        if (claims.getExpiration() != null) {
+            remainingTtl = claims.getExpiration().getTime() - System.currentTimeMillis();
+        }
         if (remainingTtl <= 0) {
             remainingTtl = 604800000L; // Fallback 7 days
         }
@@ -94,3 +97,4 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
                 .build();
     }
 }
+

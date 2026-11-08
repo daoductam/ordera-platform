@@ -13,3 +13,4 @@ public interface AuthDtoMapper {
 
     AuthUserResponse toUserResponse(UserJpaEntity entity);
 }
+

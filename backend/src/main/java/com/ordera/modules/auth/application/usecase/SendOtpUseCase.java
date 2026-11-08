@@ -10,3 +10,4 @@ public interface SendOtpUseCase {
 
     SendOtpResponse execute(SendOtpRequest request);
 }
+

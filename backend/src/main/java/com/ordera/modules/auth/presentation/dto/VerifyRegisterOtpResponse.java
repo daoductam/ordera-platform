@@ -20,3 +20,4 @@ public class VerifyRegisterOtpResponse {
     private AuthUserResponse user;
     private LoyaltyTierDetailDto loyalty;
 }
+

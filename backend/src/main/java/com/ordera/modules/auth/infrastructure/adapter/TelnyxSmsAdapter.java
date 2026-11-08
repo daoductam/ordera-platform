@@ -17,3 +17,4 @@ public class TelnyxSmsAdapter implements SmsSenderPort {
         log.info("[Telnyx SMS Gateway] Sending SMS to recipient [{}]: \"{}\"", phoneNumber, message);
     }
 }
+

@@ -97,3 +97,4 @@ class SendOtpUseCaseTest {
         verify(otpAuditLogRepository).save(any(OtpAuditLogJpaEntity.class));
     }
 }
+

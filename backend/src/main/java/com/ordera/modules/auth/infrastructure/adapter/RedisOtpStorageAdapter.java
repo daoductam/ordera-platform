@@ -24,6 +24,7 @@ public class RedisOtpStorageAdapter implements OtpStoragePort {
     private static final String OTP_PREFIX = "auth:otp:";
     private static final String COOLDOWN_PREFIX = "auth:otp:cooldown:";
     private static final String ATTEMPTS_PREFIX = "auth:otp:attempts:";
+    private static final int MAX_ATTEMPTS = 5;
 
     private String buildOtpKey(UUID tenantId, String recipient) {
         return OTP_PREFIX + tenantId + ":" + recipient;
@@ -80,7 +81,7 @@ public class RedisOtpStorageAdapter implements OtpStoragePort {
         if (currentAttempts == 1) {
             // First failed attempt, set initial TTL (e.g. 120s or lock duration)
             redisTemplate.expire(key, Math.max(120, lockTtlSeconds), TimeUnit.SECONDS);
-        } else if (currentAttempts >= 5) {
+        } else if (currentAttempts >= MAX_ATTEMPTS) {
             // Exceeded threshold: lock for lockTtlSeconds (e.g. 900s / 15 mins)
             redisTemplate.expire(key, lockTtlSeconds, TimeUnit.SECONDS);
         }
@@ -107,3 +108,4 @@ public class RedisOtpStorageAdapter implements OtpStoragePort {
         redisTemplate.delete(buildAttemptsKey(tenantId, recipient));
     }
 }
+

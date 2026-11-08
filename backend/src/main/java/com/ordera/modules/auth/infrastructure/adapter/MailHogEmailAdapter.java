@@ -41,3 +41,4 @@ public class MailHogEmailAdapter implements EmailSenderPort {
         }
     }
 }
+

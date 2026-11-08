@@ -21,3 +21,4 @@ public interface TokenBlacklistPort {
      */
     boolean isBlacklisted(String jti);
 }
+

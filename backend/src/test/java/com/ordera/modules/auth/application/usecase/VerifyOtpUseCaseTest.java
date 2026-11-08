@@ -186,3 +186,4 @@ class VerifyOtpUseCaseTest {
         verify(otpStoragePort).clearOtp(tenantId, phoneNumber);
     }
 }
+

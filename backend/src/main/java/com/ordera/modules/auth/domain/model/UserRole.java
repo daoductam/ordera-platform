@@ -10,3 +10,4 @@ public enum UserRole {
     AGENCY_ADMIN,
     SYSTEM_SUPERADMIN
 }
+

@@ -74,3 +74,4 @@ class LogoutUseCaseTest {
         verify(tokenBlacklistPort).blacklistToken(refreshJti, 604800000L);
     }
 }
+

@@ -20,3 +20,4 @@ public class TokenPair {
     private String tokenType = "Bearer";
     private long expiresIn;
 }
+

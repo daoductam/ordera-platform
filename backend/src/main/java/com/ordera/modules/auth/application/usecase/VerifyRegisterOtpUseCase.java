@@ -10,3 +10,4 @@ public interface VerifyRegisterOtpUseCase {
 
     VerifyRegisterOtpResponse execute(VerifyRegisterOtpRequest request);
 }
+

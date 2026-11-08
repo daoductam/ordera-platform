@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,13 +44,18 @@ public class VerifyRegisterOtpUseCaseImpl implements VerifyRegisterOtpUseCase {
     private final OtpStoragePort otpStoragePort;
     private final JwtTokenProviderService jwtTokenProviderService;
 
+    private static final int MAX_ATTEMPTS = 5;
+    private static final long LOCK_TTL_SECONDS = 900L; // 15 Phút
+
     @Override
     @Transactional
     public VerifyRegisterOtpResponse execute(VerifyRegisterOtpRequest request) {
         UUID tenantId = validateAndResolveTenant();
         validateRequest(request);
 
-        verifyRegistrationOtp(tenantId, request);
+        String recipient = resolveRecipient(tenantId, request);
+        checkAttemptLimits(tenantId, recipient);
+        verifyRegistrationOtp(tenantId, recipient, request);
         ensureNotAlreadyRegistered(tenantId, request);
 
         UserJpaEntity user = createAndSaveUser(tenantId, request);
@@ -75,24 +81,48 @@ public class VerifyRegisterOtpUseCaseImpl implements VerifyRegisterOtpUseCase {
         }
     }
 
-    private void verifyRegistrationOtp(UUID tenantId, VerifyRegisterOtpRequest request) {
-        // Kiểm tra OTP theo Email trước, nếu không có thì kiểm tra theo Số điện thoại
-        Optional<String> cachedOtp = otpStoragePort.getOtp(tenantId, request.getEmail());
-        if (cachedOtp.isEmpty()) {
-            cachedOtp = otpStoragePort.getOtp(tenantId, request.getPhoneNumber());
+    private String resolveRecipient(UUID tenantId, VerifyRegisterOtpRequest request) {
+        if (request.getEmail() != null) {
+            if (otpStoragePort.getOtp(tenantId, request.getEmail()).isPresent()
+                    || otpStoragePort.getAttempts(tenantId, request.getEmail()) > 0) {
+                return request.getEmail();
+            }
         }
+        return request.getPhoneNumber();
+    }
+
+    private void checkAttemptLimits(UUID tenantId, String recipient) {
+        int attempts = otpStoragePort.getAttempts(tenantId, recipient);
+        if (attempts >= MAX_ATTEMPTS) {
+            throw new BusinessException(AuthErrorCode.OTP_MAX_ATTEMPTS_EXCEEDED);
+        }
+    }
+
+    private void verifyRegistrationOtp(UUID tenantId, String recipient, VerifyRegisterOtpRequest request) {
+        Optional<String> cachedOtp = otpStoragePort.getOtp(tenantId, recipient);
 
         if (cachedOtp.isEmpty()) {
             throw new BusinessException(AuthErrorCode.OTP_EXPIRED);
         }
 
         if (!cachedOtp.get().equals(request.getOtpCode())) {
-            throw new BusinessException(AuthErrorCode.OTP_INVALID);
+            int currentAttempts = otpStoragePort.incrementAttempts(tenantId, recipient, LOCK_TTL_SECONDS);
+            if (currentAttempts >= MAX_ATTEMPTS) {
+                throw new BusinessException(AuthErrorCode.OTP_MAX_ATTEMPTS_EXCEEDED);
+            }
+            int remaining = Math.max(0, MAX_ATTEMPTS - currentAttempts);
+            String message = String.format("Mã OTP không chính xác. Bạn còn %d lần thử.", remaining);
+            throw new BusinessException(AuthErrorCode.OTP_INVALID, message, Map.of("remainingAttempts", remaining));
         }
 
-        // Xóa OTP sau khi kiểm tra hợp lệ
-        otpStoragePort.clearOtp(tenantId, request.getEmail());
-        otpStoragePort.clearOtp(tenantId, request.getPhoneNumber());
+        // Xóa OTP & attempts sau khi kiểm tra hợp lệ
+        otpStoragePort.clearOtp(tenantId, recipient);
+        if (request.getEmail() != null && !request.getEmail().equals(recipient)) {
+            otpStoragePort.clearOtp(tenantId, request.getEmail());
+        }
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(recipient)) {
+            otpStoragePort.clearOtp(tenantId, request.getPhoneNumber());
+        }
     }
 
     private void ensureNotAlreadyRegistered(UUID tenantId, VerifyRegisterOtpRequest request) {
@@ -183,3 +213,4 @@ public class VerifyRegisterOtpUseCaseImpl implements VerifyRegisterOtpUseCase {
                 .build();
     }
 }
+

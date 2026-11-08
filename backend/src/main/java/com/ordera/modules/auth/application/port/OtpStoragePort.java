@@ -55,3 +55,4 @@ public interface OtpStoragePort {
      */
     void clearOtp(UUID tenantId, String recipient);
 }
+

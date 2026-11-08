@@ -10,3 +10,4 @@ public interface SendRegisterOtpUseCase {
 
     SendRegisterOtpResponse execute(SendRegisterOtpRequest request);
 }
+

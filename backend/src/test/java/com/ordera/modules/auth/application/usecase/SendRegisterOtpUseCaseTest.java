@@ -105,3 +105,4 @@ class SendRegisterOtpUseCaseTest {
         verify(emailSenderPort).sendEmail(eq(request.getEmail()), anyString(), anyString());
     }
 }
+
