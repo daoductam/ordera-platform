@@ -143,3 +143,35 @@ Total time: 24.5 minutes
 | 1 | Task 2 | Xóa `InvalidTierTransitionException` | Đã xóa và bổ sung `LoyaltyErrorCode` implement `ErrorCode` | Chuẩn hóa theo kiến trúc chung và loại bỏ exception class riêng lẻ |
 | 2 | Task 4 | Đổi tên Repositories | Tạo `MemberProfileJpaRepository` và để `MemberProfileRepository` kế thừa | Giữ tương thích 100% với các use cases sẵn có trong `auth` module |
 
+---
+
+## Post-Implementation Refactoring & Code Review (Phase 1.4 Hardening)
+
+Sau khi hoàn tất cài đặt ban đầu, hệ thống đã thực hiện đợt rà soát chất lượng mã nguồn chuyên sâu (`/code-reviewer`) và hoàn tất các cải tiến kiến trúc:
+
+1. **Loại bỏ hoàn toàn mã nguồn chết (Dead/Legacy Code Elimination):**
+   - Đã xóa 5 file legacy chứa lỗ hổng IDOR, `IllegalArgumentException` thô và không còn sử dụng:
+     * `LoyaltyApplicationService.java`
+     * `CalculateTierProgressUseCase.java`
+     * `TierUpgradeProgressResponse.java`
+     * `MemberStatusResponse.java`
+     * `LoyaltyMapper.java`
+
+2. **Chống God Class & God Method (Orchestrator Pattern Refactoring):**
+   - Refactor `CompleteProfileUseCaseImpl` và `UpdateProfileUseCaseImpl`: phương thức `execute()` rút gọn còn dưới 30 dòng, đóng vai trò nhạc trưởng điều phối các private helper methods (`findAndValidateUser`, `updateUserEntity`, `getOrCreateMemberProfile`, `validateAvatarFile`).
+   - Xử lý triệt để Null-Safety: kiểm tra `user.getEmail() != null` trước khi so sánh `equalsIgnoreCase`.
+
+3. **Tách biệt 2 Lớp Hằng Số (Domain Constants vs Presentation Messages):**
+   - **`domain/constant/LoyaltyConstants.java` & `LedgerConstants.java`:** Chứa quy tắc nghiệp vụ bất biến, giới hạn dung lượng upload (5MB), MIME types hợp lệ, thời gian khóa phân tán Redisson (wait 3s, lease 5s), hạn 30 ngày hóa đơn khiếu nại, phân trang 20/50.
+   - **`presentation/constant/LoyaltyMessages.java`:** Chứa toàn bộ thông điệp phản hồi API `MSG_*` cho controller bọc trong `ApiResponse.ok(...)`.
+
+4. **Tối Ưu Hóa Khóa Phân Tán Redisson & Tránh Cạn Kiệt Connection Pool:**
+   - Trong `AccruePointsUseCaseImpl`, di chuyển phạm vi giao dịch database (`TransactionTemplate`) vào bên trong khối `lock.tryLock(...)` thay vì bọc `@Transactional` ở mức phương thức bên ngoài lock, triệt tiêu rủi ro chiếm dụng connection pool của HikariCP trong thời gian chờ acquire lock.
+
+5. **Bộ Lọc Xác Thực Toàn Cục `JwtAuthenticationFilter`:**
+   - Bổ sung `JwtAuthenticationFilter` hỗ trợ trích xuất JWT Token, kiểm tra blacklist trên Redis và tự động nạp `SecurityContext` + `TenantContext`.
+   - Hỗ trợ chế độ kiểm thử nhanh cho Swagger UI / Local Dev qua header `X-User-ID: <UUID>`.
+
+6. **Kết Quả Kiểm Thử Toàn Trình:**
+   - Tổng số test cases tăng lên **167 tests** (bổ sung `CompleteProfileUseCaseTest`, `UpdateProfileUseCaseTest` và cập nhật controller tests), đạt tỷ lệ **167/167 tests passed (100% BUILD SUCCESS)**.
+
