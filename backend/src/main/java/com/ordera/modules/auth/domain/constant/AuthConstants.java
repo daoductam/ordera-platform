@@ -62,3 +62,4 @@ public final class AuthConstants {
     /** Tiền tố lưu trữ danh sách đen Token thu hồi (Blacklist) */
     public static final String REDIS_BLACKLIST_PREFIX = "auth:blacklist:";
 }
+

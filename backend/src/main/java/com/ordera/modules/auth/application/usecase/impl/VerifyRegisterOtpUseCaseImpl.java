@@ -62,7 +62,7 @@ public class VerifyRegisterOtpUseCaseImpl implements VerifyRegisterOtpUseCase {
 
         TokenPair tokenPair = jwtTokenProviderService.generateTokenPair(user.getId(), tenantId, user.getRole());
 
-        return buildResponse(user, profile, initialTier, tokenPair);
+        return buildResponse(tenantId, user, profile, initialTier, tokenPair);
     }
 
     private UUID validateAndResolveTenant() {
@@ -175,7 +175,7 @@ public class VerifyRegisterOtpUseCaseImpl implements VerifyRegisterOtpUseCase {
     }
 
     private VerifyRegisterOtpResponse buildResponse(
-            UserJpaEntity user, MemberProfileJpaEntity profile, TierDefinitionJpaEntity tier, TokenPair tokenPair) {
+            UUID tenantId, UserJpaEntity user, MemberProfileJpaEntity profile, TierDefinitionJpaEntity tier, TokenPair tokenPair) {
 
         AuthUserResponse authUser = AuthUserResponse.builder()
                 .id(user.getId())
@@ -191,14 +191,19 @@ public class VerifyRegisterOtpUseCaseImpl implements VerifyRegisterOtpUseCase {
                 .lifetimePoints(profile.getLifetimePoints())
                 .build();
 
+        int nextOrder = tier.getTierOrder() + 1;
+        Optional<TierDefinitionJpaEntity> nextTierOpt = tierDefinitionRepository.findByTenantIdAndTierOrder(tenantId, nextOrder);
+        String nextTierName = nextTierOpt.map(TierDefinitionJpaEntity::getTierName).orElse(null);
+        int pointsToNextTier = nextTierOpt.map(nt -> Math.max(0, nt.getMinPointsRequired() - profile.getLifetimePoints())).orElse(0);
+
         LoyaltyTierDetailDto loyaltyDto = LoyaltyTierDetailDto.builder()
                 .tierName(tier.getTierName())
                 .tierOrder(tier.getTierOrder())
                 .themeColorHex(tier.getThemeColorHex())
                 .currentPoints(profile.getCurrentPoints())
                 .lifetimePoints(profile.getLifetimePoints())
-                .pointsToNextTier(200) // Khởi điểm lên Silver cần 200 điểm
-                .nextTierName("Silver")
+                .pointsToNextTier(pointsToNextTier)
+                .nextTierName(nextTierName)
                 .build();
 
         return VerifyRegisterOtpResponse.builder()

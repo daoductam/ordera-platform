@@ -135,6 +135,14 @@ class VerifyRegisterOtpUseCaseTest {
         when(userRepository.existsByTenantIdAndEmail(tenantId, request.getEmail())).thenReturn(false);
         when(tierDefinitionRepository.findByTenantIdAndTierOrder(tenantId, 1)).thenReturn(Optional.of(newTier));
 
+        TierDefinitionJpaEntity silverTier = TierDefinitionJpaEntity.builder()
+                .tierName("Silver")
+                .tierOrder(2)
+                .minPointsRequired(200)
+                .themeColorHex("#C0C0C0")
+                .build();
+        when(tierDefinitionRepository.findByTenantIdAndTierOrder(tenantId, 2)).thenReturn(Optional.of(silverTier));
+
         when(userRepository.save(any(UserJpaEntity.class))).thenAnswer(invocation -> {
             UserJpaEntity saved = invocation.getArgument(0);
             saved.setId(UUID.randomUUID());
