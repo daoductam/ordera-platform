@@ -11,5 +11,6 @@ import java.util.UUID;
 public interface ProductModifierGroupRepository extends JpaRepository<ProductModifierGroupJpaEntity, UUID> {
 
     List<ProductModifierGroupJpaEntity> findByProductIdOrderByDisplayOrderAsc(UUID productId);
-}
 
+    List<ProductModifierGroupJpaEntity> findByProductIdInOrderByDisplayOrderAsc(List<UUID> productIds);
+}
