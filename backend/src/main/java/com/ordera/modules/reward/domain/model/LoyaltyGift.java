@@ -19,7 +19,7 @@ public class LoyaltyGift {
     private String imageUrl;
     private int pointsCost;
     private int stockQuantity;
+    private String tag;
     private boolean active;
     private Instant createdAt;
 }
-
