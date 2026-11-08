@@ -1,6 +1,8 @@
 package com.ordera.common.util;
 
 import lombok.experimental.UtilityClass;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.security.Principal;
 import java.util.Optional;
@@ -45,5 +47,15 @@ public class SecurityUtils {
 
         return null;
     }
-}
 
+    /**
+     * Lấy UUID của người dùng hiện tại trực tiếp từ SecurityContextHolder.
+     */
+    public static UUID getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName() != null) {
+            return parseUuid(authentication.getName()).orElse(null);
+        }
+        return null;
+    }
+}

@@ -5,7 +5,8 @@ public enum TransactionType {
     VOUCHER_REDEEM,
     GIFT_REDEEM,
     TIER_BONUS,
+    CLAIM_CREDIT,
+    KIOSK_EARN,
     ADMIN_ADJUST,
     CLAIM_APPROVED
 }
-

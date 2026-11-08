@@ -16,6 +16,7 @@ public class SupportClaim {
 
     private UUID id;
     private UUID tenantId;
+    private UUID storeId;
     private UUID memberId;
     private String receiptCode;
     private LocalDate orderDate;
@@ -27,4 +28,3 @@ public class SupportClaim {
     private Instant createdAt;
     private Instant resolvedAt;
 }
-
