@@ -19,10 +19,10 @@ public class MemberProfile {
     private UUID currentTierId;
     private int currentPoints;
     private int lifetimePoints;
+    private String barcodeToken;
     private LocalDate dateOfBirth;
     private String gender;
     private String avatarUrl;
     private Instant createdAt;
     private Instant updatedAt;
 }
-

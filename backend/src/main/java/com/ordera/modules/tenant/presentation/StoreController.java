@@ -6,6 +6,7 @@ import com.ordera.common.util.SecurityUtils;
 import com.ordera.modules.tenant.application.usecase.*;
 import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.domain.model.FulfillmentType;
+import com.ordera.modules.tenant.presentation.constant.TenantMessages;
 import com.ordera.modules.tenant.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,33 +47,33 @@ public class StoreController {
         try {
             parsedType = FulfillmentType.valueOf(fulfillmentType.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new BusinessException(TenantErrorCode.INVALID_QUERY_PARAM, "Giá trị 'fulfillmentType' không hợp lệ. Chỉ chấp nhận ALL, DINE_IN, TAKEAWAY, DELIVERY.");
+            throw new BusinessException(TenantErrorCode.INVALID_QUERY_PARAM, TenantMessages.ERR_INVALID_FULFILLMENT_TYPE);
         }
 
         UUID userId = SecurityUtils.resolveCurrentUserId(userIdHeader, principal);
         List<StoreSummaryResponse> stores = getStoresListUseCase.execute(keyword, parsedType, latitude, longitude, userId);
-        return ResponseEntity.ok(ApiResponse.ok("Stores retrieved successfully", stores));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_STORES_RETRIEVED, stores));
     }
 
     @Operation(summary = "Chi tiết một chi nhánh", description = "Lấy chi tiết cửa hàng theo ID")
     @GetMapping("/{storeId}")
     public ResponseEntity<ApiResponse<StoreDetailResponse>> getStoreById(@PathVariable UUID storeId) {
         StoreDetailResponse store = getStoreDetailUseCase.execute(storeId);
-        return ResponseEntity.ok(ApiResponse.ok("Store details retrieved successfully", store));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_STORE_DETAIL_RETRIEVED, store));
     }
 
     @Operation(summary = "Danh sách bàn ăn của chi nhánh", description = "Lấy tất cả bàn ăn của chi nhánh chỉ định")
     @GetMapping("/{storeId}/tables")
     public ResponseEntity<ApiResponse<List<StoreTableResponse>>> getStoreTables(@PathVariable UUID storeId) {
         List<StoreTableResponse> tables = getStoreTablesUseCase.execute(storeId);
-        return ResponseEntity.ok(ApiResponse.ok("Tables retrieved successfully", tables));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_TABLES_RETRIEVED, tables));
     }
 
     @Operation(summary = "Giải mã mã QR bàn ăn", description = "Quét mã QR bàn ăn giải mã số bàn và chi nhánh")
     @GetMapping("/tables/qr/{qrToken}")
     public ResponseEntity<ApiResponse<ResolvedTableQrResponse>> resolveTableByQrToken(@PathVariable String qrToken) {
         ResolvedTableQrResponse response = resolveTableQrUseCase.execute(qrToken);
-        return ResponseEntity.ok(ApiResponse.ok("Table resolved successfully", response));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_TABLE_RESOLVED, response));
     }
 
     @Operation(summary = "Tùy chọn hình thức nhận hàng", description = "Lấy danh sách hình thức nhận món (Dine-in, Takeaway, Delivery) & khung giờ")
@@ -80,7 +81,7 @@ public class StoreController {
     public ResponseEntity<ApiResponse<FulfillmentOptionsResponse>> getFulfillmentOptions(
             @RequestParam(required = false) UUID storeId) {
         FulfillmentOptionsResponse response = getFulfillmentOptionsUseCase.execute(storeId);
-        return ResponseEntity.ok(ApiResponse.ok("Fulfillment options retrieved successfully", response));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_FULFILLMENT_OPTIONS_RETRIEVED, response));
     }
 
     @Operation(summary = "Lưu chi nhánh vào danh sách yêu thích", description = "Bật trạng thái yêu thích chi nhánh")
@@ -92,11 +93,11 @@ public class StoreController {
 
         UUID userId = SecurityUtils.resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
-            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để lưu chi nhánh vào danh sách yêu thích.");
+            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, TenantMessages.ERR_UNAUTHORIZED_FAVORITE_ADD);
         }
 
         ToggleFavoriteResponse response = toggleFavoriteStoreUseCase.execute(storeId, userId, true);
-        return ResponseEntity.ok(ApiResponse.ok("Store added to favorites successfully", response));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_STORE_FAVORITE_ADDED, response));
     }
 
     @Operation(summary = "Bỏ lưu chi nhánh khỏi danh sách yêu thích", description = "Tắt trạng thái yêu thích chi nhánh")
@@ -108,11 +109,11 @@ public class StoreController {
 
         UUID userId = SecurityUtils.resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
-            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để gỡ chi nhánh khỏi danh sách yêu thích.");
+            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, TenantMessages.ERR_UNAUTHORIZED_FAVORITE_REMOVE);
         }
 
         ToggleFavoriteResponse response = toggleFavoriteStoreUseCase.execute(storeId, userId, false);
-        return ResponseEntity.ok(ApiResponse.ok("Store removed from favorites successfully", response));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_STORE_FAVORITE_REMOVED, response));
     }
 
     @Operation(summary = "Danh sách chi nhánh yêu thích của hội viên", description = "Lấy tất cả các chi nhánh hội viên đã đánh dấu yêu thích")
@@ -125,10 +126,10 @@ public class StoreController {
 
         UUID userId = SecurityUtils.resolveCurrentUserId(userIdHeader, principal);
         if (userId == null) {
-            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, "Vui lòng đăng nhập để xem danh sách yêu thích.");
+            throw new BusinessException(TenantErrorCode.UNAUTHORIZED, TenantMessages.ERR_UNAUTHORIZED_FAVORITE_VIEW);
         }
 
         List<StoreSummaryResponse> favorites = getFavoriteStoresUseCase.execute(userId, latitude, longitude);
-        return ResponseEntity.ok(ApiResponse.ok("Favorite stores retrieved successfully", favorites));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_FAVORITE_STORES_RETRIEVED, favorites));
     }
 }

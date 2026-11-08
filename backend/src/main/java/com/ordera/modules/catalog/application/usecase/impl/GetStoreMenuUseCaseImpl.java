@@ -3,6 +3,7 @@ package com.ordera.modules.catalog.application.usecase.impl;
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.catalog.application.usecase.GetStoreMenuUseCase;
+import com.ordera.modules.catalog.domain.constant.CatalogConstants;
 import com.ordera.modules.catalog.domain.exception.CatalogErrorCode;
 import com.ordera.modules.catalog.infrastructure.mapper.CatalogDtoMapper;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.CategoryJpaEntity;
@@ -77,7 +78,7 @@ public class GetStoreMenuUseCaseImpl implements GetStoreMenuUseCase {
 
     private void validateStore(UUID storeId, UUID tenantId) {
         if (storeId == null) {
-            throw new BusinessException(CatalogErrorCode.STORE_NOT_FOUND, "Store ID cannot be null.");
+            throw new BusinessException(CatalogErrorCode.STORE_NOT_FOUND, CatalogConstants.ERR_STORE_ID_REQUIRED);
         }
         storeRepository.findByIdAndTenantId(storeId, tenantId)
                 .orElseThrow(() -> new BusinessException(CatalogErrorCode.STORE_NOT_FOUND,
@@ -112,7 +113,8 @@ public class GetStoreMenuUseCaseImpl implements GetStoreMenuUseCase {
 
         return products.stream().map(p -> {
             List<String> tags = catalogDtoMapper.parseDietaryTags(p.getDietaryTags());
-            boolean isPopular = tags.stream().anyMatch(t -> "Popular".equalsIgnoreCase(t) || "POPULAR".equalsIgnoreCase(t));
+            boolean isPopular = tags.stream().anyMatch(t ->
+                    CatalogConstants.TAG_POPULAR.equalsIgnoreCase(t) || CatalogConstants.TAG_POPULAR_UPPER.equalsIgnoreCase(t));
 
             return ProductSummaryResponse.builder()
                     .id(p.getId())
@@ -177,7 +179,7 @@ public class GetStoreMenuUseCaseImpl implements GetStoreMenuUseCase {
                 subNodes.add(MenuSubcategoryNode.builder()
                         .subcategoryId(null)
                         .subcategoryName(category.getName())
-                        .displayOrder(0)
+                        .displayOrder(CatalogConstants.DEFAULT_DISPLAY_ORDER)
                         .products(directProducts)
                         .build());
             }

@@ -3,6 +3,7 @@ package com.ordera.modules.catalog.application.usecase.impl;
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.catalog.application.usecase.GetCategoriesUseCase;
+import com.ordera.modules.catalog.domain.constant.CatalogConstants;
 import com.ordera.modules.catalog.domain.exception.CatalogErrorCode;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.CategoryJpaEntity;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.SubcategoryJpaEntity;
@@ -53,7 +54,7 @@ public class GetCategoriesUseCaseImpl implements GetCategoriesUseCase {
 
     private void validateStore(UUID storeId, UUID tenantId) {
         if (storeId == null) {
-            throw new BusinessException(CatalogErrorCode.STORE_NOT_FOUND, "Store ID cannot be null.");
+            throw new BusinessException(CatalogErrorCode.STORE_NOT_FOUND, CatalogConstants.ERR_STORE_ID_REQUIRED);
         }
         storeRepository.findByIdAndTenantId(storeId, tenantId)
                 .orElseThrow(() -> new BusinessException(CatalogErrorCode.STORE_NOT_FOUND,

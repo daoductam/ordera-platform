@@ -2,6 +2,7 @@ package com.ordera.modules.catalog.infrastructure.mapper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ordera.modules.catalog.domain.constant.CatalogConstants;
 import com.ordera.modules.catalog.domain.model.*;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.*;
 import com.ordera.modules.catalog.presentation.dto.*;
@@ -83,11 +84,12 @@ public interface CatalogDtoMapper {
             return false;
         }
         return domain.getDietaryTags().stream()
-                .anyMatch(tag -> "Popular".equalsIgnoreCase(tag) || "POPULAR".equalsIgnoreCase(tag));
+                .anyMatch(tag -> CatalogConstants.TAG_POPULAR.equalsIgnoreCase(tag)
+                        || CatalogConstants.TAG_POPULAR_UPPER.equalsIgnoreCase(tag));
     }
 
     default List<String> parseDietaryTags(String json) {
-        if (json == null || json.isBlank() || json.equals("[]")) {
+        if (json == null || json.isBlank() || json.equals(CatalogConstants.EMPTY_JSON_ARRAY)) {
             return Collections.emptyList();
         }
         try {
@@ -100,13 +102,13 @@ public interface CatalogDtoMapper {
 
     default String writeDietaryTags(List<String> tags) {
         if (tags == null || tags.isEmpty()) {
-            return "[]";
+            return CatalogConstants.EMPTY_JSON_ARRAY;
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(tags);
         } catch (Exception e) {
-            return "[]";
+            return CatalogConstants.EMPTY_JSON_ARRAY;
         }
     }
 }

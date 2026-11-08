@@ -3,6 +3,7 @@ package com.ordera.modules.catalog.application.usecase.impl;
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.catalog.application.usecase.SearchProductsUseCase;
+import com.ordera.modules.catalog.domain.constant.CatalogConstants;
 import com.ordera.modules.catalog.domain.exception.CatalogErrorCode;
 import com.ordera.modules.catalog.infrastructure.mapper.CatalogDtoMapper;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.CategoryJpaEntity;
@@ -58,7 +59,7 @@ public class SearchProductsUseCaseImpl implements SearchProductsUseCase {
 
     private void validateStore(UUID storeId, UUID tenantId) {
         if (storeId == null) {
-            throw new BusinessException(CatalogErrorCode.STORE_NOT_FOUND, "Store ID cannot be null.");
+            throw new BusinessException(CatalogErrorCode.STORE_NOT_FOUND, CatalogConstants.ERR_STORE_ID_REQUIRED);
         }
         storeRepository.findByIdAndTenantId(storeId, tenantId)
                 .orElseThrow(() -> new BusinessException(CatalogErrorCode.STORE_NOT_FOUND,
@@ -66,9 +67,9 @@ public class SearchProductsUseCaseImpl implements SearchProductsUseCase {
     }
 
     private void validateQuery(String query) {
-        if (query == null || query.trim().length() < 2) {
+        if (query == null || query.trim().length() < CatalogConstants.MIN_SEARCH_QUERY_LENGTH) {
             throw new BusinessException(CatalogErrorCode.INVALID_QUERY_PARAM,
-                    "Search query must contain at least 2 characters.");
+                    CatalogConstants.ERR_SEARCH_QUERY_MIN_LENGTH);
         }
     }
 
@@ -94,7 +95,8 @@ public class SearchProductsUseCaseImpl implements SearchProductsUseCase {
 
         return products.stream().map(p -> {
             List<String> tags = catalogDtoMapper.parseDietaryTags(p.getDietaryTags());
-            boolean isPopular = tags.stream().anyMatch(t -> "Popular".equalsIgnoreCase(t) || "POPULAR".equalsIgnoreCase(t));
+            boolean isPopular = tags.stream().anyMatch(t ->
+                    CatalogConstants.TAG_POPULAR.equalsIgnoreCase(t) || CatalogConstants.TAG_POPULAR_UPPER.equalsIgnoreCase(t));
 
             return ProductSummaryResponse.builder()
                     .id(p.getId())

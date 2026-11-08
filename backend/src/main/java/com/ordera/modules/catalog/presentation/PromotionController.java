@@ -2,6 +2,7 @@ package com.ordera.modules.catalog.presentation;
 
 import com.ordera.common.api.ApiResponse;
 import com.ordera.modules.catalog.application.usecase.GetPromotionBannersUseCase;
+import com.ordera.modules.catalog.presentation.constant.CatalogMessages;
 import com.ordera.modules.catalog.presentation.dto.PromotionBannerResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +26,6 @@ public class PromotionController {
             @PathVariable UUID storeId) {
 
         List<PromotionBannerResponse> banners = getPromotionBannersUseCase.execute(storeId);
-        return ResponseEntity.ok(ApiResponse.ok("Promotion banners retrieved successfully", banners));
+        return ResponseEntity.ok(ApiResponse.ok(CatalogMessages.MSG_PROMOTION_BANNERS_RETRIEVED, banners));
     }
 }

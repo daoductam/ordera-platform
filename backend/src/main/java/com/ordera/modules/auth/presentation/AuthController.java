@@ -2,6 +2,7 @@ package com.ordera.modules.auth.presentation;
 
 import com.ordera.common.api.ApiResponse;
 import com.ordera.modules.auth.application.usecase.*;
+import com.ordera.modules.auth.presentation.constant.AuthMessages;
 import com.ordera.modules.auth.presentation.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +30,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<SendOtpResponse>> sendLoginOtp(
             @Valid @RequestBody SendOtpRequest request) {
         SendOtpResponse response = sendOtpUseCase.execute(request);
-        return ResponseEntity.ok(ApiResponse.ok("Mã xác thực OTP đã được gửi thành công qua tin nhắn SMS.", response));
+        return ResponseEntity.ok(ApiResponse.ok(AuthMessages.MSG_OTP_SENT_SMS, response));
     }
 
     @Operation(summary = "3.2 Xác thực mã OTP đăng nhập", description = "Kiểm tra mã OTP 6 số, cấp JWT và trả cờ isProfileComplete")
@@ -38,8 +39,8 @@ public class AuthController {
             @Valid @RequestBody VerifyOtpRequest request) {
         VerifyOtpResponse response = verifyOtpUseCase.execute(request);
         String message = response.isProfileComplete()
-                ? "Xác thực mã OTP thành công. Đăng nhập hoàn tất."
-                : "Xác thực thành công. Vui lòng hoàn tất thông tin cá nhân của bạn.";
+                ? AuthMessages.MSG_LOGIN_COMPLETE
+                : AuthMessages.MSG_LOGIN_INCOMPLETE_PROFILE;
         return ResponseEntity.ok(ApiResponse.ok(message, response));
     }
 
@@ -48,7 +49,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<SendRegisterOtpResponse>> sendRegisterOtp(
             @Valid @RequestBody SendRegisterOtpRequest request) {
         SendRegisterOtpResponse response = sendRegisterOtpUseCase.execute(request);
-        String message = String.format("Mã xác thực đã được gửi thành công qua %s %s",
+        String message = String.format(AuthMessages.MSG_REGISTER_OTP_SENT_TEMPLATE,
                 response.getChannel(), response.getRecipientMasked());
         return ResponseEntity.ok(ApiResponse.ok(message, response));
     }
@@ -58,7 +59,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<VerifyRegisterOtpResponse>> verifyRegisterOtp(
             @Valid @RequestBody VerifyRegisterOtpRequest request) {
         VerifyRegisterOtpResponse response = verifyRegisterOtpUseCase.execute(request);
-        String message = String.format("Đăng ký thành viên thành công! Chào mừng %s.",
+        String message = String.format(AuthMessages.MSG_REGISTER_SUCCESS_TEMPLATE,
                 response.getUser() != null ? response.getUser().getFullName() : "bạn");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(message, response));
@@ -69,7 +70,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
             @Valid @RequestBody RefreshTokenRequest request) {
         RefreshTokenResponse response = refreshTokenUseCase.execute(request);
-        return ResponseEntity.ok(ApiResponse.ok("Cấp mới Access Token thành công", response));
+        return ResponseEntity.ok(ApiResponse.ok(AuthMessages.MSG_TOKEN_REFRESHED, response));
     }
 
     @Operation(summary = "3.6 Đăng xuất & Thu hồi phiên làm việc", description = "Đưa Token vào Redis Blacklist để hủy phiên làm việc ngay lập tức")
@@ -78,7 +79,7 @@ public class AuthController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody(required = false) LogoutRequest request) {
         logoutUseCase.execute(authHeader, request != null ? request : new LogoutRequest());
-        return ResponseEntity.ok(ApiResponse.ok("Đăng xuất thành công. Phiên làm việc đã bị hủy.", null));
+        return ResponseEntity.ok(ApiResponse.ok(AuthMessages.MSG_LOGOUT_SUCCESS, null));
     }
 }
 

@@ -3,6 +3,7 @@ package com.ordera.modules.catalog.application.usecase.impl;
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.catalog.application.usecase.GetPromotionBannersUseCase;
+import com.ordera.modules.catalog.domain.constant.CatalogConstants;
 import com.ordera.modules.catalog.domain.exception.CatalogErrorCode;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.PromotionBannerJpaEntity;
 import com.ordera.modules.catalog.infrastructure.persistence.repository.PromotionBannerRepository;
@@ -43,7 +44,7 @@ public class GetPromotionBannersUseCaseImpl implements GetPromotionBannersUseCas
 
     private void validateStore(UUID storeId, UUID tenantId) {
         if (storeId == null) {
-            throw new BusinessException(CatalogErrorCode.STORE_NOT_FOUND, "Store ID cannot be null.");
+            throw new BusinessException(CatalogErrorCode.STORE_NOT_FOUND, CatalogConstants.ERR_STORE_ID_REQUIRED);
         }
         storeRepository.findByIdAndTenantId(storeId, tenantId)
                 .orElseThrow(() -> new BusinessException(CatalogErrorCode.STORE_NOT_FOUND,

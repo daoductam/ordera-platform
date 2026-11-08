@@ -2,6 +2,7 @@ package com.ordera.modules.catalog.infrastructure.mapper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ordera.modules.catalog.domain.constant.CatalogConstants;
 import com.ordera.modules.catalog.domain.model.Category;
 import com.ordera.modules.catalog.domain.model.Product;
 import com.ordera.modules.catalog.domain.model.ProductModifier;
@@ -41,7 +42,7 @@ public interface CatalogMapper {
     List<ProductModifier> toModifierDomainList(List<ProductModifierJpaEntity> entities);
 
     default List<String> parseDietaryTags(String json) {
-        if (json == null || json.isBlank() || json.equals("[]")) {
+        if (json == null || json.isBlank() || json.equals(CatalogConstants.EMPTY_JSON_ARRAY)) {
             return Collections.emptyList();
         }
         try {
@@ -54,13 +55,13 @@ public interface CatalogMapper {
 
     default String writeDietaryTags(List<String> tags) {
         if (tags == null || tags.isEmpty()) {
-            return "[]";
+            return CatalogConstants.EMPTY_JSON_ARRAY;
         }
         try {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(tags);
         } catch (Exception e) {
-            return "[]";
+            return CatalogConstants.EMPTY_JSON_ARRAY;
         }
     }
 }

@@ -154,6 +154,8 @@ Mọi module nghiệp vụ trong Backend đều tuân thủ chặt chẽ **Clean
 src/main/java/com/ordera/modules/<module_name>/
 ├── presentation/                      # 1. LỚP TRÌNH DIỄN & GIAO TIẾP (Inbound Layer)
 │   ├── <Module>Controller.java        # REST Controller định tuyến HTTP endpoints
+│   ├── constant/
+│   │   └── <Module>Messages.java      # Thông điệp phản hồi người dùng ApiResponse.ok(MSG_*, data) & ERR_*
 │   └── dto/                           # Request & Response DTOs
 │       ├── <Action>Request.java       # DTO gắn annotations validation (@NotNull, @Valid, @Pattern)
 │       └── <Action>Response.java      # DTO trả về bọc trong ApiResponse<T>
@@ -162,16 +164,18 @@ src/main/java/com/ordera/modules/<module_name>/
 │   ├── usecase/                       # Giao diện và Hiện thực hóa từng Use Case độc lập
 │   │   ├── <Action>UseCase.java       # Interface định nghĩa hành vi nghiệp vụ
 │   │   └── impl/
-│   │       └── <Action>UseCaseImpl.java
+│   │       └── <Action>UseCaseImpl.java # Orchestrator Pattern (<= 30-40 dòng/execute, cấm God Method)
 │   └── service/                       # Domain / Application Services phối hợp liên module
 │       └── <Module>DomainService.java
 │
-├── domain/                            # 3. LỚP NGHIỆP VỤ LÕI & THỰC THỂ (Core Domain Layer)
+├── domain/                            # 3. LỚP NGHIỆP VỤ LÕI & THỰC THỂ (Core Domain Layer - Pure Java)
 │   ├── model/                         # Pure Java POJO (Không phụ thuộc Framework hay Database)
 │   │   ├── <Entity>.java              # Thực thể nghiệp vụ
 │   │   └── <ValueObject>.java         # Giá trị bất biến (Value Objects, Enums)
-│   └── exception/                     # Ngoại lệ nghiệp vụ riêng của Domain
-│       └── <DomainSpecific>Exception.java
+│   ├── constant/                      # Hằng số nghiệp vụ thuần túy (Business rules, limits, timeouts, regex)
+│   │   └── <Module>Constants.java     # Cấm tuyệt đối magic numbers/strings rải rác trong code
+│   └── exception/                     # Danh mục mã lỗi chuẩn hóa RFC 7807 Problem Details
+│       └── <Module>ErrorCode.java     # Enum implement ErrorCode (HttpStatus, code, default message)
 │
 └── infrastructure/                    # 4. LỚP HẠ TẦNG & TRUY XUẤT DỮ LIỆU (Outbound Layer)
     ├── persistence/
@@ -226,19 +230,24 @@ try {
 
 Chính sách bảo mật của Ordera quy định: **Bảo mật Multi-Tenant luôn được BẬT MẶC ĐỊNH trên 100% các luồng truy xuất**.
 
-### 4.1 Cơ chế Phân Lập Dữ Liệu Hai Tầng (Dual-Layer Tenant Isolation)
-1. **Tầng Ứng Dụng (Spring Security Filter & TenantContextHolder):**
-   - Mọi HTTP Request gửi tới `/api/v1/*` đều phải mang Header `X-Tenant-ID: <UUID>` hoặc được trích xuất từ JWT Claim (`tenant_id`).
-   - `TenantFilter` xác minh sự tồn tại của Tenant và lưu vào `TenantContextHolder` (ThreadLocal):
+### 4.1 Cơ chế Phân Lập Dữ Liệu & Xác Thực Ba Tầng (Triple-Layer Security & Tenant Isolation)
+1. **Tầng Ứng Dụng (TenantInterceptor & TenantContext):**
+   - Mọi HTTP Request gửi tới `/api/v1/*` đều phải mang Header `X-Tenant-ID: <UUID>` hoặc được trích xuất từ JWT Claim (`tenantId`).
+   - `TenantInterceptor` xác minh sự tồn tại của Tenant và lưu vào `TenantContext` (ThreadLocal):
      ```java
-     public class TenantContextHolder {
+     public class TenantContext {
          private static final ThreadLocal<UUID> CURRENT_TENANT = new ThreadLocal<>();
          public static void setTenantId(UUID tenantId) { CURRENT_TENANT.set(tenantId); }
          public static UUID getTenantId() { return CURRENT_TENANT.get(); }
          public static void clear() { CURRENT_TENANT.remove(); }
      }
      ```
-2. **Tầng Cơ Sở Dữ Liệu (PostgreSQL Row-Level Security - RLS):**
+2. **Tầng Xác Thực JWT & Ngữ Cảnh Danh Tính (JwtAuthenticationFilter):**
+   - Trích xuất JWT Bearer Token từ header `Authorization: Bearer <token>`.
+   - Kiểm tra Token Blacklist trên Redis (`blacklist:token:{jti}`) để từ chối các token đã bị thu hồi sau khi Đăng xuất.
+   - Giải mã HMAC-SHA512 claims, trích xuất `userId`, `tenantId`, `role` và thiết lập `SecurityContextHolder`.
+   - Hỗ trợ fallback linh hoạt cho môi trường phát triển cục bộ và Swagger UI thông qua header `X-User-ID: <UUID>`.
+3. **Tầng Cơ Sở Dữ Liệu (PostgreSQL Row-Level Security - RLS):**
    - Mọi bảng dữ liệu nghiệp vụ (`stores`, `users`, `member_profiles`, `points_ledger`, `orders`, `vouchers`,...) đều chứa cột `tenant_id UUID NOT NULL`.
    - Cơ chế Hibernate Statement Inspector tự động kích hoạt biến phiên làm việc trước khi thực hiện câu lệnh SQL:
      ```sql
