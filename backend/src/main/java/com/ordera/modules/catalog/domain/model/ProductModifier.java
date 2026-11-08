@@ -18,4 +18,3 @@ public class ProductModifier {
     private BigDecimal extraPrice;
     private boolean isDefault;
 }
-
