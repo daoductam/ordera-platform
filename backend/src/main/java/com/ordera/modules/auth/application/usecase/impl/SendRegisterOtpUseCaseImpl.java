@@ -7,6 +7,7 @@ import com.ordera.modules.auth.application.port.EmailSenderPort;
 import com.ordera.modules.auth.application.port.OtpStoragePort;
 import com.ordera.modules.auth.application.port.SmsSenderPort;
 import com.ordera.modules.auth.application.usecase.SendRegisterOtpUseCase;
+import com.ordera.modules.auth.domain.constant.AuthConstants;
 import com.ordera.modules.auth.domain.exception.AuthErrorCode;
 import com.ordera.modules.auth.domain.model.OtpChannel;
 import com.ordera.modules.auth.domain.model.OtpPurpose;
@@ -37,9 +38,6 @@ public class SendRegisterOtpUseCaseImpl implements SendRegisterOtpUseCase {
     private final SmsSenderPort smsSenderPort;
     private final EmailSenderPort emailSenderPort;
     private final OtpAuditLogRepository otpAuditLogRepository;
-
-    private static final int OTP_LENGTH = 6;
-    private static final long OTP_TTL_SECONDS = 120L;
 
     @Override
     @Transactional
@@ -89,18 +87,18 @@ public class SendRegisterOtpUseCaseImpl implements SendRegisterOtpUseCase {
     private void checkCooldown(UUID tenantId, String recipient) {
         if (otpStoragePort.isCooldownActive(tenantId, recipient)) {
             long remainingSeconds = otpStoragePort.getCooldownRemainingSeconds(tenantId, recipient);
-            long retryAfter = remainingSeconds > 0 ? remainingSeconds : OTP_TTL_SECONDS;
+            long retryAfter = remainingSeconds > 0 ? remainingSeconds : AuthConstants.OTP_COOLDOWN_SECONDS;
             String message = String.format("Vui lòng đợi thêm %d giây trước khi yêu cầu gửi lại mã OTP mới.", retryAfter);
             throw new BusinessException(AuthErrorCode.OTP_COOLDOWN_ACTIVE, message, Map.of("retryAfterSeconds", retryAfter));
         }
     }
 
     private String generateOtpCode() {
-        return OtpUtils.generateNumericOtp(OTP_LENGTH);
+        return OtpUtils.generateNumericOtp(AuthConstants.OTP_LENGTH);
     }
 
     private void saveOtpToCache(UUID tenantId, String recipient, String otpCode) {
-        otpStoragePort.saveOtp(tenantId, recipient, otpCode, OTP_TTL_SECONDS);
+        otpStoragePort.saveOtp(tenantId, recipient, otpCode, AuthConstants.OTP_TTL_SECONDS);
     }
 
     private void dispatchNotification(SendRegisterOtpRequest request, String otpCode) {
@@ -123,7 +121,7 @@ public class SendRegisterOtpUseCaseImpl implements SendRegisterOtpUseCase {
                 .purpose(OtpPurpose.REGISTER.name())
                 .attemptCount(0)
                 .verified(false)
-                .expiresAt(Instant.now().plusSeconds(OTP_TTL_SECONDS))
+                .expiresAt(Instant.now().plusSeconds(AuthConstants.OTP_TTL_SECONDS))
                 .build();
         auditLog.setTenantId(tenantId);
         otpAuditLogRepository.save(auditLog);
@@ -137,7 +135,7 @@ public class SendRegisterOtpUseCaseImpl implements SendRegisterOtpUseCase {
         return SendRegisterOtpResponse.builder()
                 .channel(request.getChannel().toUpperCase())
                 .recipientMasked(masked)
-                .cooldownSeconds(OTP_TTL_SECONDS)
+                .cooldownSeconds(AuthConstants.OTP_COOLDOWN_SECONDS)
                 .build();
     }
 }

@@ -5,6 +5,7 @@ import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.auth.application.port.OtpStoragePort;
 import com.ordera.modules.auth.application.service.JwtTokenProviderService;
 import com.ordera.modules.auth.application.usecase.VerifyOtpUseCase;
+import com.ordera.modules.auth.domain.constant.AuthConstants;
 import com.ordera.modules.auth.domain.exception.AuthErrorCode;
 import com.ordera.modules.auth.domain.model.TokenPair;
 import com.ordera.modules.auth.infrastructure.persistence.entity.OtpAuditLogJpaEntity;
@@ -43,9 +44,6 @@ public class VerifyOtpUseCaseImpl implements VerifyOtpUseCase {
     private final TierDefinitionRepository tierDefinitionRepository;
     private final JwtTokenProviderService jwtTokenProviderService;
 
-    private static final int MAX_ATTEMPTS = 5;
-    private static final long LOCK_TTL_SECONDS = 900L; // 15 Phút
-
     @Override
     @Transactional
     public VerifyOtpResponse execute(VerifyOtpRequest request) {
@@ -76,7 +74,7 @@ public class VerifyOtpUseCaseImpl implements VerifyOtpUseCase {
 
     private void checkAttemptLimits(UUID tenantId, String phoneNumber) {
         int attempts = otpStoragePort.getAttempts(tenantId, phoneNumber);
-        if (attempts >= MAX_ATTEMPTS) {
+        if (attempts >= AuthConstants.MAX_OTP_ATTEMPTS) {
             throw new BusinessException(AuthErrorCode.OTP_MAX_ATTEMPTS_EXCEEDED);
         }
     }
@@ -88,11 +86,11 @@ public class VerifyOtpUseCaseImpl implements VerifyOtpUseCase {
         }
 
         if (!cachedOtp.get().equals(otpCode)) {
-            int currentAttempts = otpStoragePort.incrementAttempts(tenantId, phoneNumber, LOCK_TTL_SECONDS);
-            if (currentAttempts >= MAX_ATTEMPTS) {
+            int currentAttempts = otpStoragePort.incrementAttempts(tenantId, phoneNumber, AuthConstants.OTP_LOCK_TTL_SECONDS);
+            if (currentAttempts >= AuthConstants.MAX_OTP_ATTEMPTS) {
                 throw new BusinessException(AuthErrorCode.OTP_MAX_ATTEMPTS_EXCEEDED);
             }
-            int remaining = Math.max(0, MAX_ATTEMPTS - currentAttempts);
+            int remaining = Math.max(0, AuthConstants.MAX_OTP_ATTEMPTS - currentAttempts);
             String message = String.format("Mã OTP không chính xác. Bạn còn %d lần thử.", remaining);
             throw new BusinessException(AuthErrorCode.OTP_INVALID, message, Map.of("remainingAttempts", remaining));
         }

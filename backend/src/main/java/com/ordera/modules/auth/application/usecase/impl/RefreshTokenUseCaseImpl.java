@@ -5,6 +5,7 @@ import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.auth.application.port.TokenBlacklistPort;
 import com.ordera.modules.auth.application.service.JwtTokenProviderService;
 import com.ordera.modules.auth.application.usecase.RefreshTokenUseCase;
+import com.ordera.modules.auth.domain.constant.AuthConstants;
 import com.ordera.modules.auth.domain.exception.AuthErrorCode;
 import com.ordera.modules.auth.domain.model.TokenPair;
 import com.ordera.modules.auth.presentation.dto.RefreshTokenRequest;
@@ -56,8 +57,8 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
 
     private Claims parseAndValidateRefreshToken(String token) {
         Claims claims = jwtTokenProviderService.parseClaims(token);
-        String tokenType = claims.get("type", String.class);
-        if (!"refresh".equalsIgnoreCase(tokenType)) {
+        String tokenType = claims.get(AuthConstants.CLAIM_TYPE, String.class);
+        if (!AuthConstants.TOKEN_TYPE_REFRESH.equalsIgnoreCase(tokenType)) {
             throw new BusinessException(AuthErrorCode.INVALID_CREDENTIALS, "Token cung cấp không phải là Refresh Token.");
         }
         return claims;
@@ -75,15 +76,15 @@ public class RefreshTokenUseCaseImpl implements RefreshTokenUseCase {
             remainingTtl = claims.getExpiration().getTime() - System.currentTimeMillis();
         }
         if (remainingTtl <= 0) {
-            remainingTtl = 604800000L; // Fallback 7 days
+            remainingTtl = AuthConstants.DEFAULT_REFRESH_TOKEN_TTL_MS;
         }
         tokenBlacklistPort.blacklistToken(claims.getId(), remainingTtl);
     }
 
     private TokenPair generateNewTokenPair(Claims claims) {
         UUID userId = UUID.fromString(claims.getSubject());
-        UUID tenantId = UUID.fromString(claims.get("tenantId", String.class));
-        String role = claims.get("role", String.class);
+        UUID tenantId = UUID.fromString(claims.get(AuthConstants.CLAIM_TENANT_ID, String.class));
+        String role = claims.get(AuthConstants.CLAIM_ROLE, String.class);
 
         return jwtTokenProviderService.generateTokenPair(userId, tenantId, role);
     }

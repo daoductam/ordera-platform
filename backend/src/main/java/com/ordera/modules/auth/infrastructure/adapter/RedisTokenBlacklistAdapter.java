@@ -1,6 +1,7 @@
 package com.ordera.modules.auth.infrastructure.adapter;
 
 import com.ordera.modules.auth.application.port.TokenBlacklistPort;
+import com.ordera.modules.auth.domain.constant.AuthConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -19,14 +20,12 @@ public class RedisTokenBlacklistAdapter implements TokenBlacklistPort {
 
     private final StringRedisTemplate redisTemplate;
 
-    private static final String BLACKLIST_PREFIX = "auth:blacklist:";
-
     @Override
     public void blacklistToken(String jti, long remainingTtlMs) {
         if (jti == null || jti.isBlank() || remainingTtlMs <= 0) {
             return;
         }
-        String key = BLACKLIST_PREFIX + jti;
+        String key = AuthConstants.REDIS_BLACKLIST_PREFIX + jti;
         redisTemplate.opsForValue().set(key, "REVOKED", remainingTtlMs, TimeUnit.MILLISECONDS);
         log.info("Blacklisted JWT jti {} for remaining TTL {} ms", jti, remainingTtlMs);
     }
@@ -36,7 +35,7 @@ public class RedisTokenBlacklistAdapter implements TokenBlacklistPort {
         if (jti == null || jti.isBlank()) {
             return false;
         }
-        String key = BLACKLIST_PREFIX + jti;
+        String key = AuthConstants.REDIS_BLACKLIST_PREFIX + jti;
         Boolean exists = redisTemplate.hasKey(key);
         return Boolean.TRUE.equals(exists);
     }

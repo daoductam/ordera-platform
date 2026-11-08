@@ -1,6 +1,7 @@
 package com.ordera.modules.auth.infrastructure.adapter;
 
 import com.ordera.modules.auth.application.port.OtpStoragePort;
+import com.ordera.modules.auth.domain.constant.AuthConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,21 +22,16 @@ public class RedisOtpStorageAdapter implements OtpStoragePort {
 
     private final StringRedisTemplate redisTemplate;
 
-    private static final String OTP_PREFIX = "auth:otp:";
-    private static final String COOLDOWN_PREFIX = "auth:otp:cooldown:";
-    private static final String ATTEMPTS_PREFIX = "auth:otp:attempts:";
-    private static final int MAX_ATTEMPTS = 5;
-
     private String buildOtpKey(UUID tenantId, String recipient) {
-        return OTP_PREFIX + tenantId + ":" + recipient;
+        return AuthConstants.REDIS_OTP_PREFIX + tenantId + ":" + recipient;
     }
 
     private String buildCooldownKey(UUID tenantId, String recipient) {
-        return COOLDOWN_PREFIX + tenantId + ":" + recipient;
+        return AuthConstants.REDIS_COOLDOWN_PREFIX + tenantId + ":" + recipient;
     }
 
     private String buildAttemptsKey(UUID tenantId, String recipient) {
-        return ATTEMPTS_PREFIX + tenantId + ":" + recipient;
+        return AuthConstants.REDIS_ATTEMPTS_PREFIX + tenantId + ":" + recipient;
     }
 
     @Override
@@ -81,7 +77,7 @@ public class RedisOtpStorageAdapter implements OtpStoragePort {
         if (currentAttempts == 1) {
             // First failed attempt, set initial TTL (e.g. 120s or lock duration)
             redisTemplate.expire(key, Math.max(120, lockTtlSeconds), TimeUnit.SECONDS);
-        } else if (currentAttempts >= MAX_ATTEMPTS) {
+        } else if (currentAttempts >= AuthConstants.MAX_OTP_ATTEMPTS) {
             // Exceeded threshold: lock for lockTtlSeconds (e.g. 900s / 15 mins)
             redisTemplate.expire(key, lockTtlSeconds, TimeUnit.SECONDS);
         }

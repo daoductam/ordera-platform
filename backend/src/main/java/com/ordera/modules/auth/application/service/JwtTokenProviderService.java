@@ -1,6 +1,7 @@
 package com.ordera.modules.auth.application.service;
 
 import com.ordera.common.exception.BusinessException;
+import com.ordera.modules.auth.domain.constant.AuthConstants;
 import com.ordera.modules.auth.domain.exception.AuthErrorCode;
 import com.ordera.modules.auth.domain.model.TokenPair;
 import io.jsonwebtoken.Claims;
@@ -59,9 +60,9 @@ public class JwtTokenProviderService {
         String accessToken = Jwts.builder()
                 .id(accessJti)
                 .subject(userId.toString())
-                .claim("tenantId", tenantId.toString())
-                .claim("role", role)
-                .claim("type", "access")
+                .claim(AuthConstants.CLAIM_TENANT_ID, tenantId.toString())
+                .claim(AuthConstants.CLAIM_ROLE, role)
+                .claim(AuthConstants.CLAIM_TYPE, AuthConstants.TOKEN_TYPE_ACCESS)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(accessExpirationMs)))
                 .signWith(signingKey, Jwts.SIG.HS512)
@@ -70,9 +71,9 @@ public class JwtTokenProviderService {
         String refreshToken = Jwts.builder()
                 .id(refreshJti)
                 .subject(userId.toString())
-                .claim("tenantId", tenantId.toString())
-                .claim("role", role)
-                .claim("type", "refresh")
+                .claim(AuthConstants.CLAIM_TENANT_ID, tenantId.toString())
+                .claim(AuthConstants.CLAIM_ROLE, role)
+                .claim(AuthConstants.CLAIM_TYPE, AuthConstants.TOKEN_TYPE_REFRESH)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(refreshExpirationMs)))
                 .signWith(signingKey, Jwts.SIG.HS512)
@@ -81,7 +82,7 @@ public class JwtTokenProviderService {
         return TokenPair.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .tokenType("Bearer")
+                .tokenType(AuthConstants.TOKEN_TYPE_BEARER)
                 .expiresIn(accessExpirationMs / 1000)
                 .build();
     }
@@ -125,7 +126,7 @@ public class JwtTokenProviderService {
      * Trích xuất Tenant ID từ JWT token.
      */
     public UUID extractTenantId(String token) {
-        String tenantIdStr = parseClaims(token).get("tenantId", String.class);
+        String tenantIdStr = parseClaims(token).get(AuthConstants.CLAIM_TENANT_ID, String.class);
         return UUID.fromString(tenantIdStr);
     }
 
