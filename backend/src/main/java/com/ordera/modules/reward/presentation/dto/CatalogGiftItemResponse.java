@@ -21,3 +21,4 @@ public class CatalogGiftItemResponse {
     private boolean canAfford;
     private int pointsNeeded;
 }
+

@@ -7,3 +7,4 @@ public interface ApplyGiftToCartUseCase {
 
     CartGiftCalculationResponse execute(ApplyGiftRequest request);
 }
+

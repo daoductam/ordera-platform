@@ -36,8 +36,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ApplyVoucherToCartUseCaseImpl implements ApplyVoucherToCartUseCase {
 
-    private static final BigDecimal VAT_RATE = new BigDecimal("0.15");
-
     private final CartOfferPort cartOfferPort;
     private final MemberProfileJpaRepository memberProfileRepository;
     private final VoucherJpaRepository voucherRepository;
@@ -77,7 +75,8 @@ public class ApplyVoucherToCartUseCaseImpl implements ApplyVoucherToCartUseCase 
 
         BigDecimal discountAmount = calculateDiscount(voucher, subtotal);
         BigDecimal netAmount = subtotal.subtract(discountAmount).max(BigDecimal.ZERO);
-        BigDecimal vatAmount = netAmount.multiply(VAT_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal vatAmount = netAmount.multiply(RewardConstants.FOOD_VAT_RATE)
+                .divide(RewardConstants.FOOD_VAT_DIVISOR, 2, RoundingMode.HALF_UP);
         BigDecimal finalTotal = netAmount;
 
         return CartVoucherCalculationResponse.builder()
@@ -152,3 +151,4 @@ public class ApplyVoucherToCartUseCaseImpl implements ApplyVoucherToCartUseCase 
                 .orElseThrow(() -> new BusinessException(RewardErrorCode.MEMBER_PROFILE_NOT_FOUND));
     }
 }
+

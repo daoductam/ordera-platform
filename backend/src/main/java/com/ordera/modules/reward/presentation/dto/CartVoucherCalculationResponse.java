@@ -30,3 +30,4 @@ public class CartVoucherCalculationResponse {
         private BigDecimal discountAmount;
     }
 }
+

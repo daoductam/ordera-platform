@@ -7,3 +7,4 @@ public interface ValidatePromoCodeUseCase {
 
     ValidatePromoCodeResponse execute(ValidatePromoCodeRequest request);
 }
+

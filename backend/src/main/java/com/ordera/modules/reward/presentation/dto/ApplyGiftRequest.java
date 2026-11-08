@@ -20,3 +20,4 @@ public class ApplyGiftRequest {
     @NotNull
     private UUID rewardGiftId;
 }
+

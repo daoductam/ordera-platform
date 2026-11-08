@@ -45,3 +45,4 @@ public interface CartOfferPort {
      */
     void clearAppliedGift(UUID cartId, UUID tenantId);
 }
+

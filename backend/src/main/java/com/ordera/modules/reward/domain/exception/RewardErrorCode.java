@@ -33,3 +33,4 @@ public enum RewardErrorCode implements ErrorCode {
     private final int status;
     private final String defaultMessage;
 }
+

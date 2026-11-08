@@ -8,3 +8,4 @@ public interface RedeemPhysicalGiftUseCase {
 
     RedeemGiftResponse execute(UUID giftId);
 }
+

@@ -27,3 +27,4 @@ public class UserVoucherItemResponse {
     private Instant validUntil;
     private String status;
 }
+

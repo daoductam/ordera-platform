@@ -8,3 +8,4 @@ public interface GetAvailableOffersForCartUseCase {
 
     AvailableOffersResponse execute(UUID cartId);
 }
+

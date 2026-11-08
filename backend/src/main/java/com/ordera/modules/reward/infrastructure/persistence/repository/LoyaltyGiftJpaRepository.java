@@ -15,3 +15,4 @@ public interface LoyaltyGiftJpaRepository extends JpaRepository<LoyaltyGiftJpaEn
 
     Optional<LoyaltyGiftJpaEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 }
+

@@ -55,7 +55,7 @@ public interface RewardDtoMapper {
     CartOfferVoucherItemResponse toCartOfferVoucherItem(VoucherJpaEntity voucher);
 
     @Mapping(target = "giftId", source = "id")
-    @Mapping(target = "isApplicable", constant = "true")
+    @Mapping(target = "isApplicable", expression = "java(gift.getStockQuantity() > 0)")
     @Mapping(target = "status", constant = RewardConstants.STATUS_AVAILABLE)
     CartOfferGiftItemResponse toCartOfferGiftItem(LoyaltyGiftJpaEntity gift);
 
@@ -70,3 +70,4 @@ public interface RewardDtoMapper {
         return voucher.getDiscountValue().stripTrailingZeros().toPlainString() + " " + RewardConstants.CURRENCY_NOK;
     }
 }
+

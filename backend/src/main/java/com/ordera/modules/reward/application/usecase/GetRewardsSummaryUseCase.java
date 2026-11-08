@@ -6,3 +6,4 @@ public interface GetRewardsSummaryUseCase {
 
     RewardsSummaryResponse execute();
 }
+

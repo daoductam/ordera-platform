@@ -22,4 +22,7 @@ public interface UserGiftRedemptionJpaRepository extends JpaRepository<UserGiftR
     Optional<UserGiftRedemptionJpaEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 
     Optional<UserGiftRedemptionJpaEntity> findByTenantIdAndAppliedOrderId(UUID tenantId, UUID appliedOrderId);
+
+    long countByTenantIdAndMemberIdAndStatus(UUID tenantId, UUID memberId, String status);
 }
+

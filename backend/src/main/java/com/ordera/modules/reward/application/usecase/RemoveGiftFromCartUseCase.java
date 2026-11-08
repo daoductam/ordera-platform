@@ -7,3 +7,4 @@ public interface RemoveGiftFromCartUseCase {
 
     CartGiftCalculationResponse execute(RemoveGiftRequest request);
 }
+

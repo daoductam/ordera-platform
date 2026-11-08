@@ -6,3 +6,4 @@ public interface GetMyRewardsWalletUseCase {
 
     MyRewardsWalletResponse execute(String status, String type);
 }
+

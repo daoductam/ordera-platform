@@ -17,9 +17,10 @@ import java.util.UUID;
 public class ValidatePromoCodeRequest {
 
     @NotBlank
-    @Size(min = 3, max = 32)
+    @Size(min = 3, max = 20)
     private String code;
 
     @NotNull
     private UUID cartId;
 }
+

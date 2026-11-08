@@ -26,3 +26,4 @@ public class CatalogVoucherItemResponse {
     private boolean canAfford;
     private int pointsNeeded;
 }
+

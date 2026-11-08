@@ -21,3 +21,4 @@ public class ApplyVoucherRequest {
     @NotBlank
     private String voucherCode;
 }
+

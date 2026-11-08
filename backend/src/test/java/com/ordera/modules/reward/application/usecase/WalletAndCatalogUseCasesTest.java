@@ -216,10 +216,10 @@ class WalletAndCatalogUseCasesTest {
     @Test
     @DisplayName("should count available vouchers and gifts for rewards summary badge")
     void should_count_available_vouchers_and_gifts_for_summary_badge() {
-        when(userVoucherRepository.findByTenantIdAndMemberIdAndStatus(tenantId, memberId, RewardConstants.STATUS_AVAILABLE))
-                .thenReturn(List.of(new UserVoucherJpaEntity(), new UserVoucherJpaEntity()));
-        when(userGiftRedemptionRepository.findByTenantIdAndMemberIdAndStatus(tenantId, memberId, RewardConstants.STATUS_PENDING))
-                .thenReturn(List.of(new UserGiftRedemptionJpaEntity()));
+        when(userVoucherRepository.countByTenantIdAndMemberIdAndStatus(tenantId, memberId, RewardConstants.STATUS_AVAILABLE))
+                .thenReturn(2L);
+        when(userGiftRedemptionRepository.countByTenantIdAndMemberIdAndStatus(tenantId, memberId, RewardConstants.STATUS_PENDING))
+                .thenReturn(1L);
 
         RewardsSummaryResponse summary = summaryUseCase.execute();
 
@@ -228,3 +228,4 @@ class WalletAndCatalogUseCasesTest {
         assertThat(summary.getTotalAvailableRewards()).isEqualTo(3);
     }
 }
+

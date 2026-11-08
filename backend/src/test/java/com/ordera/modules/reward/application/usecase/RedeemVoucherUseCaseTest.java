@@ -213,3 +213,4 @@ class RedeemVoucherUseCaseTest {
         verify(lock).unlock();
     }
 }
+

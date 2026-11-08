@@ -22,3 +22,4 @@ public class UserGiftItemResponse {
     private String status;
     private Instant validUntil;
 }
+

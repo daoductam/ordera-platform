@@ -148,3 +148,4 @@ public class GetMyRewardsWalletUseCaseImpl implements GetMyRewardsWalletUseCase 
         return result;
     }
 }
+

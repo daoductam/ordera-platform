@@ -22,3 +22,4 @@ public class CartOfferVoucherItemResponse {
     private String ineligibilityReason;
     private String status;
 }
+

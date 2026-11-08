@@ -24,4 +24,7 @@ public interface UserVoucherJpaRepository extends JpaRepository<UserVoucherJpaEn
     Optional<UserVoucherJpaEntity> findByTenantIdAndAppliedOrderId(UUID tenantId, UUID appliedOrderId);
 
     Optional<UserVoucherJpaEntity> findByAppliedOrderId(UUID appliedOrderId);
+
+    long countByTenantIdAndMemberIdAndStatus(UUID tenantId, UUID memberId, String status);
 }
+

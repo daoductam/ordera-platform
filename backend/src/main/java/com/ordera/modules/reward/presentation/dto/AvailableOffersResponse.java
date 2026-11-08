@@ -17,3 +17,4 @@ public class AvailableOffersResponse {
     private List<CartOfferVoucherItemResponse> vouchers;
     private List<CartOfferGiftItemResponse> gifts;
 }
+

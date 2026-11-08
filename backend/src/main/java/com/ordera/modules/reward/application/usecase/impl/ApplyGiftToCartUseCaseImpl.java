@@ -109,3 +109,4 @@ public class ApplyGiftToCartUseCaseImpl implements ApplyGiftToCartUseCase {
                 .orElseThrow(() -> new BusinessException(RewardErrorCode.MEMBER_PROFILE_NOT_FOUND));
     }
 }
+

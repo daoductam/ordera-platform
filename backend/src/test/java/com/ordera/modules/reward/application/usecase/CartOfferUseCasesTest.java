@@ -241,7 +241,7 @@ class CartOfferUseCasesTest {
                 .status(RewardConstants.STATUS_IN_USE)
                 .appliedOrderId(cartId)
                 .build();
-        when(userVoucherRepository.findByAppliedOrderId(cartId)).thenReturn(Optional.of(uv));
+        when(userVoucherRepository.findByTenantIdAndAppliedOrderId(tenantId, cartId)).thenReturn(Optional.of(uv));
 
         CartVoucherCalculationResponse result = removeVoucherUseCase.execute(new RemoveVoucherRequest(cartId, "OFF30"));
 
@@ -311,3 +311,4 @@ class CartOfferUseCasesTest {
         verify(cartOfferPort).clearAppliedGift(cartId, tenantId);
     }
 }
+

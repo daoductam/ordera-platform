@@ -144,3 +144,4 @@ class RewardControllerTest {
         verify(getRewardsSummaryUseCase).execute();
     }
 }
+

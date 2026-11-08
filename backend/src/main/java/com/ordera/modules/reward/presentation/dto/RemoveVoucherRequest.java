@@ -21,3 +21,4 @@ public class RemoveVoucherRequest {
     @NotBlank
     private String voucherCode;
 }
+

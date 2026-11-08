@@ -18,3 +18,4 @@ public class CartOfferGiftItemResponse {
     private boolean isApplicable;
     private String status;
 }
+

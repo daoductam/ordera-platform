@@ -220,3 +220,4 @@ class RedeemPhysicalGiftUseCaseTest {
         verify(loyaltyGiftRepository, never()).findByIdAndTenantId(any(), any());
     }
 }
+

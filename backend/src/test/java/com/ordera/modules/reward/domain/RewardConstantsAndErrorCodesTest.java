@@ -94,3 +94,4 @@ class RewardConstantsAndErrorCodesTest {
         assertThat(redemption.getRedemptionCode()).hasSize(9);
     }
 }
+

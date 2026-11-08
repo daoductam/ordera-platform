@@ -16,3 +16,4 @@ public class RewardsCatalogResponse {
     private List<CatalogVoucherItemResponse> vouchers;
     private List<CatalogGiftItemResponse> gifts;
 }
+

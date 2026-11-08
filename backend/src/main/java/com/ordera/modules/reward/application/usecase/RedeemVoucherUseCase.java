@@ -8,3 +8,4 @@ public interface RedeemVoucherUseCase {
 
     RedeemVoucherResponse execute(UUID voucherId);
 }
+

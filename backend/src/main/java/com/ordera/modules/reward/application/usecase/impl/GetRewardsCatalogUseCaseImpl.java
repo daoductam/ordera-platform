@@ -104,3 +104,4 @@ public class GetRewardsCatalogUseCaseImpl implements GetRewardsCatalogUseCase {
         return result;
     }
 }
+

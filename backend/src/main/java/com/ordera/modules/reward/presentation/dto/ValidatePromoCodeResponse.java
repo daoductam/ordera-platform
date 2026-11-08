@@ -18,3 +18,4 @@ public class ValidatePromoCodeResponse {
     private BigDecimal discountAmount;
     private BigDecimal minOrderValue;
 }
+

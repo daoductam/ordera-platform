@@ -27,3 +27,4 @@ public class RewardMessages {
     public static final String ERR_UNAUTHORIZED = "Vui lòng đăng nhập để thực hiện thao tác.";
     public static final String ERR_CART_NOT_FOUND = "Giỏ hàng không tồn tại hoặc đã hết hạn phiên làm việc.";
 }
+

@@ -47,4 +47,9 @@ public class RewardConstants {
     // Định dạng tiền tệ hiển thị
     public static final String CURRENCY_NOK = "NOK";
     public static final String PERCENT_SYMBOL = "%";
+
+    // Thuế suất VAT F&B Na Uy (15% đồ ăn mang về - inclusive pricing)
+    public static final java.math.BigDecimal FOOD_VAT_RATE = new java.math.BigDecimal("0.15");
+    public static final java.math.BigDecimal FOOD_VAT_DIVISOR = new java.math.BigDecimal("1.15");
 }
+

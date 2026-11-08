@@ -7,3 +7,4 @@ public interface RemoveVoucherFromCartUseCase {
 
     CartVoucherCalculationResponse execute(RemoveVoucherRequest request);
 }
+

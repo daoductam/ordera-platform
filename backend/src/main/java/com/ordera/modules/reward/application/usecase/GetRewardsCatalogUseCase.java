@@ -6,3 +6,4 @@ public interface GetRewardsCatalogUseCase {
 
     RewardsCatalogResponse execute();
 }
+

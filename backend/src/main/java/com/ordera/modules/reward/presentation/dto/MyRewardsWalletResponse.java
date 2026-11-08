@@ -16,3 +16,4 @@ public class MyRewardsWalletResponse {
     private List<UserVoucherItemResponse> vouchers;
     private List<UserGiftItemResponse> gifts;
 }
+

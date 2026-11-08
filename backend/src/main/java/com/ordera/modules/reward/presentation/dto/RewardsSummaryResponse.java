@@ -14,3 +14,4 @@ public class RewardsSummaryResponse {
     private int activeVouchersCount;
     private int availableGiftsCount;
 }
+

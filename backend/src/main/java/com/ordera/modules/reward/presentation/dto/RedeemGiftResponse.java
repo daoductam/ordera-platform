@@ -22,3 +22,4 @@ public class RedeemGiftResponse {
     private String instruction;
     private Instant createdAt;
 }
+

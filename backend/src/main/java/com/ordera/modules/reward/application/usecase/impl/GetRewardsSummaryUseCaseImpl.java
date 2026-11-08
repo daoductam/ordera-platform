@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -73,14 +72,13 @@ public class GetRewardsSummaryUseCaseImpl implements GetRewardsSummaryUseCase {
     }
 
     private int countActiveVouchers(UUID tenantId, UUID memberId) {
-        List<UserVoucherJpaEntity> list = userVoucherRepository.findByTenantIdAndMemberIdAndStatus(
+        return (int) userVoucherRepository.countByTenantIdAndMemberIdAndStatus(
                 tenantId, memberId, RewardConstants.STATUS_AVAILABLE);
-        return list.size();
     }
 
     private int countAvailableGifts(UUID tenantId, UUID memberId) {
-        List<UserGiftRedemptionJpaEntity> list = userGiftRedemptionRepository.findByTenantIdAndMemberIdAndStatus(
+        return (int) userGiftRedemptionRepository.countByTenantIdAndMemberIdAndStatus(
                 tenantId, memberId, RewardConstants.STATUS_PENDING);
-        return list.size();
     }
 }
+

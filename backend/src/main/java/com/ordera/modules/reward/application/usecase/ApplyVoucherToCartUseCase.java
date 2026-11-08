@@ -7,3 +7,4 @@ public interface ApplyVoucherToCartUseCase {
 
     CartVoucherCalculationResponse execute(ApplyVoucherRequest request);
 }
+

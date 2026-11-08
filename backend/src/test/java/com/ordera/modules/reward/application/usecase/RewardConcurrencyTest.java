@@ -188,3 +188,4 @@ class RewardConcurrencyTest {
         assertThat(gift.getStockQuantity()).isEqualTo(0);
     }
 }
+

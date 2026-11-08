@@ -21,3 +21,4 @@ public class RedeemVoucherResponse {
     private Instant validUntil;
     private String status;
 }
+

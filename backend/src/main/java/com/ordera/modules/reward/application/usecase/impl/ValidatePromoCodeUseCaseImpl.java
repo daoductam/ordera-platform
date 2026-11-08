@@ -108,3 +108,4 @@ public class ValidatePromoCodeUseCaseImpl implements ValidatePromoCodeUseCase {
         return userId;
     }
 }
+

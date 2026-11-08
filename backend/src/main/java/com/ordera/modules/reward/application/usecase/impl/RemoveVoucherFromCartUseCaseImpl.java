@@ -33,8 +33,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RemoveVoucherFromCartUseCaseImpl implements RemoveVoucherFromCartUseCase {
 
-    private static final BigDecimal VAT_RATE = new BigDecimal("0.15");
-
     private final CartOfferPort cartOfferPort;
     private final MemberProfileJpaRepository memberProfileRepository;
     private final UserVoucherJpaRepository userVoucherRepository;
@@ -55,7 +53,7 @@ public class RemoveVoucherFromCartUseCaseImpl implements RemoveVoucherFromCartUs
         }
 
         // 1. Hoàn trả voucher về trạng thái AVAILABLE
-        Optional<UserVoucherJpaEntity> userVoucherOpt = userVoucherRepository.findByAppliedOrderId(request.getCartId());
+        Optional<UserVoucherJpaEntity> userVoucherOpt = userVoucherRepository.findByTenantIdAndAppliedOrderId(tenantId, request.getCartId());
         userVoucherOpt.ifPresent(uv -> {
             uv.setStatus(RewardConstants.STATUS_AVAILABLE);
             uv.setAppliedOrderId(null);
@@ -66,7 +64,8 @@ public class RemoveVoucherFromCartUseCaseImpl implements RemoveVoucherFromCartUs
         cartOfferPort.clearAppliedVoucher(request.getCartId(), tenantId);
 
         BigDecimal subtotal = (cart.subtotalAmount() != null) ? cart.subtotalAmount() : BigDecimal.ZERO;
-        BigDecimal vatAmount = subtotal.multiply(VAT_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal vatAmount = subtotal.multiply(RewardConstants.FOOD_VAT_RATE)
+                .divide(RewardConstants.FOOD_VAT_DIVISOR, 2, RoundingMode.HALF_UP);
 
         return CartVoucherCalculationResponse.builder()
                 .cartId(request.getCartId())
@@ -99,3 +98,4 @@ public class RemoveVoucherFromCartUseCaseImpl implements RemoveVoucherFromCartUs
                 .orElseThrow(() -> new BusinessException(RewardErrorCode.MEMBER_PROFILE_NOT_FOUND));
     }
 }
+
