@@ -5,6 +5,7 @@ import com.ordera.modules.ledger.infrastructure.persistence.entity.PointsLedgerJ
 import com.ordera.modules.ledger.infrastructure.persistence.repository.PointsLedgerJpaRepository;
 import com.ordera.modules.loyalty.application.usecase.AccruePointsCommand;
 import com.ordera.modules.loyalty.application.usecase.AccruePointsUseCase;
+import com.ordera.modules.loyalty.domain.constant.LoyaltyConstants;
 import com.ordera.modules.loyalty.domain.exception.LoyaltyErrorCode;
 import com.ordera.modules.loyalty.infrastructure.persistence.entity.MemberProfileJpaEntity;
 import com.ordera.modules.loyalty.infrastructure.persistence.entity.TierDefinitionJpaEntity;
@@ -14,8 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,6 +26,11 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Động cơ tích lũy điểm thưởng và ghi sổ cái bất biến (Points Accrual Engine).
+ * Áp dụng Redisson Distributed Lock để chống Race Condition và gian lận cộng điểm đồng thời.
+ * Quản lý transaction sau khi đã chiếm giữ lock thành công nhằm tránh cạn kiệt connection pool.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,19 +41,25 @@ public class AccruePointsUseCaseImpl implements AccruePointsUseCase {
     private final TierDefinitionJpaRepository tierDefinitionRepository;
     private final PointsLedgerJpaRepository pointsLedgerRepository;
 
+    @Autowired(required = false)
+    private PlatformTransactionManager transactionManager;
+
     @Override
-    @Transactional
     public PointsLedgerJpaEntity execute(AccruePointsCommand command) {
         Objects.requireNonNull(command, "AccruePointsCommand must not be null");
         UUID tenantId = command.getTenantId();
         UUID memberId = command.getMemberId();
 
-        String lockKey = "lock:tenant:" + tenantId + ":member:" + memberId;
+        String lockKey = String.format(LoyaltyConstants.REDIS_LOCK_KEY_PATTERN, tenantId, memberId);
         RLock lock = redissonClient.getLock(lockKey);
 
         boolean acquired;
         try {
-            acquired = lock.tryLock(3, 5, TimeUnit.SECONDS);
+            acquired = lock.tryLock(
+                    LoyaltyConstants.REDIS_LOCK_WAIT_SECONDS,
+                    LoyaltyConstants.REDIS_LOCK_LEASE_SECONDS,
+                    TimeUnit.SECONDS
+            );
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new BusinessException(LoyaltyErrorCode.CONCURRENT_TRANSACTION_LOCK, "Luồng xử lý bị gián đoạn khi chờ khóa điểm.");
@@ -57,6 +71,10 @@ public class AccruePointsUseCaseImpl implements AccruePointsUseCase {
         }
 
         try {
+            if (transactionManager != null) {
+                TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
+                return txTemplate.execute(status -> processAccrual(command));
+            }
             return processAccrual(command);
         } finally {
             if (lock.isHeldByCurrentThread()) {
@@ -85,7 +103,7 @@ public class AccruePointsUseCaseImpl implements AccruePointsUseCase {
 
         // 2. Tự động xét mốc thăng hạng thẻ
         UUID newTierId = evaluateTierUpgrade(tenantId, newLifetimePoints, memberProfile.getCurrentTierId());
-        if (!newTierId.equals(memberProfile.getCurrentTierId())) {
+        if (!Objects.equals(newTierId, memberProfile.getCurrentTierId())) {
             log.info("Member {} upgraded to new tier: {} (lifetimePoints: {})", memberId, newTierId, newLifetimePoints);
             memberProfile.setCurrentTierId(newTierId);
         }
@@ -129,4 +147,3 @@ public class AccruePointsUseCaseImpl implements AccruePointsUseCase {
         return currentTierId;
     }
 }
-

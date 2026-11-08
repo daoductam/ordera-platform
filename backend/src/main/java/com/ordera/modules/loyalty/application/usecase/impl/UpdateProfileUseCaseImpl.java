@@ -19,6 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Cập nhật thông tin cá nhân hội viên (họ tên, email, ngày sinh, giới tính, avatar).
+ * Áp dụng Orchestrator Pattern điều phối các bước cập nhật.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,33 +34,59 @@ public class UpdateProfileUseCaseImpl implements UpdateProfileUseCase {
     @Override
     @Transactional
     public UpdateProfileResponse execute(UpdateProfileRequest request) {
+        UUID tenantId = resolveTenantId();
+        UUID userId = resolveUserId();
+
+        UserJpaEntity user = fetchUser(userId, tenantId);
+        MemberProfileJpaEntity profile = fetchMemberProfile(userId, tenantId);
+
+        updateUser(user, request, tenantId, userId);
+        updateProfile(profile, request);
+
+        return buildResponse(profile, user);
+    }
+
+    private UUID resolveTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
             throw new BusinessException(LoyaltyErrorCode.TENANT_HEADER_MISSING);
         }
+        return tenantId;
+    }
 
+    private UUID resolveUserId() {
         UUID userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
             throw new BusinessException(LoyaltyErrorCode.UNAUTHORIZED);
         }
+        return userId;
+    }
 
-        UserJpaEntity user = userRepository.findByIdAndTenantId(userId, tenantId)
+    private UserJpaEntity fetchUser(UUID userId, UUID tenantId) {
+        return userRepository.findByIdAndTenantId(userId, tenantId)
                 .orElseThrow(() -> new BusinessException(LoyaltyErrorCode.MEMBER_PROFILE_NOT_FOUND));
+    }
 
-        MemberProfileJpaEntity profile = memberProfileRepository.findByTenantIdAndUserId(tenantId, userId)
+    private MemberProfileJpaEntity fetchMemberProfile(UUID userId, UUID tenantId) {
+        return memberProfileRepository.findByTenantIdAndUserId(tenantId, userId)
                 .orElseThrow(() -> new BusinessException(LoyaltyErrorCode.MEMBER_PROFILE_NOT_FOUND));
+    }
 
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail().trim())) {
-            boolean emailExists = userRepository.existsByTenantIdAndEmailAndIdNot(tenantId, request.getEmail().trim(), userId);
+    private void updateUser(UserJpaEntity user, UpdateProfileRequest request, UUID tenantId, UUID userId) {
+        String newEmail = request.getEmail().trim();
+        if (user.getEmail() == null || !user.getEmail().equalsIgnoreCase(newEmail)) {
+            boolean emailExists = userRepository.existsByTenantIdAndEmailAndIdNot(tenantId, newEmail, userId);
             if (emailExists) {
                 throw new BusinessException(LoyaltyErrorCode.EMAIL_ALREADY_EXISTS);
             }
-            user.setEmail(request.getEmail().trim());
+            user.setEmail(newEmail);
         }
 
         user.setFullName(request.getFullName().trim());
         userRepository.save(user);
+    }
 
+    private void updateProfile(MemberProfileJpaEntity profile, UpdateProfileRequest request) {
         if (request.getDateOfBirth() != null) {
             profile.setDateOfBirth(request.getDateOfBirth());
         }
@@ -68,7 +98,9 @@ public class UpdateProfileUseCaseImpl implements UpdateProfileUseCase {
         }
         profile.setUpdatedAt(Instant.now());
         memberProfileRepository.save(profile);
+    }
 
+    private UpdateProfileResponse buildResponse(MemberProfileJpaEntity profile, UserJpaEntity user) {
         return UpdateProfileResponse.builder()
                 .id(profile.getId())
                 .fullName(user.getFullName())
@@ -80,4 +112,3 @@ public class UpdateProfileUseCaseImpl implements UpdateProfileUseCase {
                 .build();
     }
 }
-

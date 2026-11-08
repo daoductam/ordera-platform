@@ -1,5 +1,6 @@
 package com.ordera.modules.loyalty.domain.model;
 
+import com.ordera.modules.loyalty.domain.constant.LoyaltyConstants;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -13,6 +14,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SupportClaim {
+
+    public static final String STATUS_PENDING = LoyaltyConstants.CLAIM_STATUS_PENDING;
+    public static final String STATUS_APPROVED = LoyaltyConstants.CLAIM_STATUS_APPROVED;
+    public static final String STATUS_REJECTED = LoyaltyConstants.CLAIM_STATUS_REJECTED;
 
     private UUID id;
     private UUID tenantId;

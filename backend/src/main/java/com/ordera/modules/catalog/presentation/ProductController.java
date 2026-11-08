@@ -5,6 +5,7 @@ import com.ordera.modules.catalog.application.usecase.GetProductDetailUseCase;
 import com.ordera.modules.catalog.application.usecase.GetProductModifiersUseCase;
 import com.ordera.modules.catalog.application.usecase.GetStoreMenuUseCase;
 import com.ordera.modules.catalog.application.usecase.SearchProductsUseCase;
+import com.ordera.modules.catalog.presentation.constant.CatalogMessages;
 import com.ordera.modules.catalog.presentation.dto.ModifierGroupResponse;
 import com.ordera.modules.catalog.presentation.dto.ProductDetailResponse;
 import com.ordera.modules.catalog.presentation.dto.ProductSummaryResponse;
@@ -34,7 +35,7 @@ public class ProductController {
             @PathVariable UUID storeId) {
 
         StoreMenuResponse menu = getStoreMenuUseCase.execute(storeId);
-        return ResponseEntity.ok(ApiResponse.ok("Store menu retrieved successfully", menu));
+        return ResponseEntity.ok(ApiResponse.ok(CatalogMessages.MSG_STORE_MENU_RETRIEVED, menu));
     }
 
     @Operation(summary = "Chi tiết một món ăn", description = "Lấy chi tiết món ăn kèm originalPrice, piecesText, dietaryTags và các nhóm modifiers")
@@ -43,7 +44,7 @@ public class ProductController {
             @PathVariable UUID productId) {
 
         ProductDetailResponse product = getProductDetailUseCase.execute(productId);
-        return ResponseEntity.ok(ApiResponse.ok("Product details retrieved successfully", product));
+        return ResponseEntity.ok(ApiResponse.ok(CatalogMessages.MSG_PRODUCT_DETAILS_RETRIEVED, product));
     }
 
     @Operation(summary = "Nhóm tùy chọn Modifiers của món", description = "Lấy danh sách các nhóm tùy chọn (Size, Toppings, Mức đá, Mức đường) của món ăn")
@@ -52,7 +53,7 @@ public class ProductController {
             @PathVariable UUID productId) {
 
         List<ModifierGroupResponse> modifiers = getProductModifiersUseCase.execute(productId);
-        return ResponseEntity.ok(ApiResponse.ok("Product modifiers retrieved successfully", modifiers));
+        return ResponseEntity.ok(ApiResponse.ok(CatalogMessages.MSG_PRODUCT_MODIFIERS_RETRIEVED, modifiers));
     }
 
     @Operation(summary = "Tìm kiếm món ăn", description = "Tìm kiếm món ăn theo từ khóa tại chi nhánh")
@@ -62,6 +63,6 @@ public class ProductController {
             @RequestParam String query) {
 
         List<ProductSummaryResponse> products = searchProductsUseCase.execute(storeId, query);
-        return ResponseEntity.ok(ApiResponse.ok("Search completed", products));
+        return ResponseEntity.ok(ApiResponse.ok(CatalogMessages.MSG_SEARCH_COMPLETED, products));
     }
 }

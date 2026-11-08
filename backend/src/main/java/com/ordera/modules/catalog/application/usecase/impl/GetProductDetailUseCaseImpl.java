@@ -3,6 +3,7 @@ package com.ordera.modules.catalog.application.usecase.impl;
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.catalog.application.usecase.GetProductDetailUseCase;
+import com.ordera.modules.catalog.domain.constant.CatalogConstants;
 import com.ordera.modules.catalog.domain.exception.CatalogErrorCode;
 import com.ordera.modules.catalog.infrastructure.mapper.CatalogDtoMapper;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.ProductJpaEntity;
@@ -52,7 +53,7 @@ public class GetProductDetailUseCaseImpl implements GetProductDetailUseCase {
 
     private ProductJpaEntity fetchProduct(UUID productId, UUID tenantId) {
         if (productId == null) {
-            throw new BusinessException(CatalogErrorCode.PRODUCT_NOT_FOUND, "Product ID cannot be null.");
+            throw new BusinessException(CatalogErrorCode.PRODUCT_NOT_FOUND, CatalogConstants.ERR_PRODUCT_ID_REQUIRED);
         }
         return productRepository.findByIdAndTenantId(productId, tenantId)
                 .orElseThrow(() -> new BusinessException(CatalogErrorCode.PRODUCT_NOT_FOUND,

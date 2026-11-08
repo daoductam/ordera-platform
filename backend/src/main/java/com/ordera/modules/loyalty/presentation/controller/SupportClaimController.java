@@ -2,6 +2,7 @@ package com.ordera.modules.loyalty.presentation.controller;
 
 import com.ordera.common.api.ApiResponse;
 import com.ordera.modules.loyalty.application.usecase.SubmitSupportClaimUseCase;
+import com.ordera.modules.loyalty.presentation.constant.LoyaltyMessages;
 import com.ordera.modules.loyalty.presentation.dto.SubmitSupportClaimRequest;
 import com.ordera.modules.loyalty.presentation.dto.SupportClaimResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +29,7 @@ public class SupportClaimController {
     public ResponseEntity<ApiResponse<SupportClaimResponse>> submitSupportClaim(@Valid @RequestBody SubmitSupportClaimRequest request) {
         SupportClaimResponse response = submitSupportClaimUseCase.execute(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Yêu cầu khiếu nại đã được ghi nhận. Quản trị viên sẽ xử lý trong vòng 24 giờ.", response));
+                .body(ApiResponse.ok(LoyaltyMessages.MSG_CLAIM_SUBMITTED, response));
     }
 }
 

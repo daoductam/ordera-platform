@@ -7,6 +7,7 @@ import com.ordera.common.util.SecurityUtils;
 import com.ordera.modules.auth.infrastructure.persistence.entity.UserJpaEntity;
 import com.ordera.modules.auth.infrastructure.persistence.repository.UserRepository;
 import com.ordera.modules.loyalty.application.usecase.GetMemberProfileUseCase;
+import com.ordera.modules.loyalty.domain.constant.LoyaltyConstants;
 import com.ordera.modules.loyalty.domain.exception.LoyaltyErrorCode;
 import com.ordera.modules.loyalty.infrastructure.persistence.entity.MemberProfileJpaEntity;
 import com.ordera.modules.loyalty.infrastructure.persistence.entity.TierDefinitionJpaEntity;
@@ -24,6 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Lấy toàn bộ thông tin chi tiết hồ sơ hội viên và tiến độ thẻ thành viên.
+ * Áp dụng Orchestrator Pattern điều phối các bước truy vấn dữ liệu.
+ * Tái sử dụng hằng số cấu hình từ LoyaltyConstants.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -37,22 +43,53 @@ public class GetMemberProfileUseCaseImpl implements GetMemberProfileUseCase {
     @Override
     @Transactional(readOnly = true)
     public MemberProfileResponse execute() {
+        UUID tenantId = resolveTenantId();
+        UUID userId = resolveUserId();
+
+        MemberProfileJpaEntity profile = fetchMemberProfile(tenantId, userId);
+        UserJpaEntity user = fetchUser(tenantId, userId);
+
+        LoyaltyTierInfoResponse loyaltyInfo = buildTierInfo(tenantId, profile);
+        boolean hasMissingNotice = checkMissingPointsNotice(tenantId, profile.getId());
+        QuickActionCountersResponse counters = buildCounters(hasMissingNotice);
+
+        String barcode = resolveBarcode(profile);
+        String barcodeQrUrl = String.format(
+                LoyaltyConstants.BARCODE_URL_TEMPLATE,
+                LoyaltyConstants.DEFAULT_API_BASE_URL,
+                barcode
+        );
+
+        return buildResponse(profile, user, loyaltyInfo, counters, barcode, barcodeQrUrl, hasMissingNotice);
+    }
+
+    private UUID resolveTenantId() {
         UUID tenantId = TenantContext.getTenantId();
         if (tenantId == null) {
             throw new BusinessException(LoyaltyErrorCode.TENANT_HEADER_MISSING);
         }
+        return tenantId;
+    }
 
+    private UUID resolveUserId() {
         UUID userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
             throw new BusinessException(LoyaltyErrorCode.UNAUTHORIZED);
         }
+        return userId;
+    }
 
-        MemberProfileJpaEntity profile = memberProfileRepository.findByTenantIdAndUserId(tenantId, userId)
+    private MemberProfileJpaEntity fetchMemberProfile(UUID tenantId, UUID userId) {
+        return memberProfileRepository.findByTenantIdAndUserId(tenantId, userId)
                 .orElseThrow(() -> new BusinessException(LoyaltyErrorCode.MEMBER_PROFILE_NOT_FOUND));
+    }
 
-        UserJpaEntity user = userRepository.findByIdAndTenantId(userId, tenantId)
+    private UserJpaEntity fetchUser(UUID tenantId, UUID userId) {
+        return userRepository.findByIdAndTenantId(userId, tenantId)
                 .orElseThrow(() -> new BusinessException(LoyaltyErrorCode.MEMBER_PROFILE_NOT_FOUND));
+    }
 
+    private LoyaltyTierInfoResponse buildTierInfo(UUID tenantId, MemberProfileJpaEntity profile) {
         List<TierDefinitionJpaEntity> tiers = tierDefinitionRepository.findByTenantIdOrderByTierOrderAsc(tenantId);
         LoyaltyTierUtils.TierProgressResult progress = LoyaltyTierUtils.calculateTierProgress(
                 profile.getCurrentTierId(),
@@ -61,12 +98,7 @@ public class GetMemberProfileUseCaseImpl implements GetMemberProfileUseCase {
                 tiers
         );
 
-        boolean hasMissingNotice = supportClaimRepository.existsByTenantIdAndMemberIdAndStatus(tenantId, profile.getId(), "PENDING");
-
-        String barcode = profile.getBarcodeToken() != null ? profile.getBarcodeToken() : "ORD-MEM-" + profile.getId().toString().substring(0, 8).toUpperCase();
-        String barcodeQrUrl = "https://api.ordera.no/v1/barcodes/" + barcode + ".png";
-
-        LoyaltyTierInfoResponse loyaltyInfo = LoyaltyTierInfoResponse.builder()
+        return LoyaltyTierInfoResponse.builder()
                 .currentTier(progress.currentTierName())
                 .tierOrder(progress.currentTierOrder())
                 .themeColorHex(progress.themeColorHex())
@@ -78,14 +110,39 @@ public class GetMemberProfileUseCaseImpl implements GetMemberProfileUseCase {
                 .nextTierMinPoints(progress.nextTierMinPoints())
                 .progressPercentage(progress.progressPercentage())
                 .build();
+    }
 
-        QuickActionCountersResponse counters = QuickActionCountersResponse.builder()
-                .activeVouchersCount(2)
-                .availableGiftsCount(1)
-                .activeOrdersCount(1)
+    private boolean checkMissingPointsNotice(UUID tenantId, UUID memberId) {
+        return supportClaimRepository.existsByTenantIdAndMemberIdAndStatus(
+                tenantId, memberId, LoyaltyConstants.CLAIM_STATUS_PENDING
+        );
+    }
+
+    private QuickActionCountersResponse buildCounters(boolean hasMissingNotice) {
+        return QuickActionCountersResponse.builder()
+                .activeVouchersCount(LoyaltyConstants.DEFAULT_ACTIVE_VOUCHERS_COUNT)
+                .availableGiftsCount(LoyaltyConstants.DEFAULT_AVAILABLE_GIFTS_COUNT)
+                .activeOrdersCount(LoyaltyConstants.DEFAULT_ACTIVE_ORDERS_COUNT)
                 .unreadNotificationsCount(hasMissingNotice ? 1 : 0)
                 .build();
+    }
 
+    private String resolveBarcode(MemberProfileJpaEntity profile) {
+        if (profile.getBarcodeToken() != null && !profile.getBarcodeToken().isBlank()) {
+            return profile.getBarcodeToken();
+        }
+        return LoyaltyConstants.DEFAULT_BARCODE_PREFIX + profile.getId().toString().substring(0, 8).toUpperCase();
+    }
+
+    private MemberProfileResponse buildResponse(
+            MemberProfileJpaEntity profile,
+            UserJpaEntity user,
+            LoyaltyTierInfoResponse loyaltyInfo,
+            QuickActionCountersResponse counters,
+            String barcode,
+            String barcodeQrUrl,
+            boolean hasMissingNotice
+    ) {
         return MemberProfileResponse.builder()
                 .id(profile.getId())
                 .userId(user.getId())
@@ -106,4 +163,3 @@ public class GetMemberProfileUseCaseImpl implements GetMemberProfileUseCase {
                 .build();
     }
 }
-

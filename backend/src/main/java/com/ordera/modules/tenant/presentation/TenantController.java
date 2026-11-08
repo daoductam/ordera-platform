@@ -2,6 +2,7 @@ package com.ordera.modules.tenant.presentation;
 
 import com.ordera.common.api.ApiResponse;
 import com.ordera.modules.tenant.application.usecase.GetTenantInfoUseCase;
+import com.ordera.modules.tenant.presentation.constant.TenantMessages;
 import com.ordera.modules.tenant.presentation.dto.TenantResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,7 +24,7 @@ public class TenantController {
     @GetMapping("/current")
     public ResponseEntity<ApiResponse<TenantResponse>> getCurrentTenant() {
         TenantResponse response = getTenantInfoUseCase.execute();
-        return ResponseEntity.ok(ApiResponse.ok("Tenant details retrieved successfully", response));
+        return ResponseEntity.ok(ApiResponse.ok(TenantMessages.MSG_TENANT_DETAILS_RETRIEVED, response));
     }
 }
 

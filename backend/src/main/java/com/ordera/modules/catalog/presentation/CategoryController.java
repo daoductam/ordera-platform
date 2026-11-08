@@ -3,6 +3,7 @@ package com.ordera.modules.catalog.presentation;
 import com.ordera.common.api.ApiResponse;
 import com.ordera.modules.catalog.application.usecase.GetCategoriesUseCase;
 import com.ordera.modules.catalog.application.usecase.GetSubcategoriesUseCase;
+import com.ordera.modules.catalog.presentation.constant.CatalogMessages;
 import com.ordera.modules.catalog.presentation.dto.CategoryResponse;
 import com.ordera.modules.catalog.presentation.dto.SubcategoryResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +29,7 @@ public class CategoryController {
             @PathVariable UUID storeId) {
 
         List<CategoryResponse> categories = getCategoriesUseCase.execute(storeId);
-        return ResponseEntity.ok(ApiResponse.ok("Categories retrieved successfully", categories));
+        return ResponseEntity.ok(ApiResponse.ok(CatalogMessages.MSG_CATEGORIES_RETRIEVED, categories));
     }
 
     @Operation(summary = "Danh sách nhóm con theo danh mục", description = "Lấy danh sách các subcategory pills thuộc một danh mục chính")
@@ -37,6 +38,6 @@ public class CategoryController {
             @PathVariable UUID categoryId) {
 
         List<SubcategoryResponse> subcategories = getSubcategoriesUseCase.execute(categoryId);
-        return ResponseEntity.ok(ApiResponse.ok("Subcategories retrieved successfully", subcategories));
+        return ResponseEntity.ok(ApiResponse.ok(CatalogMessages.MSG_SUBCATEGORIES_RETRIEVED, subcategories));
     }
 }

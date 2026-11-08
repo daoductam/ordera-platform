@@ -3,6 +3,7 @@ package com.ordera.modules.catalog.application.usecase.impl;
 import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
 import com.ordera.modules.catalog.application.usecase.GetProductModifiersUseCase;
+import com.ordera.modules.catalog.domain.constant.CatalogConstants;
 import com.ordera.modules.catalog.domain.exception.CatalogErrorCode;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.ProductModifierGroupJpaEntity;
 import com.ordera.modules.catalog.infrastructure.persistence.entity.ProductModifierJpaEntity;
@@ -46,7 +47,7 @@ public class GetProductModifiersUseCaseImpl implements GetProductModifiersUseCas
 
     private void validateProduct(UUID productId, UUID tenantId) {
         if (productId == null) {
-            throw new BusinessException(CatalogErrorCode.PRODUCT_NOT_FOUND, "Product ID cannot be null.");
+            throw new BusinessException(CatalogErrorCode.PRODUCT_NOT_FOUND, CatalogConstants.ERR_PRODUCT_ID_REQUIRED);
         }
         productRepository.findByIdAndTenantId(productId, tenantId)
                 .orElseThrow(() -> new BusinessException(CatalogErrorCode.PRODUCT_NOT_FOUND,

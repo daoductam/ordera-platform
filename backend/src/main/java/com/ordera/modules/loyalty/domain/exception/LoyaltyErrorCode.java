@@ -17,6 +17,7 @@ public enum LoyaltyErrorCode implements ErrorCode {
     INVALID_TIER_TRANSITION("INVALID_TIER_TRANSITION", 400, "Bước chuyển hạng thẻ thành viên không hợp lệ."),
     INSUFFICIENT_POINTS("INSUFFICIENT_POINTS", 400, "Số dư điểm thưởng không đủ để thực hiện giao dịch."),
     RECEIPT_EXPIRED("RECEIPT_EXPIRED", 422, "Hệ thống chỉ hỗ trợ tiếp nhận khiếu nại cộng điểm cho hóa đơn phát sinh trong vòng 30 ngày gần nhất."),
+    INVALID_RECEIPT_DATE("INVALID_RECEIPT_DATE", 400, "Ngày lập hóa đơn không được vượt quá ngày hiện tại."),
     CLAIM_ALREADY_EXISTS("CLAIM_ALREADY_EXISTS", 409, "Mã hóa đơn này đã được gửi khiếu nại trước đó hoặc đã được cộng điểm trong hệ thống."),
     CLAIM_NOT_FOUND("CLAIM_NOT_FOUND", 404, "Không tìm thấy phiếu khiếu nại thiếu điểm."),
     TENANT_HEADER_MISSING("TENANT_HEADER_MISSING", 400, "Header 'X-Tenant-ID' is required for multi-tenant data isolation."),

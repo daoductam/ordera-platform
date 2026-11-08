@@ -5,7 +5,6 @@ import com.ordera.modules.loyalty.infrastructure.persistence.entity.SupportClaim
 import com.ordera.modules.loyalty.infrastructure.persistence.entity.TierDefinitionJpaEntity;
 import com.ordera.modules.loyalty.presentation.dto.SupportClaimResponse;
 import com.ordera.modules.loyalty.presentation.dto.TierDefinitionResponse;
-import com.ordera.modules.loyalty.presentation.dto.UpdateProfileResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -21,7 +20,5 @@ public interface LoyaltyDtoMapper {
 
     @Mapping(target = "claimId", source = "id")
     SupportClaimResponse toClaimResponse(SupportClaimJpaEntity entity);
-
-    UpdateProfileResponse toUpdateResponse(MemberProfileJpaEntity entity);
 }
 

@@ -118,6 +118,24 @@ class SubmitSupportClaimUseCaseTest {
     }
 
     @Test
+    @DisplayName("should throw INVALID_RECEIPT_DATE when receipt date is in the future")
+    void should_throw_invalid_receipt_date_when_in_future() {
+        SubmitSupportClaimRequest request = SubmitSupportClaimRequest.builder()
+                .receiptCode("RCP-FUTURE-999")
+                .orderDate(LocalDate.now().plusDays(2))
+                .billAmount(new BigDecimal("150.00"))
+                .build();
+
+        when(memberProfileRepository.findByTenantIdAndUserId(tenantId, userId)).thenReturn(Optional.of(profile));
+
+        assertThatThrownBy(() -> submitSupportClaimUseCase.execute(request))
+                .isInstanceOf(BusinessException.class)
+                .matches(ex -> ((BusinessException) ex).getErrorCode() == LoyaltyErrorCode.INVALID_RECEIPT_DATE);
+
+        verify(supportClaimRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("should throw CLAIM_ALREADY_EXISTS when receipt code already submitted")
     void should_throw_claim_already_exists_when_duplicate_code() {
         SubmitSupportClaimRequest request = SubmitSupportClaimRequest.builder()

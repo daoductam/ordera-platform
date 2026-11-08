@@ -4,6 +4,7 @@ import com.ordera.common.context.TenantContext;
 import com.ordera.common.exception.BusinessException;
 import com.ordera.common.util.DateTimeUtils;
 import com.ordera.modules.tenant.application.usecase.GetFulfillmentOptionsUseCase;
+import com.ordera.modules.tenant.domain.constant.TenantConstants;
 import com.ordera.modules.tenant.domain.exception.TenantErrorCode;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.repository.StoreRepository;
@@ -54,14 +55,14 @@ public class GetFulfillmentOptionsUseCaseImpl implements GetFulfillmentOptionsUs
         boolean dineInEnabled = store.isAcceptsDinein();
         boolean takeawayEnabled = store.isAcceptsPickup();
         boolean deliveryEnabled = store.isAcceptsDelivery();
-        int prepMinutes = store.getPreparingTimeMinutes() != null ? store.getPreparingTimeMinutes() : 15;
+        int prepMinutes = store.getPreparingTimeMinutes() != null ? store.getPreparingTimeMinutes() : TenantConstants.DEFAULT_PREPARING_TIME_MINUTES;
         List<String> availableSlots = DateTimeUtils.generateTimeSlots(store.getOpeningHours());
 
         return buildResponse(dineInEnabled, takeawayEnabled, deliveryEnabled, prepMinutes, availableSlots);
     }
 
     private FulfillmentOptionsResponse buildDefaultTenantOptions() {
-        return buildResponse(true, true, true, 15, DateTimeUtils.DEFAULT_SLOTS);
+        return buildResponse(true, true, true, TenantConstants.DEFAULT_PREPARING_TIME_MINUTES, DateTimeUtils.DEFAULT_SLOTS);
     }
 
     private FulfillmentOptionsResponse buildResponse(boolean dineIn,
