@@ -6,7 +6,7 @@ import com.ordera.modules.tenant.domain.model.Store;
 import com.ordera.modules.tenant.domain.model.StoreTable;
 import com.ordera.modules.tenant.domain.model.Tenant;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.CustomerFavoriteStoreJpaEntity;
-import com.ordera.modules.tenant.infrastructure.persistence.entity.KioskDeviceJpaEntity;
+import com.ordera.modules.kiosk.infrastructure.persistence.entity.KioskDeviceJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.StoreTableJpaEntity;
 import com.ordera.modules.tenant.infrastructure.persistence.entity.TenantJpaEntity;
