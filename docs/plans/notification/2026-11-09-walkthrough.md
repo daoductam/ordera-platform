@@ -106,3 +106,4 @@ Chúng tôi đã hoàn thành toàn bộ mã nguồn Backend cho Phân hệ Thô
 ```
 - **Tổng số tests:** 33 tests
 - **Tỷ lệ pass:** 100% (0 failures, 0 errors, 0 skipped).
+
