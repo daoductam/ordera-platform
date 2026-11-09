@@ -1,17 +1,10 @@
 package com.ordera.modules.order.infrastructure.persistence.repository;
 
-import com.ordera.modules.order.infrastructure.persistence.entity.OrderItemModifierJpaEntity;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
-
+/**
+ * Backward compatibility alias for OrderItemModifierJpaRepository.
+ */
 @Repository
-public interface OrderItemModifierRepository extends JpaRepository<OrderItemModifierJpaEntity, UUID> {
-
-    List<OrderItemModifierJpaEntity> findByOrderItemId(UUID orderItemId);
-
-    List<OrderItemModifierJpaEntity> findByOrderItemIdIn(List<UUID> orderItemIds);
+public interface OrderItemModifierRepository extends OrderItemModifierJpaRepository {
 }
-

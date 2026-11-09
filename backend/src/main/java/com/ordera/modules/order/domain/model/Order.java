@@ -17,6 +17,7 @@ public class Order {
     private UUID tenantId;
     private UUID storeId;
     private UUID userId;
+    private String orderNumber;
     private String orderCode;
     private String pickupMethod;
     private String pickupTimeType;
@@ -35,7 +36,9 @@ public class Order {
     private String paymentMethod;
     private String orderNotes;
     private UUID appliedVoucherId;
+    private UUID appliedGiftId;
+    private String appliedGiftTitle;
+    private String eReceiptEmail;
     private Instant createdAt;
     private Instant completedAt;
 }
-

@@ -1,4 +1,4 @@
-package com.ordera.modules.tenant.infrastructure.persistence.entity;
+package com.ordera.modules.kiosk.infrastructure.persistence.entity;
 
 import com.ordera.common.entity.BaseTenantEntity;
 import jakarta.persistence.*;
@@ -9,6 +9,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA Entity ánh xạ bảng `kiosk_devices` trong PostgreSQL.
+ * Hỗ trợ phân lập đa thương hiệu (Row-Level Security) qua BaseTenantEntity.
+ */
 @Entity
 @Table(name = "kiosk_devices", uniqueConstraints = {
         @UniqueConstraint(name = "uq_kiosk_devices_tenant_code", columnNames = {"tenant_id", "device_code"})
