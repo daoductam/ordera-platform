@@ -35,3 +35,4 @@ public class AddCartItemRequest {
     @Size(max = 255, message = "Special instructions must not exceed 255 characters")
     private String specialInstructions;
 }
+

@@ -15,3 +15,4 @@ public class StoreInfoResponse {
     private String address;
     private String phoneNumber;
 }
+

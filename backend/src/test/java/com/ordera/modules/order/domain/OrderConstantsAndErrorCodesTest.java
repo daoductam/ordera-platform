@@ -51,3 +51,4 @@ class OrderConstantsAndErrorCodesTest {
         assertEquals(422, OrderErrorCode.INVALID_ORDER_STATUS.getStatus());
     }
 }
+

@@ -246,8 +246,12 @@ public class CartService {
 
     private Cart buildCartFromEntity(CartJpaEntity entity) {
         List<CartItemJpaEntity> itemEntities = cartItemJpaRepository.findByCartId(entity.getId());
+        List<UUID> productIds = itemEntities.stream().map(CartItemJpaEntity::getProductId).distinct().toList();
+        Map<UUID, ProductJpaEntity> productMap = productRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(ProductJpaEntity::getId, p -> p, (a, b) -> a));
+
         List<CartItem> items = itemEntities.stream().map(ie -> {
-            ProductJpaEntity product = productRepository.findById(ie.getProductId()).orElse(null);
+            ProductJpaEntity product = productMap.get(ie.getProductId());
             String name = product != null ? product.getName() : "Item";
             BigDecimal unitPrice = product != null ? product.getBasePrice() : BigDecimal.ZERO;
             return CartItem.builder()
@@ -294,6 +298,19 @@ public class CartService {
             entity.setAppliedVoucherCode(cart.getAppliedVoucherCode());
             entity.setAppliedGiftId(cart.getAppliedGiftId());
             cartJpaRepository.save(entity);
+
+            cartItemJpaRepository.deleteByCartId(cart.getId());
+            if (cart.getItems() != null && !cart.getItems().isEmpty()) {
+                List<CartItemJpaEntity> entities = cart.getItems().stream().map(item ->
+                        CartItemJpaEntity.builder()
+                                .cartId(cart.getId())
+                                .productId(item.getProductId())
+                                .quantity(item.getQuantity())
+                                .specialInstruction(item.getSpecialInstruction())
+                                .build()
+                ).toList();
+                cartItemJpaRepository.saveAll(entities);
+            }
         });
     }
 

@@ -238,3 +238,4 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.message").value(OrderMessages.MSG_RECEIPT_EMAIL_SENT));
     }
 }
+

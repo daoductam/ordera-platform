@@ -31,3 +31,4 @@ public class OrderMessages {
     public static final String ERR_MIN_ORDER_NOT_MET = "Đơn hàng chưa đạt giá trị tối thiểu của Voucher.";
     public static final String ERR_STOCK_UNAVAILABLE = "Một hoặc nhiều món trong đơn hàng đã hết nguyên liệu.";
 }
+

@@ -160,3 +160,4 @@ class CartControllerTest {
                 .andExpect(jsonPath("$.message").value(OrderMessages.MSG_ALLERGY_NOTE_UPDATED));
     }
 }
+

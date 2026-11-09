@@ -21,10 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -50,7 +47,7 @@ public class GetOrderDetailUseCaseImpl implements GetOrderDetailUseCase {
         OrderJpaEntity order = orderRepository.findByIdAndTenantId(orderId, tenantId)
                 .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        if (userId != null && order.getUserId() != null && !order.getUserId().equals(userId)) {
+        if (order.getUserId() != null && (userId == null || !order.getUserId().equals(userId))) {
             throw new BusinessException(OrderErrorCode.ORDER_NOT_FOUND);
         }
 
@@ -113,8 +110,17 @@ public class GetOrderDetailUseCaseImpl implements GetOrderDetailUseCase {
 
     private List<OrderDetailItemResponse> buildItemDetails(UUID orderId) {
         List<OrderItemJpaEntity> itemEntities = orderItemRepository.findByOrderId(orderId);
+        if (itemEntities.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<UUID> itemIds = itemEntities.stream().map(OrderItemJpaEntity::getId).toList();
+        List<OrderItemModifierJpaEntity> allModifiers = modifierRepository.findByOrderItemIdIn(itemIds);
+        Map<UUID, List<OrderItemModifierJpaEntity>> modifierMap = allModifiers.stream()
+                .collect(Collectors.groupingBy(OrderItemModifierJpaEntity::getOrderItemId));
+
         return itemEntities.stream().map(item -> {
-            List<OrderItemModifierJpaEntity> mods = modifierRepository.findByOrderItemId(item.getId());
+            List<OrderItemModifierJpaEntity> mods = modifierMap.getOrDefault(item.getId(), Collections.emptyList());
             String modSummary = mods.stream()
                     .map(m -> m.getModifierGroupName() + ": " + m.getModifierName())
                     .collect(Collectors.joining(", "));
@@ -139,3 +145,4 @@ public class GetOrderDetailUseCaseImpl implements GetOrderDetailUseCase {
                 .build();
     }
 }
+

@@ -17,3 +17,4 @@ public class UpdateCartItemQuantityRequest {
     @Max(value = 99, message = "Quantity must not exceed 99")
     private int quantity;
 }
+

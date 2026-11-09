@@ -25,3 +25,4 @@ public class CartItemDetailResponse {
     private List<String> modifierNames;
     private String specialInstructions;
 }
+

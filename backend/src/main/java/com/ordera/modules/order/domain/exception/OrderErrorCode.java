@@ -33,3 +33,4 @@ public enum OrderErrorCode implements ErrorCode {
     private final int status;
     private final String defaultMessage;
 }
+

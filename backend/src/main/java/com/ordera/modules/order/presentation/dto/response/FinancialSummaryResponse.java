@@ -21,3 +21,4 @@ public class FinancialSummaryResponse {
     private String paymentMethod;
     private String paymentStatus;
 }
+

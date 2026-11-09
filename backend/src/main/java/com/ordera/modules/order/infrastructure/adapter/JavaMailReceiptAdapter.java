@@ -11,6 +11,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.HtmlUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -146,15 +147,20 @@ public class JavaMailReceiptAdapter {
     }
 
     private String buildEmailHtml(OrderJpaEntity order, List<OrderItemJpaEntity> items) {
+        String safeCustomerName = HtmlUtils.htmlEscape(order.getPickupPersonName() != null ? order.getPickupPersonName() : "Customer");
+        String safeOrderNumber = HtmlUtils.htmlEscape(order.getOrderNumber() != null ? order.getOrderNumber() : "");
+        String safeOrderCode = HtmlUtils.htmlEscape(order.getOrderCode() != null ? order.getOrderCode() : "");
+        String safePickupMethod = HtmlUtils.htmlEscape(order.getPickupMethod() != null ? order.getPickupMethod() : "");
+
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>");
         sb.append("<h2 style='color: #1a1a1a;'>Ordera — Electronic Receipt</h2>");
-        sb.append("<p>Dear <strong>").append(order.getPickupPersonName()).append("</strong>,</p>");
+        sb.append("<p>Dear <strong>").append(safeCustomerName).append("</strong>,</p>");
         sb.append("<p>Thank you for your order at Ordera. Here is your digital receipt:</p>");
         sb.append("<div style='background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 15px 0;'>");
-        sb.append("<p><strong>Order Number:</strong> <span style='font-size: 18px; color: #d32f2f;'>").append(order.getOrderNumber()).append("</span></p>");
-        sb.append("<p><strong>Order Code:</strong> ").append(order.getOrderCode()).append("</p>");
-        sb.append("<p><strong>Pickup Method:</strong> ").append(order.getPickupMethod()).append("</p>");
+        sb.append("<p><strong>Order Number:</strong> <span style='font-size: 18px; color: #d32f2f;'>").append(safeOrderNumber).append("</span></p>");
+        sb.append("<p><strong>Order Code:</strong> ").append(safeOrderCode).append("</p>");
+        sb.append("<p><strong>Pickup Method:</strong> ").append(safePickupMethod).append("</p>");
         sb.append("<p><strong>Total Paid:</strong> <strong>").append(order.getTotalAmount()).append(" NOK</strong></p>");
         sb.append("<p><strong>VAT 15% Included:</strong> ").append(order.getVatAmount()).append(" NOK</p>");
         sb.append("<p><strong>Points Earned:</strong> +").append(order.getPointsEarned()).append(" pts</p>");
@@ -165,3 +171,4 @@ public class JavaMailReceiptAdapter {
         return sb.toString();
     }
 }
+

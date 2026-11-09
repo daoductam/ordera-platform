@@ -16,3 +16,4 @@ public class SelectedGiftResponse {
     private UUID giftId;
     private String title;
 }
+

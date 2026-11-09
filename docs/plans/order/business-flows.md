@@ -498,3 +498,4 @@ sequenceDiagram
     C-->>Client: 200 OK: ApiResponse.ok(MSG_RECEIPT_EMAIL_SENT, SendEReceiptResponse)
     deactivate C
 ```
+

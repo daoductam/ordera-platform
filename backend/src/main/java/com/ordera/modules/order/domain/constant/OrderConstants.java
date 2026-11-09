@@ -14,6 +14,8 @@ public class OrderConstants {
     // Quy tắc tính toán tài chính & thuế VAT 15%
     public static final BigDecimal VAT_RATE = new BigDecimal("0.15");
     public static final BigDecimal VAT_DIVISOR = new BigDecimal("1.15");
+    public static final double VAT_PERCENT_DISPLAY = 15.0;
+    public static final BigDecimal PERCENT_DIVISOR = new BigDecimal("100");
     public static final int DECIMAL_SCALE = 2;
 
     // Vòng đời lưu trữ Cache & Idempotency
@@ -47,3 +49,4 @@ public class OrderConstants {
     public static final String TIMELINE_IN_KITCHEN = "IN_KITCHEN";
     public static final String TIMELINE_READY_FOR_PICKUP = "READY_FOR_PICKUP";
 }
+

@@ -8,3 +8,4 @@ public interface SendEReceiptEmailUseCase {
 
     SendEReceiptResponse execute(UUID tenantId, UUID userId, UUID orderId, String email);
 }
+

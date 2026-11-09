@@ -40,7 +40,7 @@ public class SendEReceiptEmailUseCaseImpl implements SendEReceiptEmailUseCase {
         OrderJpaEntity order = orderRepository.findByIdAndTenantId(orderId, tenantId)
                 .orElseThrow(() -> new BusinessException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        if (userId != null && order.getUserId() != null && !order.getUserId().equals(userId)) {
+        if (order.getUserId() != null && (userId == null || !order.getUserId().equals(userId))) {
             throw new BusinessException(OrderErrorCode.ORDER_NOT_FOUND);
         }
 
@@ -58,3 +58,4 @@ public class SendEReceiptEmailUseCaseImpl implements SendEReceiptEmailUseCase {
                 .build();
     }
 }
+

@@ -28,3 +28,4 @@ public class CheckoutOrderResponse {
     private String paymentMethod;
     private Instant createdAt;
 }
+

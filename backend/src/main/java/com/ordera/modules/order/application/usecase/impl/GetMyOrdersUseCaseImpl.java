@@ -18,9 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * UseCase lấy danh sách đơn hàng của khách hàng theo tab ACTIVE hoặc PAST (API 6.7).
@@ -56,23 +55,42 @@ public class GetMyOrdersUseCaseImpl implements GetMyOrdersUseCase {
         Page<OrderJpaEntity> ordersPage = orderRepository
                 .findByTenantIdAndUserIdAndStatusInOrderByCreatedAtDesc(tenantId, userId, targetStatuses, pageable);
 
-        List<OrderSummaryResponse> summaries = ordersPage.getContent().stream()
-                .map(order -> mapToSummary(tenantId, order))
+        List<OrderJpaEntity> orders = ordersPage.getContent();
+        if (orders.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, ordersPage.getTotalElements());
+        }
+
+        List<UUID> orderIds = orders.stream().map(OrderJpaEntity::getId).toList();
+        List<OrderItemJpaEntity> allItems = orderItemRepository.findByOrderIdIn(orderIds);
+        Map<UUID, List<OrderItemJpaEntity>> orderItemsMap = allItems.stream()
+                .collect(Collectors.groupingBy(OrderItemJpaEntity::getOrderId));
+
+        List<UUID> storeIds = orders.stream()
+                .map(OrderJpaEntity::getStoreId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<UUID, String> storeNameMap = storeRepository.findAllById(storeIds).stream()
+                .filter(store -> tenantId.equals(store.getTenantId()))
+                .collect(Collectors.toMap(StoreJpaEntity::getId, StoreJpaEntity::getName, (existing, replacement) -> existing));
+
+        List<OrderSummaryResponse> summaries = orders.stream()
+                .map(order -> mapToSummary(order, orderItemsMap, storeNameMap))
                 .toList();
 
         return new PageImpl<>(summaries, pageable, ordersPage.getTotalElements());
     }
 
-    private OrderSummaryResponse mapToSummary(UUID tenantId, OrderJpaEntity order) {
-        String storeName = "Linn Sushi Sentrum";
-        if (order.getStoreId() != null) {
-            Optional<StoreJpaEntity> store = storeRepository.findByIdAndTenantId(order.getStoreId(), tenantId);
-            if (store.isPresent()) {
-                storeName = store.get().getName();
-            }
-        }
+    private OrderSummaryResponse mapToSummary(
+            OrderJpaEntity order,
+            Map<UUID, List<OrderItemJpaEntity>> orderItemsMap,
+            Map<UUID, String> storeNameMap) {
 
-        List<OrderItemJpaEntity> items = orderItemRepository.findByOrderId(order.getId());
+        String storeName = order.getStoreId() != null
+                ? storeNameMap.getOrDefault(order.getStoreId(), "Linn Sushi Sentrum")
+                : "Linn Sushi Sentrum";
+
+        List<OrderItemJpaEntity> items = orderItemsMap.getOrDefault(order.getId(), Collections.emptyList());
         int itemCount = items.stream().mapToInt(OrderItemJpaEntity::getQuantity).sum();
         String firstItemName = !items.isEmpty() ? items.get(0).getProductName() : "Order";
 
@@ -91,3 +109,4 @@ public class GetMyOrdersUseCaseImpl implements GetMyOrdersUseCase {
                 .build();
     }
 }
+

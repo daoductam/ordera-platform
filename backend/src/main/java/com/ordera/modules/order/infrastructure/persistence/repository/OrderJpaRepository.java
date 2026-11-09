@@ -27,3 +27,4 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID> 
 
     long countByTenantIdAndStoreIdAndCreatedAtGreaterThanEqual(UUID tenantId, UUID storeId, Instant startOfDay);
 }
+

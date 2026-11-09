@@ -24,3 +24,4 @@ public class PreviewCheckoutResponse {
     private AppliedVoucherResponse appliedVoucher;
     private SelectedGiftResponse selectedGift;
 }
+

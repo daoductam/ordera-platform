@@ -10,3 +10,4 @@ public interface GetMyOrdersUseCase {
 
     Page<OrderSummaryResponse> execute(UUID tenantId, UUID userId, String tab, Pageable pageable);
 }
+

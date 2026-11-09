@@ -48,3 +48,4 @@ public class CheckoutOrderRequest {
 
     private String eReceiptEmail;
 }
+

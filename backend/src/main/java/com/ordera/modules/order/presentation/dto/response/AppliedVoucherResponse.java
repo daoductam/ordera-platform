@@ -18,3 +18,4 @@ public class AppliedVoucherResponse {
     private String discountValueText;
     private BigDecimal discountAmount;
 }
+

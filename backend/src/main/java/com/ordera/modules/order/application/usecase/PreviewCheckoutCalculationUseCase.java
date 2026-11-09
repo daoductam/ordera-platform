@@ -9,3 +9,4 @@ public interface PreviewCheckoutCalculationUseCase {
 
     PreviewCheckoutResponse execute(UUID tenantId, UUID userId, PreviewCheckoutRequest request);
 }
+

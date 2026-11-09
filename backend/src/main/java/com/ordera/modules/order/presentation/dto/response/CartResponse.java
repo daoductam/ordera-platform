@@ -29,3 +29,4 @@ public class CartResponse {
     private BigDecimal subtotalAmount = BigDecimal.ZERO;
     private String currency;
 }
+

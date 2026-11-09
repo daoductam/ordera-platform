@@ -9,3 +9,4 @@ public interface CheckoutOrderUseCase {
 
     CheckoutOrderResponse execute(UUID tenantId, UUID userId, String idempotencyKey, CheckoutOrderRequest request);
 }
+

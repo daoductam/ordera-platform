@@ -27,3 +27,4 @@ public class OrderSummaryResponse {
     private int estimatedReadyMinutes;
     private Instant createdAt;
 }
+

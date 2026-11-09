@@ -172,3 +172,4 @@ class PreviewCheckoutCalculationUseCaseTest {
         assertEquals(OrderErrorCode.MINIMUM_ORDER_VALUE_NOT_MET, ex.getErrorCode());
     }
 }
+

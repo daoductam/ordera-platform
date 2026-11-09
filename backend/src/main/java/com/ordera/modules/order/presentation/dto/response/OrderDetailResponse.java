@@ -30,3 +30,4 @@ public class OrderDetailResponse {
     private FinancialSummaryResponse financialSummary;
     private int pointsEarned;
 }
+

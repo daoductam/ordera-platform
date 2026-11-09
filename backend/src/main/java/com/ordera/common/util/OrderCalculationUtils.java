@@ -98,3 +98,4 @@ public final class OrderCalculationUtils {
         return calculatedPoints.setScale(0, RoundingMode.FLOOR).intValue();
     }
 }
+

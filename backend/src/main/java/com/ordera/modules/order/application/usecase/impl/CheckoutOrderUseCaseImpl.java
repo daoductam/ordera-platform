@@ -40,8 +40,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -77,6 +80,9 @@ public class CheckoutOrderUseCaseImpl implements CheckoutOrderUseCase {
     private final AccruePointsUseCase accruePointsUseCase;
     private final JavaMailReceiptAdapter javaMailReceiptAdapter;
 
+    @Autowired(required = false)
+    private PlatformTransactionManager transactionManager;
+
     private static final DateTimeFormatter ORDER_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     @Override
@@ -85,8 +91,7 @@ public class CheckoutOrderUseCaseImpl implements CheckoutOrderUseCase {
         RLock lock = acquireCheckoutLock(userId, request.getCartId());
         try {
             CalculatedOrderData calcData = validateAndCalculateAmounts(tenantId, userId, request);
-            OrderPersistenceResult result = createOrderEntities(tenantId, userId, request, calcData);
-            applyRewardsAndPoints(tenantId, userId, result.order(), request);
+            OrderPersistenceResult result = persistOrderAndRewardsTransactionally(tenantId, userId, request, calcData);
             clearCartCache(tenantId, request.getCartId(), userId);
             dispatchReceiptEmail(result.order(), result.items());
             recordIdempotency(tenantId, idempotencyKey, result.order().getId());
@@ -94,6 +99,21 @@ public class CheckoutOrderUseCaseImpl implements CheckoutOrderUseCase {
         } finally {
             releaseLock(lock);
         }
+    }
+
+    private OrderPersistenceResult persistOrderAndRewardsTransactionally(
+            UUID tenantId, UUID userId, CheckoutOrderRequest request, CalculatedOrderData calcData) {
+        if (transactionManager != null) {
+            TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
+            return txTemplate.execute(status -> {
+                OrderPersistenceResult res = createOrderEntities(tenantId, userId, request, calcData);
+                applyRewardsAndPoints(tenantId, userId, res.order(), request);
+                return res;
+            });
+        }
+        OrderPersistenceResult res = createOrderEntities(tenantId, userId, request, calcData);
+        applyRewardsAndPoints(tenantId, userId, res.order(), request);
+        return res;
     }
 
     private void checkIdempotency(UUID tenantId, String idempotencyKey) {
@@ -180,7 +200,6 @@ public class CheckoutOrderUseCaseImpl implements CheckoutOrderUseCase {
         return new CalculatedOrderData(cart, subtotal, discount, safeTip, vat, total, pointsEarned, appliedVoucherId, giftTitle);
     }
 
-    @Transactional
     protected OrderPersistenceResult createOrderEntities(
             UUID tenantId, UUID userId, CheckoutOrderRequest request, CalculatedOrderData data) {
 
@@ -365,3 +384,4 @@ public class CheckoutOrderUseCaseImpl implements CheckoutOrderUseCase {
 
     protected record OrderPersistenceResult(OrderJpaEntity order, List<OrderItemJpaEntity> items) {}
 }
+

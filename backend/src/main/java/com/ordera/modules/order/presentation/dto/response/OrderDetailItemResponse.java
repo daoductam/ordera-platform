@@ -18,3 +18,4 @@ public class OrderDetailItemResponse {
     private BigDecimal unitPrice;
     private String modifiersSummary;
 }
+

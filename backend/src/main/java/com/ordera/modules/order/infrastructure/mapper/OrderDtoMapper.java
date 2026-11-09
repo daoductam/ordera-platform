@@ -48,3 +48,4 @@ public interface OrderDtoMapper {
     @Mapping(target = "itemPrice", source = "unitPrice")
     CartItemDetailResponse toCartItemDetailResponse(CartItem item);
 }
+

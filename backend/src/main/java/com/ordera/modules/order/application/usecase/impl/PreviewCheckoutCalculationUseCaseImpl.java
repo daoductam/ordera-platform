@@ -72,7 +72,7 @@ public class PreviewCheckoutCalculationUseCaseImpl implements PreviewCheckoutCal
                 .discountAmount(discount.setScale(OrderConstants.DECIMAL_SCALE, RoundingMode.HALF_UP))
                 .tipAmount(safeTip.setScale(OrderConstants.DECIMAL_SCALE, RoundingMode.HALF_UP))
                 .vatAmount(vat.setScale(OrderConstants.DECIMAL_SCALE, RoundingMode.HALF_UP))
-                .vatPercentage(15.0)
+                .vatPercentage(OrderConstants.VAT_PERCENT_DISPLAY)
                 .finalTotalAmount(total.setScale(OrderConstants.DECIMAL_SCALE, RoundingMode.HALF_UP))
                 .currency(OrderConstants.CURRENCY_NOK)
                 .pointsToEarn(pointsToEarn)
@@ -104,7 +104,7 @@ public class PreviewCheckoutCalculationUseCaseImpl implements PreviewCheckoutCal
 
         if (RewardConstants.DISCOUNT_TYPE_PERCENT.equalsIgnoreCase(voucher.getDiscountType())) {
             BigDecimal percent = voucher.getDiscountValue() != null ? voucher.getDiscountValue() : BigDecimal.ZERO;
-            discountAmount = subtotal.multiply(percent).divide(new BigDecimal("100"), OrderConstants.DECIMAL_SCALE, RoundingMode.HALF_UP);
+            discountAmount = subtotal.multiply(percent).divide(OrderConstants.PERCENT_DIVISOR, OrderConstants.DECIMAL_SCALE, RoundingMode.HALF_UP);
             discountText = "-" + percent.stripTrailingZeros().toPlainString() + " %";
         } else {
             BigDecimal fixed = voucher.getDiscountValue() != null ? voucher.getDiscountValue() : BigDecimal.ZERO;
@@ -143,3 +143,4 @@ public class PreviewCheckoutCalculationUseCaseImpl implements PreviewCheckoutCal
         return tierOpt.map(TierDefinitionJpaEntity::getEarnPointsRate).orElse(BigDecimal.ONE);
     }
 }
+

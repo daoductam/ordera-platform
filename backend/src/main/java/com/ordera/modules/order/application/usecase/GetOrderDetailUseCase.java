@@ -8,3 +8,4 @@ public interface GetOrderDetailUseCase {
 
     OrderDetailResponse execute(UUID tenantId, UUID userId, UUID orderId);
 }
+

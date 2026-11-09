@@ -29,3 +29,4 @@ public class PreviewCheckoutRequest {
 
     private String pickupMethod;
 }
+

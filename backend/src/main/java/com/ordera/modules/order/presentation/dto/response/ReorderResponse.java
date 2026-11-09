@@ -18,3 +18,4 @@ public class ReorderResponse {
     private int itemCount;
     private BigDecimal subtotalAmount;
 }
+

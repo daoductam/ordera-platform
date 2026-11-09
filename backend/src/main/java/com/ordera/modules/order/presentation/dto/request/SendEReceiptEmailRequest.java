@@ -17,3 +17,4 @@ public class SendEReceiptEmailRequest {
     @Email(message = "email must be a valid email format")
     private String email;
 }
+

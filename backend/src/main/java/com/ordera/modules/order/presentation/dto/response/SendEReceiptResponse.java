@@ -17,3 +17,4 @@ public class SendEReceiptResponse {
     private String orderNumber;
     private Instant dispatchedAt;
 }
+

@@ -97,3 +97,4 @@ class OrderCalculationUtilsTest {
         assertEquals(255, goldPoints);
     }
 }
+
