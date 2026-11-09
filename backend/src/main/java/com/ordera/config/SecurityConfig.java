@@ -45,7 +45,9 @@ public class SecurityConfig {
                                 "/api/v1/loyalty/**",
                                 "/api/v1/rewards/**",
                                 "/api/v1/cart/**",
-                                "/api/v1/kiosk/**"
+                                "/api/v1/kiosk/**",
+                                "/api/v1/notifications/**",
+                                "/api/v1/support/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
