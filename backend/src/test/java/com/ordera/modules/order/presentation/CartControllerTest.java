@@ -139,6 +139,26 @@ class CartControllerTest {
     }
 
     @Test
+    @DisplayName("DELETE /api/v1/cart/items/{itemId} should return 200 with MSG_CART_ITEM_REMOVED")
+    void should_delete_item_successfully() throws Exception {
+        UUID itemId = UUID.randomUUID();
+        CartResponse cartResponse = CartResponse.builder()
+                .cartId(UUID.randomUUID())
+                .totalItemCount(0)
+                .subtotalAmount(BigDecimal.ZERO)
+                .build();
+
+        when(cartService.deleteItem(eq(tenantId), any(), eq(itemId))).thenReturn(cartResponse);
+
+        mockMvc.perform(delete("/api/v1/cart/items/" + itemId)
+                        .header("X-Tenant-ID", tenantId.toString())
+                        .header("X-User-ID", userId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(OrderMessages.MSG_CART_ITEM_REMOVED));
+    }
+
+    @Test
     @DisplayName("PUT /api/v1/cart/comment should return 200 with MSG_ALLERGY_NOTE_UPDATED")
     void should_update_comment_successfully() throws Exception {
         UpdateCartCommentRequest request = new UpdateCartCommentRequest("No wasabi please");

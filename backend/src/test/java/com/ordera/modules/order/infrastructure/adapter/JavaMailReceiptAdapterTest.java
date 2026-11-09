@@ -95,3 +95,4 @@ class JavaMailReceiptAdapterTest {
         assertThat(pdfString).contains("ORDERA - ELECTRONIC RECEIPT");
     }
 }
+

@@ -255,3 +255,4 @@ class OrderTrackingAndReceiptUseCasesTest {
         verify(storeRepository, never()).findByIdAndTenantId(any(), any());
     }
 }
+
